@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
   Mountain,
@@ -14,8 +14,11 @@ import {
   CheckCircle,
   ArrowRight,
   Menu,
+  Satellite,
+  Map,
 } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 export default function HillyheallyHomepage() {
   return (
@@ -23,21 +26,20 @@ export default function HillyheallyHomepage() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Mountain className="h-8 w-8 text-brand-600" />
-            <span className="text-2xl font-bold text-brand-800">Hilly Heally</span>
+          <div className="flex items-center space-x-3">
+            <Image src="/images/logo.png" alt="Hillyheally 로고" width={48} height={24} className="h-8 w-auto" />
+            <span className="text-2xl font-extrabold text-primary">Hilly Heally</span>
           </div>
           <nav className="hidden md:flex items-center space-x-8">
-            <Link href="#features" className="text-gray-600 hover:text-brand-600 transition-colors">
-              기능
+            <Link href="#home" className="text-gray-600 hover:text-brand-600 transition-colors">
+              HOME
             </Link>
-            <Link href="#benefits" className="text-gray-600 hover:text-brand-600 transition-colors">
-              혜택
+            <Link href="#about" className="text-gray-600 hover:text-brand-600 transition-colors">
+              ABOUT
             </Link>
-            <Link href="#users" className="text-gray-600 hover:text-brand-600 transition-colors">
-              사용자
+            <Link href="#contents" className="text-gray-600 hover:text-brand-600 transition-colors">
+              CONTENTS
             </Link>
-            <Button className="bg-brand-600 hover:bg-brand-700">시작하기</Button>
           </nav>
           <Button variant="ghost" size="icon" className="md:hidden">
             <Menu className="h-6 w-6" />
@@ -46,13 +48,12 @@ export default function HillyheallyHomepage() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative py-20 lg:py-32 overflow-hidden">
+      <section id="home" className="relative py-20 lg:py-32 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-gray-50/50 to-gray-100/50" />
         <div className="container mx-auto px-4 relative">
           <div className="max-w-4xl mx-auto text-center">
-            <Badge className="mb-6 bg-gray-100 text-gray-800 hover:bg-gray-200">🏃‍♂️ 아웃도어 대회 플랫폼</Badge>
             <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              <span className="text-brand-600">마감 10분 전에도,</span>
+              <span className="text-brand-600">오픈과 동시에 몰려도,</span>
               <br />
               <span className="text-accent-600">트래픽 걱정 없이 신청 완료.</span>
             </h1>
@@ -62,7 +63,7 @@ export default function HillyheallyHomepage() {
               QR 참가증으로 대회장 입장까지 한 번에.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-brand-600 hover:bg-brand-700 text-lg px-8 py-3">
+              {/* <Button size="lg" className="bg-brand-600 hover:bg-brand-700 text-lg px-8 py-3">
                 <Play className="mr-2 h-5 w-5" />앱 다운로드
               </Button>
               <Button
@@ -78,7 +79,7 @@ export default function HillyheallyHomepage() {
                 className="border-accent-600 text-accent-600 hover:bg-accent-50 text-lg px-8 py-3"
               >
                 베타 신청하기
-              </Button>
+              </Button> */}
             </div>
           </div>
         </div>
@@ -88,7 +89,7 @@ export default function HillyheallyHomepage() {
       <section className="py-20 bg-red-50">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-8">복잡하고 느린 대회 신청, 이제 그만.</h2>
+            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-8">어렵고 느린 대회 신청, 이제 그만.</h2>
             <div className="grid md:grid-cols-3 gap-8">
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-4">
@@ -117,14 +118,14 @@ export default function HillyheallyHomepage() {
       </section>
 
       {/* Product Introduction Section */}
-      <section id="features" className="py-20 bg-white">
+      <section id="about" className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">Hilly Heally는 어떤 플랫폼인가요?</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-              Hilly Heally는 아웃도어 대회의 신청, 결제, 참가 인증까지 한 번에 해결하는
-              <br />
-              <strong>스마트 스포츠 대회 통합 플랫폼</strong>입니다.
+              Hilly Heally는 아웃도어 대회의 신청, 결제, 참가 인증은 물론<br />
+              GPS 하드웨어 기반 실시간 트레킹과 3D 지도 기반 트레일 콘텐츠까지<br />
+              한 번에 경험할 수 있는 스마트 스포츠 플랫폼입니다.
             </p>
           </div>
 
@@ -208,87 +209,40 @@ export default function HillyheallyHomepage() {
                 </p>
               </CardContent>
             </Card>
-          </div>
-        </div>
-      </section>
 
-      {/* Target Users & Benefits Section */}
-      <section id="benefits" className="py-20 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">누구를 위한 플랫폼인가요?</h2>
-          </div>
+            <Card>
+              <CardHeader>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center mb-2 bg-primary-100">
+                  <Satellite className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle className="text-brand-800">하드웨어 연동 실시간 트레킹</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">
+                  GPS 하드웨어와 연동하여 실시간 위치 추적 및 안전한 트레킹 경험을 제공합니다.
+                </p>
+              </CardContent>
+            </Card>
 
-          <div className="grid lg:grid-cols-2 gap-12">
-            <div className="bg-white p-8 rounded-xl shadow-sm">
-              <div className="text-center mb-8">
-                <div className="w-20 h-20 bg-brand-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Users className="h-10 w-10 text-white" />
+            <Card>
+              <CardHeader>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center mb-2 bg-primary-100">
+                  <Map className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="text-2xl font-bold text-brand-800 mb-4">참가자용 혜택</h3>
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-start">
-                  <CheckCircle className="h-6 w-6 text-brand-500 mr-3 mt-1 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">트래픽 걱정 없는 빠른 신청</h4>
-                    <p className="text-gray-600 text-sm">마감 직전에도 끊김 없이 안정적으로 대회 신청</p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <CheckCircle className="h-6 w-6 text-brand-500 mr-3 mt-1 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">QR로 간편 입장</h4>
-                    <p className="text-gray-600 text-sm">QR 참가증으로 대회장에서 빠르고 간편한 입장</p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <CheckCircle className="h-6 w-6 text-brand-500 mr-3 mt-1 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">내 기록을 한눈에 확인</h4>
-                    <p className="text-gray-600 text-sm">모든 대회 참가 기록과 성과를 통합 관리</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white p-8 rounded-xl shadow-sm">
-              <div className="text-center mb-8">
-                <div className="w-20 h-20 bg-accent-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Trophy className="h-10 w-10 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold text-brand-800 mb-4">주최자용 혜택</h3>
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-start">
-                  <CheckCircle className="h-6 w-6 text-brand-500 mr-3 mt-1 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">신청/결제 통합 관리</h4>
-                    <p className="text-gray-600 text-sm">대회 신청부터 결제까지 하나의 시스템에서 관리</p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <CheckCircle className="h-6 w-6 text-brand-500 mr-3 mt-1 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">참가자 실시간 모니터링</h4>
-                    <p className="text-gray-600 text-sm">참가자 현황과 대회 진행 상황을 실시간으로 확인</p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <CheckCircle className="h-6 w-6 text-brand-500 mr-3 mt-1 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">수기 작업 최소화</h4>
-                    <p className="text-gray-600 text-sm">자동화된 시스템으로 운영 업무 효율성 극대화</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+                <CardTitle className="text-brand-800">3D 지도 콘텐츠 제공</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">
+                  한국 주요 트레일의 3D 지도, 고도 정보, 인증 지점 등 차별화된 지도 콘텐츠를 제공합니다.
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
 
       {/* Differentiation Section */}
-      <section id="users" className="py-20 bg-white">
+      <section id="contents" className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">차별화 포인트</h2>
@@ -304,7 +258,7 @@ export default function HillyheallyHomepage() {
                 <CardTitle className="text-brand-800">병목 없는 신청 시스템</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-600">트래픽 집중 시간에도 안정적인 대회 신청이 가능합니다</p>
+                <p className="text-sm text-gray-600">트래픽 집중 시간에도 안정적인 대회 신청이 가능</p>
               </CardContent>
             </Card>
 
@@ -348,7 +302,7 @@ export default function HillyheallyHomepage() {
       </section>
 
       {/* Coming Soon Section */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">향후 비전</h2>
@@ -369,8 +323,8 @@ export default function HillyheallyHomepage() {
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <Trophy className="h-6 w-6 text-purple-600" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">참가자 간 챌린지</h3>
-              <p className="text-gray-600 text-sm">다양한 챌린지와 경쟁 시스템</p>
+              <h3 className="font-semibold text-gray-900 mb-2">참가자 간 매치</h3>
+              <p className="text-gray-600 text-sm">다양한 매치 시스템</p>
               <Badge className="mt-2 bg-purple-100 text-purple-800">Coming Soon</Badge>
             </div>
 
@@ -379,7 +333,7 @@ export default function HillyheallyHomepage() {
                 <Mountain className="h-6 w-6 text-green-600" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">유료 트레일 콘텐츠</h3>
-              <p className="text-gray-600 text-sm">프리미엄 트레일 정보 스토어</p>
+              <p className="text-gray-600 text-sm">프리미엄 트레일 정보</p>
               <Badge className="mt-2 bg-green-100 text-green-800">Coming Soon</Badge>
             </div>
 
@@ -399,9 +353,9 @@ export default function HillyheallyHomepage() {
       <section className="py-20 bg-gradient-to-r from-brand-600 to-accent-600">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">
-            지금 신청하고, 빠른 대회 참가를 경험하세요!
+            지금 함께 빠른 대회 참가, 실시간 트레킹, 3D 지도 콘텐츠를 경험해보세요!
           </h2>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          {/* <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="bg-white text-brand-600 hover:bg-gray-100 text-lg px-8 py-3">
               앱 다운로드
               <ArrowRight className="ml-2 h-5 w-5" />
@@ -412,7 +366,7 @@ export default function HillyheallyHomepage() {
             <Button size="lg" className="bg-white text-brand-600 hover:bg-gray-100 text-lg px-8 py-3">
               대회 둘러보기
             </Button>
-          </div>
+          </div> */}
         </div>
       </section>
 
@@ -469,12 +423,15 @@ export default function HillyheallyHomepage() {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <Mountain className="h-8 w-8 text-brand-400" />
+                <Image src="/images/logo.png" alt="Hillyheally 로고" width={40} height={40} />
                 <span className="text-2xl font-bold">Hilly Heally</span>
               </div>
-              <p className="text-gray-400">울퉁불퉁한 길 위에서, 나만의 리듬으로 회복하는 시간</p>
+              <p className="text-gray-400">(주) 힐리힐리</p>
+              <p className="text-gray-400">서울시 서초구 명달로 116 송현빌딩 3층</p>
+              <p className="text-gray-400">사업자번호: 274-10-01948</p>
+              <p className="text-gray-400">MAIL: dev@hillyheally.com</p>
             </div>
-            <div>
+            {/* <div>
               <h4 className="font-semibold mb-4">제품</h4>
               <ul className="space-y-2 text-gray-400">
                 <li>
@@ -548,10 +505,10 @@ export default function HillyheallyHomepage() {
                   </Link>
                 </li>
               </ul>
-            </div>
+            </div> */}
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 Hilly Heally. All rights reserved.</p>
+            <p>&copy; 2025 Hilly Heally. All rights reserved.</p>
           </div>
         </div>
       </footer>
