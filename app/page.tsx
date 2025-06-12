@@ -429,6 +429,7 @@ export default function HillyheallyHomepage() {
               <p className="text-gray-400">(주) 힐리힐리</p>
               <p className="text-gray-400">서울시 서초구 명달로 116 송현빌딩 3층</p>
               <p className="text-gray-400">사업자번호: 274-10-01948</p>
+              <p className="text-gray-400">TEL: 070-4006-4544 FAX: 02-6455-6023</p>
               <p className="text-gray-400">MAIL: dev@hillyheally.com</p>
             </div>
             {/* <div>
