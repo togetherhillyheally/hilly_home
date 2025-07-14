@@ -27,7 +27,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/static ./.next/static
 
 # 포트 설정 (Next.js 기본 포트는 3000)
-EXPOSE 3000
+EXPOSE 3200
 
 # 실행 명령
 CMD ["node", "server.js"]

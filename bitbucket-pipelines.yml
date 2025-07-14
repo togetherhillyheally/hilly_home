@@ -1,0 +1,97 @@
+# Template docker-push
+
+# This template allows you to build and push your docker image to a Docker Hub account.
+# The workflow allows running tests, code linting and security scans on feature branches (as well as master).
+# The docker image will be validated and pushed to the docker registry after the code is merged to master.
+
+# Prerequisites: $DOCKERHUB_USERNAME, $DOCKERHUB_PASSWORD setup as deployment variables
+
+image: node:18
+
+pipelines:
+  custom:
+    deploy:
+      - variables:
+        - name: DEPLOY_ENV
+          default: dev
+          allowed-values:
+            - dev
+            - stg
+            - prd
+      - step:
+          name: Setting environment
+          script:
+            - echo "Deploying to $DEPLOY_ENV environment"
+            - |
+              if [ "$DEPLOY_ENV" == "dev" ]; then
+                export SSH_HOST=$SSH_HOST_DEV
+                export SSH_USER=$SSH_USER_DEV
+                export VERSION="latest"
+              elif [ "$DEPLOY_ENV" == "stg" ]; then
+                export SSH_HOST=$SSH_HOST_STG
+                export SSH_USER=$SSH_USER_STG
+                export VERSION="latest"
+              elif [ "$DEPLOY_ENV" == "prd" ]; then
+                export SSH_HOST=$SSH_HOST_PRD
+                export SSH_USER=$SSH_USER_PRD
+                export VERSION="$DEPLOY_ENV-0.1.${BITBUCKET_BUILD_NUMBER}"
+              else
+                echo "Unknown environment: $DEPLOY_ENV" && exit 1
+              fi
+            - echo $SSH_HOST > .ssh_host
+            - echo $SSH_USER > .ssh_user
+            - echo $VERSION > .version
+          artifacts:
+            - .ssh_host
+            - .ssh_user
+            - .version
+      - step:
+          size: 2x
+          name: Docker build and push
+          caches:
+            - docker
+          services:
+            - docker
+          script:
+            - IMAGE_NAME=$BITBUCKET_REPO_SLUG
+            - VERSION=$(cat .version)
+            - docker login -u "$DOCKERHUB_USERNAME" --password-stdin <<< "$DOCKERHUB_PASSWORD"
+            - docker build --platform linux/amd64 --build-arg MY_ENVIRONMENT=$DEPLOY_ENV -t $DOCKERHUB_USERNAME/${IMAGE_NAME}:${VERSION} .
+            - docker push $DOCKERHUB_USERNAME/${IMAGE_NAME}:${VERSION}
+          artifacts:
+            - .ssh_host
+            - .ssh_user
+            - .version
+      - step:
+          name: Deploy to $DEPLOY_ENV
+          script:
+            - if [ "$DEPLOY_ENV" = "prd" ]; then
+                echo "Skipping deploy for prd environment";
+                exit 0;
+              fi
+            - echo "Deploying to remote server..."
+            - export VERSION=$(cat .version)
+            - export SSH_HOST=$(cat .ssh_host)
+            - export SSH_USER=$(cat .ssh_user)
+            - pipe: atlassian/ssh-run:0.4.1
+              variables:
+                SSH_USER: $SSH_USER
+                SERVER: $SSH_HOST
+                COMMAND: |
+                  cd /home/ubuntu/docker/web
+                  VERSION=${VERSION} docker-compose pull $BITBUCKET_REPO_SLUG
+                  docker stop $BITBUCKET_REPO_SLUG || true
+                  docker rm $BITBUCKET_REPO_SLUG || true
+                  
+                  OLD_IMAGE_ID=$(docker images $DOCKERHUB_USERNAME/$BITBUCKET_REPO_SLUG --format "{{.Repository}}:{{.Tag}} {{.ID}}" | grep -v "$VERSION" | awk '{print $2}')
+                  if [ -n "$OLD_IMAGE_ID" ]; then
+                    docker rmi $OLD_IMAGE_ID || true
+                  fi
+                  
+                  docker image prune -f
+                  VERSION=${VERSION} docker-compose up -d $BITBUCKET_REPO_SLUG
+
+definitions:
+  services:
+    docker:
+      memory: 2048
