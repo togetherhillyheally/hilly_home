@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
-export default function AuthResult() {
+function AuthResultContent() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -82,5 +82,29 @@ export default function AuthResult() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AuthResult() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="max-w-md w-full space-y-8">
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-gray-900">
+                본인인증 처리 중
+              </h2>
+              <p className="mt-2 text-gray-600">잠시만 기다려주세요...</p>
+            </div>
+            <div className="flex justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <AuthResultContent />
+    </Suspense>
   );
 }
