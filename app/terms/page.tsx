@@ -11,7 +11,7 @@ export default function TermsPage() {
   return (
     <main className="container mx-auto px-4 py-12 max-w-4xl text-gray-900">
       <div className="mb-6 flex justify-between items-center">
-        <h1 className="text-xl font-semibold">서비스 이용약관</h1>
+        <h1 className="text-xl font-semibold">서비스 이용약관.</h1>
         <Link href="/">
           <Button variant="outline" size="sm">
             홈으로
