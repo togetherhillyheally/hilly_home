@@ -28,7 +28,6 @@ export default async function PrivacyPolicyPage() {
   return (
     <main className="container mx-auto px-4 py-12">
       <div className="mb-6 flex justify-between items-center">
-        <h1 className="text-xl font-semibold">개인정보 처리방침</h1>
         <Link href="/">
           <Button variant="outline" size="sm">
             홈으로
