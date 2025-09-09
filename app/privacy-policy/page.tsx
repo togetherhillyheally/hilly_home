@@ -26,17 +26,31 @@ export default async function PrivacyPolicyPage() {
   }
 
   return (
-    <main className="container mx-auto px-4 py-12">
-      <div className="mb-6 flex justify-between items-center">
-        <Link href="/">
-          <Button variant="outline" size="sm">
-            홈으로
-          </Button>
-        </Link>
-      </div>
-      <article className="prose prose-neutral max-w-4xl privacy-prose">
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{markdown}</ReactMarkdown>
-      </article>
-    </main>
+    <div className="min-h-screen bg-gray-900">
+      <main className="container mx-auto px-4 py-12">
+        <div className="mb-6 flex justify-between items-center">
+          <Link href="/">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-gray-600 bg-gray-800 text-white hover:bg-gray-700 hover:text-white"
+            >
+              홈으로
+            </Button>
+          </Link>
+        </div>
+
+        <header className="mb-10">
+          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white">
+            개인정보처리방침
+          </h1>
+          <p className="mt-2 text-sm text-white">시행일: 2025.08.06</p>
+        </header>
+
+        <article className="prose prose-invert max-w-4xl privacy-prose text-white [&_*]:text-white [&_h1]:text-white [&_h2]:text-white [&_h3]:text-white [&_h4]:text-white [&_h5]:text-white [&_h6]:text-white [&_p]:text-white [&_li]:text-white [&_td]:text-white [&_th]:text-white [&_strong]:text-white [&_em]:text-white">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{markdown}</ReactMarkdown>
+        </article>
+      </main>
+    </div>
   );
 }
