@@ -32,31 +32,31 @@ export default function HillyheallyHomepage() {
       {/* Header */}
       <header className="sticky top-0 py-2 z-50 bg-gray-900/80 backdrop-blur-md border-b border-gray-700">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 animate-fade-in-up">
             <Image
               src="/images/home_logo.png"
               alt="Hillyheally 로고"
               width={72}
               height={40}
-              className="h-14 w-auto"
+              className="h-14 w-auto hover:scale-105 transition-transform duration-300"
             />
           </div>
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center space-x-8 animate-fade-in-up delay-200">
             <Link
               href="#home"
-              className="text-gray-300 hover:text-red-500 transition-colors font-bold"
+              className="text-gray-300 hover:text-red-500 transition-all duration-300 font-bold hover:scale-105"
             >
               홈
             </Link>
             <Link
               href="#about"
-              className="text-gray-300 hover:text-red-500 transition-colors font-bold"
+              className="text-gray-300 hover:text-red-500 transition-all duration-300 font-bold hover:scale-105"
             >
               소개
             </Link>
             <Link
               href="#features"
-              className="text-gray-300 hover:text-red-500 transition-colors font-bold"
+              className="text-gray-300 hover:text-red-500 transition-all duration-300 font-bold hover:scale-105"
             >
               기능
             </Link>
@@ -69,23 +69,33 @@ export default function HillyheallyHomepage() {
 
       {/* Hero Section */}
       <section id="home" className="relative py-20 lg:py-32 overflow-hidden">
-        <div className="container mx-auto px-4 relative">
+        {/* Animated Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(251,146,60,0.1),transparent_50%)] animate-pulse"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(236,72,153,0.1),transparent_50%)] animate-pulse delay-1000"></div>
+        </div>
+
+        <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-              <span className="bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">
-                지도 위에서 연결되고,
-              </span>
-              <br />
-              <span className="bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">
-                길 위에서 함께 성장한다.
-              </span>
-            </h1>
-            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-              대회 신청부터 실시간 그룹 트래킹, 3D 지도 기반 미션까지
-              <br />
-              혼자 걷더라도 "함께 걷는 경험"을 만드는 스마트 플랫폼
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="animate-fade-in-up">
+              <h1 className="text-4xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+                <span className="bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent animate-gradient-x">
+                  지도 위에서 연결되고,
+                </span>
+                <br />
+                <span className="bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent animate-gradient-x delay-300">
+                  길 위에서 함께 성장한다.
+                </span>
+              </h1>
+            </div>
+            <div className="animate-fade-in-up delay-500">
+              <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
+                대회 신청부터 실시간 그룹 트래킹, 3D 지도 기반 미션까지
+                <br />
+                혼자 걷더라도 "함께 걷는 경험"을 만드는 스마트 플랫폼
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up delay-700">
               {/* <Button size="lg" className="bg-brand-600 hover:bg-brand-700 text-lg px-8 py-3">
                 <Play className="mr-2 h-5 w-5" />앱 다운로드
               </Button>
@@ -180,15 +190,15 @@ export default function HillyheallyHomepage() {
       {/* Features Section */}
       <section id="features" className="py-20 bg-gray-900">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
+          <div className="text-center mb-16 animate-fade-in-up">
             <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
               핵심 기능
             </h2>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-orange-400/20 to-pink-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="text-center animate-fade-in-up delay-100 hover:scale-105 transition-transform duration-300">
+              <div className="w-16 h-16 bg-gradient-to-br from-orange-400/20 to-pink-500/20 rounded-full flex items-center justify-center mx-auto mb-4 hover:shadow-lg hover:shadow-orange-500/25 transition-shadow duration-300">
                 <Timer className="h-8 w-8 text-orange-400" />
               </div>
               <h3 className="text-white font-semibold mb-2">
@@ -199,8 +209,8 @@ export default function HillyheallyHomepage() {
               </p>
             </div>
 
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-orange-400/20 to-pink-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="text-center animate-fade-in-up delay-200 hover:scale-105 transition-transform duration-300">
+              <div className="w-16 h-16 bg-gradient-to-br from-orange-400/20 to-pink-500/20 rounded-full flex items-center justify-center mx-auto mb-4 hover:shadow-lg hover:shadow-pink-500/25 transition-shadow duration-300">
                 <Users className="h-8 w-8 text-pink-400" />
               </div>
               <h3 className="text-white font-semibold mb-2">
@@ -209,8 +219,8 @@ export default function HillyheallyHomepage() {
               <p className="text-gray-300 text-sm">함께 걷는 경험을 제공</p>
             </div>
 
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-orange-400/20 to-pink-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="text-center animate-fade-in-up delay-300 hover:scale-105 transition-transform duration-300">
+              <div className="w-16 h-16 bg-gradient-to-br from-orange-400/20 to-pink-500/20 rounded-full flex items-center justify-center mx-auto mb-4 hover:shadow-lg hover:shadow-orange-500/25 transition-shadow duration-300">
                 <Map className="h-8 w-8 text-orange-500" />
               </div>
               <h3 className="text-white font-semibold mb-2">
@@ -219,8 +229,8 @@ export default function HillyheallyHomepage() {
               <p className="text-gray-300 text-sm">함께 걷기, 찾기, 그리기</p>
             </div>
 
-            <div className="text-center">
-              <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="text-center animate-fade-in-up delay-400 hover:scale-105 transition-transform duration-300">
+              <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 hover:shadow-lg hover:shadow-red-500/25 transition-shadow duration-300">
                 <Smartphone className="h-8 w-8 text-red-500" />
               </div>
               <h3 className="text-white font-semibold mb-2">
@@ -233,18 +243,28 @@ export default function HillyheallyHomepage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-orange-500 to-pink-600">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">
-            지도 위에서 연결되고, 길 위에서 함께 성장하는
-            <br />
-            새로운 아웃도어 경험을 시작하세요!
-          </h2>
-          <p className="text-xl text-white mb-8 max-w-2xl mx-auto">
-            대회 신청부터 실시간 그룹 트래킹, 3D 지도 기반 미션까지
-            <br />
-            혼자 걷더라도 '함께' 하는 아웃도어 경험을 만나보세요.
-          </p>
+      <section className="py-20 bg-gradient-to-r from-orange-500 to-pink-600 relative overflow-hidden">
+        {/* Animated Background */}
+        <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-pink-600">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.1),transparent_50%)] animate-pulse"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(255,255,255,0.1),transparent_50%)] animate-pulse delay-1000"></div>
+        </div>
+
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <div className="animate-fade-in-up">
+            <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">
+              지도 위에서 연결되고, 길 위에서 함께 성장하는
+              <br />
+              새로운 아웃도어 경험을 시작하세요!
+            </h2>
+          </div>
+          <div className="animate-fade-in-up delay-300">
+            <p className="text-xl text-white mb-8 max-w-2xl mx-auto">
+              대회 신청부터 실시간 그룹 트래킹, 3D 지도 기반 미션까지
+              <br />
+              혼자 걷더라도 '함께' 하는 아웃도어 경험을 만나보세요.
+            </p>
+          </div>
           {/* <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="bg-white text-brand-600 hover:bg-gray-100 text-lg px-8 py-3">
               앱 다운로드
