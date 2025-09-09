@@ -90,7 +90,7 @@ export default function HillyheallyHomepage() {
             </div>
             <div className="animate-fade-in-up delay-500">
               <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-                대회 신청부터 실시간 그룹 트래킹, 3D 지도 기반 미션까지
+                대회 신청부터 실시간 그룹 트래킹, 2D/3D 지도 기반 퀘스트까지
                 <br />
                 혼자 걷더라도 "함께 걷는 경험"을 만드는 스마트 플랫폼
               </p>
@@ -126,7 +126,7 @@ export default function HillyheallyHomepage() {
               대회 신청 → 참가 → 실시간 관제/기록 관리를 지원하는 동시에
               <br />
               <strong className="bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">
-                3D 지도 기반 실시간 그룹 트래킹과 '함께' 기능
+                2D/3D 지도 기반 실시간 그룹 트래킹과 '함께' 기능
               </strong>
               을 제공하여
               <br />
@@ -173,13 +173,13 @@ export default function HillyheallyHomepage() {
                   <Map className="h-6 w-6 text-orange-500" />
                 </div>
                 <CardTitle className="text-white">
-                  3D 지도 기반 퀘스트
+                  2D/3D 지도 기반 퀘스트
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-300">
-                  한국 주요 트레일의 3D 지도 기반 게이미피케이션으로 함께 걷고,
-                  찾고, 그리는 미션을 제공합니다.
+                  한국 주요 트레일의 2D/3D 지도 기반 게이미피케이션으로 함께
+                  걷고, 찾고, 그리는 퀘스트를 제공합니다.
                 </p>
               </CardContent>
             </Card>
@@ -224,7 +224,7 @@ export default function HillyheallyHomepage() {
                 <Map className="h-8 w-8 text-orange-500" />
               </div>
               <h3 className="text-white font-semibold mb-2">
-                3D 지도 기반 미션
+                2D/3D 지도 기반 퀘스트
               </h3>
               <p className="text-gray-300 text-sm">함께 걷기, 찾기, 그리기</p>
             </div>
@@ -260,7 +260,7 @@ export default function HillyheallyHomepage() {
           </div>
           <div className="animate-fade-in-up delay-300">
             <p className="text-xl text-white mb-8 max-w-2xl mx-auto">
-              대회 신청부터 실시간 그룹 트래킹, 3D 지도 기반 미션까지
+              대회 신청부터 실시간 그룹 트래킹, 2D/3D 지도 기반 퀘스트까지
               <br />
               혼자 걷더라도 '함께' 하는 아웃도어 경험을 만나보세요.
             </p>
