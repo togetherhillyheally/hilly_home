@@ -85,7 +85,7 @@ export default function HillyheallyHomepage() {
               <p className="text-lg text-gray-500 mb-10 max-w-xl mx-auto leading-relaxed">
                 코스를 찾고, 모험을 만들고, 퍼즐을 완성해 힐리를 얻고,
                 <br />
-                나만의 베이스캠프를 꾸미는 아웃도어 소셜 플랫폼
+                나만의 캠프를 꾸미는 아웃도어 소셜 플랫폼
               </p>
             </div>
           </div>
@@ -155,8 +155,8 @@ export default function HillyheallyHomepage() {
               {
                 step: "06",
                 icon: <Tent className="h-5 w-5 text-pink-400" />,
-                title: "퍼즐 완성 & 베이스캠프 꾸미기",
-                desc: "퍼즐을 완성해 힐리를 획득하고, 나만의 베이스캠프에 텐트·장비·자연물을 배치해 캠핑 씬을 꾸며보세요.",
+                title: "퍼즐 완성 & 캠프 꾸미기",
+                desc: "퍼즐을 완성해 힐리를 획득하고, 나만의 캠프에 텐트·장비·자연물을 배치해 캠핑 씬을 꾸며보세요.",
                 accent: "border-l-pink-500/60",
               },
             ].map((item, idx) => (
@@ -237,13 +237,13 @@ export default function HillyheallyHomepage() {
                 icon: <Puzzle className="h-6 w-6 text-orange-400" />,
                 iconBg: "bg-orange-400/10",
                 title: "퍼즐 & 힐리",
-                desc: "모험을 완료해 퍼즐 조각을 모으고, 퍼즐을 완성하면 앱 내 화폐 '힐리'를 획득합니다. 힐리로 베이스캠프 오브젝트를 해금하세요.",
+                desc: "모험을 완료해 퍼즐 조각을 모으고, 퍼즐을 완성하면 앱 내 화폐 '힐리'를 획득합니다. 힐리로 캠프 오브젝트를 해금하세요.",
                 hover: "hover:border-orange-500/30",
               },
               {
                 icon: <Tent className="h-6 w-6 text-violet-400" />,
                 iconBg: "bg-violet-400/10",
-                title: "나만의 베이스캠프",
+                title: "나만의 캠프",
                 desc: "싸이월드 미니홈피처럼 나만의 캠핑 씬을 꾸며보세요. 배경·지면·텐트·장비·자연·동물을 자유롭게 배치할 수 있습니다.",
                 hover: "hover:border-violet-500/30",
               },
@@ -292,7 +292,7 @@ export default function HillyheallyHomepage() {
           </div>
           <div className="animate-fade-in-up delay-300">
             <p className="text-gray-500 mb-4 max-w-xl mx-auto text-sm leading-relaxed">
-              코스를 발견하고, 퍼즐을 완성하고, 나만의 베이스캠프를 꾸며보세요.
+              코스를 발견하고, 퍼즐을 완성하고, 나만의 캠프를 꾸며보세요.
             </p>
           </div>
         </div>
