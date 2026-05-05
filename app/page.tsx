@@ -244,7 +244,7 @@ export default function HillyheallyHomepage() {
                 icon: <Tent className="h-6 w-6 text-violet-400" />,
                 iconBg: "bg-violet-400/10",
                 title: "나만의 캠프",
-                desc: "싸이월드 미니홈피처럼 나만의 캠핑 씬을 꾸며보세요. 배경·지면·텐트·장비·자연·동물을 자유롭게 배치할 수 있습니다.",
+                desc: "나만의 캠핑 씬을 꾸며보세요. 배경·지면·텐트·장비·자연·동물을 자유롭게 배치할 수 있습니다.",
                 hover: "hover:border-violet-500/30",
               },
               {
