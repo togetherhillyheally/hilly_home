@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.hillyheally.app",
+      "sha256_cert_fingerprints": [
+        "23:F6:4B:E4:53:1D:3B:7A:4D:A2:AE:B4:62:12:50:26:E9:1D:38:9E:FF:19:5D:BA:1B:75:83:90:8A:7E:1B:ED"
+      ]
+    }
+  }
+]

@@ -1,13 +1,13 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Map,
   MapPin,
   Users,
-  Shield,
-  CheckCircle,
   Menu,
-  MessageCircle,
   Star,
+  Navigation,
+  Puzzle,
+  Stamp,
+  Tent,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -48,7 +48,11 @@ export default function HillyheallyHomepage() {
               핵심 기능
             </Link>
           </nav>
-          <Button variant="ghost" size="icon" className="md:hidden text-gray-400">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden text-gray-400"
+          >
             <Menu className="h-6 w-6" />
           </Button>
         </div>
@@ -74,16 +78,14 @@ export default function HillyheallyHomepage() {
                   나만의 지도를 만들고,
                 </span>
                 <br />
-                <span className="text-white">
-                  함께 걷는 경험을 만드세요.
-                </span>
+                <span className="text-white">함께 걷는 경험을 만드세요.</span>
               </h1>
             </div>
             <div className="animate-fade-in-up delay-500">
               <p className="text-lg text-gray-500 mb-10 max-w-xl mx-auto leading-relaxed">
-                코스를 찾고, 모험을 만들고, 같이 걸을 사람을 모집하고, 산행 후 기록과 후기를
+                코스를 찾고, 모험을 만들고, 퍼즐을 완성해 힐리를 얻고,
                 <br />
-                남기는 아웃도어 소셜 플랫폼
+                나만의 캠프를 꾸미는 아웃도어 소셜 플랫폼
               </p>
             </div>
           </div>
@@ -118,37 +120,44 @@ export default function HillyheallyHomepage() {
               {
                 step: "01",
                 icon: <Map className="h-5 w-5 text-orange-400" />,
-                title: "트레일 발견",
-                desc: "산 이름, 코스, 지역으로 검색하거나 지도에서 원하는 트레일을 찾아보세요.",
+                title: "코스 & 지도 발견",
+                desc: "코스 지도와 스탬프 지도를 탐색하고, GPX 파일을 업로드해 나만의 트레일을 만들어보세요.",
                 accent: "border-l-orange-500/60",
               },
               {
                 step: "02",
                 icon: <MapPin className="h-5 w-5 text-pink-400" />,
-                title: "나만의 지도 만들기",
-                desc: "마음에 드는 트레일을 저장해 내 지도로 관리하세요.",
+                title: "트레일 수집",
+                desc: "마음에 드는 트레일을 수집하고, 체크포인트에 사진과 메모를 남겨 나만의 지도를 완성하세요.",
                 accent: "border-l-pink-500/60",
               },
               {
                 step: "03",
                 icon: <Users className="h-5 w-5 text-orange-300" />,
-                title: "모험 만들기",
-                desc: "일정·장소·정원을 설정하고 같이 걸을 참가자를 모집하세요.",
+                title: "모험 만들기 & 모집",
+                desc: "코스 또는 스탬프 지도를 선택해 모험을 만들고, 같이 걸을 모험자를 모집하세요.",
                 accent: "border-l-orange-400/60",
               },
               {
                 step: "04",
-                icon: <CheckCircle className="h-5 w-5 text-pink-300" />,
-                title: "참가 신청 & 운영",
-                desc: "참가 신청을 받고 승인·거절을 관리하세요. 공지사항 작성, 유저 초대, 링크 공유까지 모험 운영에 필요한 모든 것을 제공합니다.",
+                icon: <Navigation className="h-5 w-5 text-pink-300" />,
+                title: "실시간 위치 공유 & 산행",
+                desc: "모험이 시작되면 모험자 간 실시간 위치를 공유하고, GPS로 이동 경로를 자동 기록합니다.",
                 accent: "border-l-pink-400/60",
               },
               {
                 step: "05",
-                icon: <Star className="h-5 w-5 text-orange-400" />,
-                title: "기록 & 후기",
-                desc: "산행을 마치면 별점과 후기를 남겨 경험을 기록하세요.",
+                icon: <Puzzle className="h-5 w-5 text-orange-400" />,
+                title: "기록 & 퍼즐 조각 수집",
+                desc: "모험을 완료하면 활동 거리와 시간에 따라 퍼즐 조각을 획득하고, 후기와 경험을 기록하세요.",
                 accent: "border-l-orange-500/60",
+              },
+              {
+                step: "06",
+                icon: <Tent className="h-5 w-5 text-pink-400" />,
+                title: "퍼즐 완성 & 캠프 꾸미기",
+                desc: "퍼즐을 완성해 힐리를 획득하고, 나만의 캠프에 텐트·장비·자연물을 배치해 캠핑 씬을 꾸며보세요.",
+                accent: "border-l-pink-500/60",
               },
             ].map((item, idx) => (
               <div
@@ -165,8 +174,12 @@ export default function HillyheallyHomepage() {
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-white font-semibold mb-1">{item.title}</h3>
-                  <p className="text-gray-500 text-sm leading-relaxed">{item.desc}</p>
+                  <h3 className="text-white font-semibold mb-1">
+                    {item.title}
+                  </h3>
+                  <p className="text-gray-500 text-sm leading-relaxed">
+                    {item.desc}
+                  </p>
                 </div>
               </div>
             ))}
@@ -195,23 +208,51 @@ export default function HillyheallyHomepage() {
               {
                 icon: <Map className="h-6 w-6 text-orange-400" />,
                 iconBg: "bg-orange-400/10",
-                title: "지도 기반 트레일 탐색",
-                desc: "전국 트레일을 지도에서 탐색하고, GPX 업로드와 체크포인트 관리로 나만의 코스를 만들어 저장하세요.",
+                title: "코스 지도 & GPX 업로드",
+                desc: "GPX 파일을 업로드해 나만의 코스 지도를 만들고, 체크포인트에 사진·메모·후기를 남겨 트레일을 완성하세요.",
                 hover: "hover:border-orange-500/30",
               },
               {
-                icon: <Users className="h-6 w-6 text-pink-400" />,
+                icon: <Stamp className="h-6 w-6 text-pink-400" />,
                 iconBg: "bg-pink-400/10",
-                title: "모험 생성 & 참가자 관리",
-                desc: "모험을 열고 참가 신청을 받아보세요. 승인·거절·강제 퇴출과 유저 초대, 공지사항까지 호스트가 필요한 모든 기능을 제공합니다.",
+                title: "스탬프 지도",
+                desc: "로게이닝에서 영감을 받은 스탬프 수집 지도. 실제 장소를 방문해 스탬프를 찍고, 모든 포인트를 완료하세요.",
                 hover: "hover:border-pink-500/30",
               },
               {
-                icon: <Star className="h-6 w-6 text-orange-300" />,
+                icon: <Users className="h-6 w-6 text-orange-300" />,
                 iconBg: "bg-orange-300/10",
-                title: "후기 & 평점",
-                desc: "산행을 마친 승인 참가자만 후기를 남길 수 있어요. 0.5 단위 별점 슬라이더로 솔직한 경험을 기록하세요.",
+                title: "모험 생성 & 참가자 관리",
+                desc: "코스 또는 스탬프 모험을 만들고, 참가 신청 승인·거절, 유저 초대, 공지사항까지 호스트에게 필요한 모든 기능을 제공합니다.",
                 hover: "hover:border-orange-400/30",
+              },
+              {
+                icon: <Navigation className="h-6 w-6 text-pink-300" />,
+                iconBg: "bg-pink-300/10",
+                title: "실시간 위치 공유 & GPS 기록",
+                desc: "모험 중 모험자 간 실시간 위치를 공유하고, GPS로 이동 경로를 자동 기록합니다. 백그라운드에서도 동작합니다.",
+                hover: "hover:border-pink-400/30",
+              },
+              {
+                icon: <Puzzle className="h-6 w-6 text-orange-400" />,
+                iconBg: "bg-orange-400/10",
+                title: "퍼즐 & 힐리",
+                desc: "모험을 완료해 퍼즐 조각을 모으고, 퍼즐을 완성하면 앱 내 화폐 '힐리'를 획득합니다. 힐리로 캠프 오브젝트를 해금하세요.",
+                hover: "hover:border-orange-500/30",
+              },
+              {
+                icon: <Tent className="h-6 w-6 text-violet-400" />,
+                iconBg: "bg-violet-400/10",
+                title: "나만의 캠프",
+                desc: "나만의 캠핑 씬을 꾸며보세요. 배경·지면·텐트·장비·자연·동물을 자유롭게 배치할 수 있습니다.",
+                hover: "hover:border-violet-500/30",
+              },
+              {
+                icon: <Star className="h-6 w-6 text-pink-400" />,
+                iconBg: "bg-pink-400/10",
+                title: "후기 & 경로 카드 공유",
+                desc: "산행을 마치면 별점 후기를 남기고, GPS 이동 경로를 카드로 만들어 공유할 수 있어요.",
+                hover: "hover:border-pink-500/30",
               },
             ].map((item, idx) => (
               <div
@@ -219,11 +260,15 @@ export default function HillyheallyHomepage() {
                 className={`p-6 rounded-2xl bg-white/[0.03] border border-white/[0.06] ${item.hover} transition-all duration-300 animate-fade-in-up`}
                 style={{ animationDelay: `${idx * 100}ms` }}
               >
-                <div className={`w-11 h-11 ${item.iconBg} rounded-xl flex items-center justify-center mb-5`}>
+                <div
+                  className={`w-11 h-11 ${item.iconBg} rounded-xl flex items-center justify-center mb-5`}
+                >
                   {item.icon}
                 </div>
                 <h3 className="text-white font-semibold mb-2">{item.title}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">{item.desc}</p>
+                <p className="text-gray-500 text-sm leading-relaxed">
+                  {item.desc}
+                </p>
               </div>
             ))}
           </div>
@@ -247,7 +292,7 @@ export default function HillyheallyHomepage() {
           </div>
           <div className="animate-fade-in-up delay-300">
             <p className="text-gray-500 mb-4 max-w-xl mx-auto text-sm leading-relaxed">
-              코스를 발견하고, 사람을 만나고, 경험을 기록으로 남겨보세요.
+              코스를 발견하고, 퍼즐을 완성하고, 나만의 캠프를 꾸며보세요.
             </p>
           </div>
         </div>
@@ -265,22 +310,33 @@ export default function HillyheallyHomepage() {
                   width={40}
                   height={40}
                 />
-                <span className="text-xl font-bold text-white">Hilly Heally</span>
+                <span className="text-xl font-bold text-white">
+                  Hilly Heally
+                </span>
               </div>
               <p className="text-gray-600 text-sm">상호명: 주식회사 힐리힐리</p>
-              <p className="text-gray-600 text-sm">대표자: 정영교</p>
+              <p className="text-gray-600 text-sm">대표자: 박준섭</p>
               <p className="text-gray-600 text-sm">
                 주소: 서울시 서초구 서초중앙로 123, 지하 1층 1003호
               </p>
               <p className="text-gray-600 text-sm">사업자번호: 720-86-03798</p>
-              <p className="text-gray-600 text-sm">Tel: 1800-5191 FAX: 02-6455-6023</p>
-              <p className="text-gray-600 text-sm">Mail: service@hillyheally.com</p>
+              <p className="text-gray-600 text-sm">
+                Tel: 1800-5191 FAX: 02-6455-6023
+              </p>
+              <p className="text-gray-600 text-sm">
+                Mail: service@hillyheally.com
+              </p>
             </div>
           </div>
           <div className="border-t border-white/[0.05] mt-8 pt-8 text-center text-gray-600">
-            <p className="text-sm">&copy; 2025 Hilly Heally. All rights reserved.</p>
+            <p className="text-sm">
+              &copy; 2025 Hilly Heally. All rights reserved.
+            </p>
             <div className="mt-3 flex items-center justify-center gap-6 text-sm">
-              <Link href="/terms" className="hover:text-white transition-colors">
+              <Link
+                href="/terms"
+                className="hover:text-white transition-colors"
+              >
                 서비스 이용약관
               </Link>
               <span className="text-gray-700">|</span>
