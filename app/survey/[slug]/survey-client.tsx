@@ -18,7 +18,7 @@ type Props = {
 export default function SurveyClient({ survey, slug }: Props) {
   const allQuestions = useMemo(
     () => survey.sections.flatMap((s) => s.questions),
-    [survey]
+    [survey],
   );
 
   const [answers, setAnswers] = useState<SurveyAnswers>({});
@@ -27,7 +27,7 @@ export default function SurveyClient({ survey, slug }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const answeredCount = Object.values(answers).filter(
-    (v) => v !== null && v !== undefined && v !== ""
+    (v) => v !== null && v !== undefined && v !== "",
   ).length;
   const progress =
     allQuestions.length === 0
@@ -49,14 +49,14 @@ export default function SurveyClient({ survey, slug }: Props) {
         meta: {
           user_agent:
             typeof navigator !== "undefined" ? navigator.userAgent : null,
-          locale:
-            typeof navigator !== "undefined" ? navigator.language : null,
+          locale: typeof navigator !== "undefined" ? navigator.language : null,
           answered_count: answeredCount,
           total_questions: allQuestions.length,
         },
       });
       setSubmitted(true);
-      if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+      if (typeof window !== "undefined")
+        window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e) {
       setError(e instanceof Error ? e.message : "제출 중 오류가 발생했습니다.");
     } finally {
@@ -113,7 +113,8 @@ export default function SurveyClient({ survey, slug }: Props) {
                 </span>
               </h1>
               <p className="text-sm text-gray-400">
-                답변은 익명으로 저장됩니다. 편한 만큼만 답해주세요.
+                자유롭게 생각나는대로 답해주세요. 어려운 질문엔 답을 안 써도
+                돼요.
               </p>
             </div>
 
@@ -158,7 +159,7 @@ export default function SurveyClient({ survey, slug }: Props) {
                   "inline-flex items-center justify-center gap-2 px-8 py-3 rounded-full font-medium text-sm",
                   "bg-gradient-to-r from-orange-400 to-pink-500 text-white shadow-lg shadow-orange-500/20",
                   "transition-all hover:scale-[1.02] hover:shadow-orange-500/30",
-                  "disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed"
+                  "disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed",
                 )}
               >
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -259,7 +260,7 @@ function ScaleField({
                 "border",
                 active
                   ? "bg-gradient-to-r from-orange-400 to-pink-500 text-white border-transparent shadow-md shadow-orange-500/20"
-                  : "bg-white/[0.03] border-white/10 text-gray-300 hover:border-orange-400/40 hover:text-white"
+                  : "bg-white/[0.03] border-white/10 text-gray-300 hover:border-orange-400/40 hover:text-white",
               )}
             >
               {n}
@@ -300,7 +301,7 @@ function ChoiceField({
               "px-4 h-10 rounded-lg text-sm font-medium transition-all border",
               active
                 ? "bg-gradient-to-r from-orange-400 to-pink-500 text-white border-transparent shadow-md shadow-orange-500/20"
-                : "bg-white/[0.03] border-white/10 text-gray-300 hover:border-orange-400/40 hover:text-white"
+                : "bg-white/[0.03] border-white/10 text-gray-300 hover:border-orange-400/40 hover:text-white",
             )}
           >
             {opt}
