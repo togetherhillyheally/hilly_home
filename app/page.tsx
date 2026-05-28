@@ -107,7 +107,7 @@ export default function HillyheallyHomepage() {
             <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4 tracking-tight">
               함께 걷는 경험,{" "}
               <span className="bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">
-                이렇게 만들어집니다
+                이렇게 만들어집니다!
               </span>
             </h2>
             <p className="text-gray-500 text-base max-w-xl mx-auto">
