@@ -17,6 +17,8 @@ FROM node:20-alpine AS runner
 
 # 시스템 기본 설정
 ENV NODE_ENV=production
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3200
 
 # 앱 디렉터리 준비
 WORKDIR /app
@@ -26,7 +28,6 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/static ./.next/static
 
-# 포트 설정 (Next.js 기본 포트는 3000)
 EXPOSE 3200
 
 # 실행 명령
