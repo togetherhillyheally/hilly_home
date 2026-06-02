@@ -1,0 +1,12 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["JG26695UN3.com.hillyheally.app"],
+        "components": [
+          { "/": "/a/*" }
+        ]
+      }
+    ]
+  }
+}

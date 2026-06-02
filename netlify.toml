@@ -9,3 +9,8 @@
   for = "/.well-known/assetlinks.json"
   [headers.values]
     Content-Type = "application/json"
+
+[[headers]]
+  for = "/.well-known/apple-app-site-association"
+  [headers.values]
+    Content-Type = "application/json"
