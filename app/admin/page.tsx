@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminLoginPage() {
   const session = await readAdminSession();
-  if (session) redirect("/admin/delete-requests");
+  if (session) redirect("/admin/dashboard");
 
   return (
     <main className="container mx-auto px-4 py-20">
