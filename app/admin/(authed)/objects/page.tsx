@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Coins } from "lucide-react";
+import { Coins, Plus } from "lucide-react";
 import { adminList } from "@/lib/admin-rest";
+import { categoryLabel } from "@/lib/basecamp-object-constants";
 
 export const dynamic = "force-dynamic";
 
@@ -61,13 +62,22 @@ export default async function ObjectsPage({
 
   return (
     <main className="p-6 lg:p-10">
-      <header className="mb-6">
-        <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
-          오브젝트 카탈로그
-        </h1>
-        <p className="text-sm text-gray-400 mt-1">
-          총 {total.toLocaleString()}개
-        </p>
+      <header className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
+            오브젝트 카탈로그
+          </h1>
+          <p className="text-sm text-gray-400 mt-1">
+            총 {total.toLocaleString()}개
+          </p>
+        </div>
+        <Link
+          href="/admin/objects/new"
+          className="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium transition-colors"
+        >
+          <Plus className="h-4 w-4" />
+          새 오브젝트
+        </Link>
       </header>
 
       <div className="mb-5 flex flex-wrap gap-1.5">
@@ -91,7 +101,7 @@ export default async function ObjectsPage({
                 : "bg-white/[0.04] text-gray-400 border border-white/10 hover:text-white"
             }`}
           >
-            {c}
+            {categoryLabel(c)}
           </Link>
         ))}
       </div>
@@ -103,11 +113,12 @@ export default async function ObjectsPage({
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
           {rows.map((o) => (
-            <div
+            <Link
               key={o.id}
-              className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden"
+              href={`/admin/objects/${o.id}`}
+              className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden hover:border-orange-500/40 hover:bg-white/[0.04] transition-colors group"
             >
-              <div className="aspect-square bg-white/[0.04] relative">
+              <div className="aspect-square bg-checkerboard">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={publicImageUrl(o.storage_path, o.created_at)}
@@ -115,24 +126,29 @@ export default async function ObjectsPage({
                   className="w-full h-full object-contain"
                   loading="lazy"
                 />
-                {o.unlock_cost != null && o.unlock_cost > 0 ? (
-                  <span className="absolute top-1.5 right-1.5 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-black/60 text-orange-300 text-[10px] font-mono">
-                    <Coins className="h-2.5 w-2.5" />
-                    {o.unlock_cost}
-                  </span>
-                ) : null}
               </div>
               <div className="p-3">
-                <div className="text-sm text-white truncate" title={o.name}>
+                <div
+                  className="text-sm text-white truncate group-hover:text-orange-300 transition-colors"
+                  title={o.name}
+                >
                   {o.name}
                 </div>
                 <div className="flex items-center justify-between mt-1 text-[10px] text-gray-500">
                   <span className="px-1.5 py-0.5 rounded-md bg-white/[0.04] border border-white/10">
-                    {o.category}
+                    {categoryLabel(o.category)}
                   </span>
-                  {o.sort_order != null ? (
-                    <span className="font-mono">#{o.sort_order}</span>
-                  ) : null}
+                  <div className="flex items-center gap-2">
+                    {o.unlock_cost != null && o.unlock_cost > 0 ? (
+                      <span className="inline-flex items-center gap-0.5 text-orange-300 font-mono">
+                        <Coins className="h-3 w-3" />
+                        {o.unlock_cost}
+                      </span>
+                    ) : null}
+                    {o.sort_order != null ? (
+                      <span className="font-mono">#{o.sort_order}</span>
+                    ) : null}
+                  </div>
                 </div>
                 {o.design_key ? (
                   <code className="block mt-1 text-[10px] text-gray-600 truncate">
@@ -140,7 +156,7 @@ export default async function ObjectsPage({
                   </code>
                 ) : null}
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
