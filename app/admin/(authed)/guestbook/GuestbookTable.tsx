@@ -96,9 +96,6 @@ export default function GuestbookTable({ rows }: { rows: GuestbookRow[] }) {
                         <span className="text-gray-600">(없음)</span>
                       )}
                     </div>
-                    <code className="text-[10px] text-gray-600">
-                      {r.author_user_id.slice(0, 8)}…
-                    </code>
                   </td>
                   <td className="px-4 py-3 text-xs">
                     <div className="text-gray-300">
@@ -106,9 +103,6 @@ export default function GuestbookTable({ rows }: { rows: GuestbookRow[] }) {
                         <span className="text-gray-600">(없음)</span>
                       )}
                     </div>
-                    <code className="text-[10px] text-gray-600">
-                      {r.owner_user_id.slice(0, 8)}…
-                    </code>
                   </td>
                   <td className="px-4 py-3 max-w-[320px]">
                     <div className="text-gray-200 text-xs whitespace-pre-wrap line-clamp-3">

@@ -20,6 +20,15 @@ type StampPoint = {
 
 type TrailMini = { id: string; name: string };
 
+function parseStampTitle(raw: string): { icon: string | null; label: string } {
+  const idx = raw.indexOf("|");
+  if (idx === -1) return { icon: null, label: raw };
+  return {
+    icon: raw.slice(0, idx).trim() || null,
+    label: raw.slice(idx + 1).trim() || raw,
+  };
+}
+
 function buildHref(s: { q?: string; trail?: string; page?: number }): string {
   const sp = new URLSearchParams();
   if (s.q) sp.set("q", s.q);
@@ -158,11 +167,22 @@ export default async function StampsPage({
                           <span className="text-gray-600">(없음)</span>
                         )}
                       </div>
-                      <code className="text-[10px] text-gray-600">
-                        {p.trail_id.slice(0, 8)}…
-                      </code>
                     </td>
-                    <td className="px-4 py-3 text-white">{p.title}</td>
+                    <td className="px-4 py-3">
+                      {(() => {
+                        const { icon, label } = parseStampTitle(p.title);
+                        return (
+                          <div className="flex items-center gap-2">
+                            <span className="text-white">{label}</span>
+                            {icon ? (
+                              <code className="text-[10px] text-gray-500 bg-white/[0.04] border border-white/10 rounded px-1.5 py-0.5">
+                                {icon}
+                              </code>
+                            ) : null}
+                          </div>
+                        );
+                      })()}
+                    </td>
                     <td className="px-4 py-3 text-xs text-gray-300 max-w-[280px]">
                       {p.hint ? (
                         <span className="line-clamp-2">{p.hint}</span>

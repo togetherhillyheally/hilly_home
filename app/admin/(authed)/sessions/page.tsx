@@ -261,9 +261,6 @@ export default async function SessionsPage({
                           <span className="text-gray-600">(없음)</span>
                         )}
                       </div>
-                      <code className="text-[10px] text-gray-600">
-                        {s.host_id.slice(0, 8)}…
-                      </code>
                     </td>
                     <td className="px-4 py-3 text-xs text-gray-300 whitespace-nowrap">
                       <div>{formatDate(s.meeting_at)}</div>

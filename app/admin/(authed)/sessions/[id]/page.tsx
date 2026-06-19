@@ -270,9 +270,7 @@ export default async function SessionDetailPage({
               label="호스트"
               value={
                 userMap.get(session.host_id) ?? (
-                  <code className="text-xs text-gray-500">
-                    {session.host_id.slice(0, 8)}…
-                  </code>
+                  <span className="text-gray-600">(없음)</span>
                 )
               }
             />
@@ -407,9 +405,6 @@ export default async function SessionDetailPage({
                           <span className="text-gray-600">(없음)</span>
                         )}
                       </Link>
-                      <code className="block text-[10px] text-gray-600">
-                        {p.user_id.slice(0, 8)}…
-                      </code>
                     </td>
                     <td className="px-3 py-2">
                       <span
@@ -466,7 +461,7 @@ export default async function SessionDetailPage({
                 </div>
               ) : null}
               <div className="text-[11px] text-gray-500 mt-2">
-                {userMap.get(n.author_id) ?? n.author_id.slice(0, 8) + "…"} ·{" "}
+                {userMap.get(n.author_id) ?? "(없음)"} ·{" "}
                 {formatDate(n.created_at)}
               </div>
             </li>
@@ -515,7 +510,7 @@ export default async function SessionDetailPage({
                   href={`/admin/users/${r.author_id}`}
                   className="hover:text-white"
                 >
-                  {userMap.get(r.author_id) ?? r.author_id.slice(0, 8) + "…"}
+                  {userMap.get(r.author_id) ?? "(없음)"}
                 </Link>{" "}
                 · {formatDate(r.created_at)}
               </div>
@@ -544,9 +539,7 @@ export default async function SessionDetailPage({
                     href={`/admin/users/${l.user_id}`}
                     className="text-sm text-white hover:text-orange-300 truncate"
                   >
-                    {l.nickname ??
-                      userMap.get(l.user_id) ??
-                      l.user_id.slice(0, 8) + "…"}
+                    {l.nickname ?? userMap.get(l.user_id) ?? "(없음)"}
                   </Link>
                   {l.hidden ? (
                     <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] border bg-gray-500/15 text-gray-300 border-gray-500/30">
@@ -599,9 +592,7 @@ export default async function SessionDetailPage({
                   href={`/admin/users/${m.user_id}`}
                   className="text-xs text-gray-200 hover:text-orange-300 truncate"
                 >
-                  {m.nickname ??
-                    userMap.get(m.user_id) ??
-                    m.user_id.slice(0, 8) + "…"}
+                  {m.nickname ?? userMap.get(m.user_id) ?? "(없음)"}
                 </Link>
                 <span className="text-[10px] text-gray-500 whitespace-nowrap">
                   {formatDate(m.created_at)}

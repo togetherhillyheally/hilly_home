@@ -184,9 +184,6 @@ export default function UsersTable({
                             </span>
                           ) : null}
                         </Link>
-                        <code className="block text-[10px] text-gray-500">
-                          {p.id.slice(0, 8)}…
-                        </code>
                       </div>
                     </div>
                   </td>

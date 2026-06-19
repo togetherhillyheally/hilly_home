@@ -94,9 +94,7 @@ export default async function NotificationsPage() {
                       <span>
                         →{" "}
                         {userMap.get(n.user_id) ?? (
-                          <code className="text-gray-600">
-                            {n.user_id.slice(0, 8)}…
-                          </code>
+                          <span className="text-gray-600">(없음)</span>
                         )}
                       </span>
                       {n.is_read ? (

@@ -150,9 +150,6 @@ export default function ReportsTable({ rows }: { rows: ReportRow[] }) {
                         <span className="text-gray-600">(없음)</span>
                       )}
                     </div>
-                    <code className="text-[10px] text-gray-500">
-                      {r.reporter_id.slice(0, 8)}…
-                    </code>
                   </td>
                   <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">
                     {formatDate(r.created_at)}

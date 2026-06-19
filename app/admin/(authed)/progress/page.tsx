@@ -180,9 +180,6 @@ export default async function ProgressPage({
                             <span className="text-gray-600">(없음)</span>
                           )}
                         </div>
-                        <code className="text-[10px] text-gray-500">
-                          {p.id.slice(0, 8)}…
-                        </code>
                       </td>
                       <td className="px-4 py-3 text-xs">
                         <div className="font-mono text-gray-300">

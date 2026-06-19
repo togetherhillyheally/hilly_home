@@ -65,7 +65,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   {
     title: "콘텐츠",
     items: [
-      { href: "/admin/trails", label: "트레일 (코스 지도)", icon: Map },
+      { href: "/admin/trails", label: "코스 지도", icon: Map },
       { href: "/admin/stamps", label: "스탬프 지도", icon: Stamp },
       { href: "/admin/sessions", label: "모험 (세션)", icon: Mountain },
     ],

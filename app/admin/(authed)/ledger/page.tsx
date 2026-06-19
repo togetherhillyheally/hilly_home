@@ -228,9 +228,6 @@ export default async function LedgerPage({
                             <span className="text-gray-600">(없음)</span>
                           )}
                         </div>
-                        <code className="text-[10px] text-gray-600">
-                          {r.user_id.slice(0, 8)}…
-                        </code>
                       </td>
                       <td className="px-3 py-3 text-xs">
                         <span
@@ -240,7 +237,11 @@ export default async function LedgerPage({
                               : "bg-pink-500/15 text-pink-300 border-pink-500/30"
                           }`}
                         >
-                          {r.currency}
+                          {r.currency === "campfire"
+                            ? "모닥불"
+                            : r.currency === "firewood"
+                              ? "장작"
+                              : r.currency}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-xs">

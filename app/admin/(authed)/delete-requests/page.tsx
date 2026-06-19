@@ -4,21 +4,36 @@ import DeleteRequestsTable, {
 
 export const dynamic = "force-dynamic";
 
-async function fetchRequests(): Promise<DeletionRequest[]> {
+async function supabaseGet<T>(path: string): Promise<T[]> {
   const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/account_deletion_requests?select=id,user_id,phone_number,phone_e164,status,source,note,requested_at,processed_at,processed_by&order=requested_at.desc&limit=200`,
-    {
-      headers: {
-        apikey: SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
-      },
-      cache: "no-store",
-    }
-  );
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: {
+      apikey: SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+    },
+    cache: "no-store",
+  });
   if (!res.ok) return [];
-  return (await res.json()) as DeletionRequest[];
+  return (await res.json()) as T[];
+}
+
+async function fetchRequests(): Promise<DeletionRequest[]> {
+  const requests = await supabaseGet<DeletionRequest>(
+    "account_deletion_requests?select=id,user_id,phone_number,phone_e164,status,source,note,requested_at,processed_at,processed_by&order=requested_at.desc&limit=200"
+  );
+  const userIds = Array.from(
+    new Set(requests.map((r) => r.user_id).filter((v): v is string => !!v))
+  );
+  if (userIds.length === 0) return requests;
+  const profiles = await supabaseGet<{ id: string; nickname: string | null }>(
+    `profiles?select=id,nickname&id=in.(${userIds.join(",")})`
+  );
+  const nameMap = new Map(profiles.map((p) => [p.id, p.nickname]));
+  return requests.map((r) => ({
+    ...r,
+    nickname: r.user_id ? (nameMap.get(r.user_id) ?? null) : null,
+  }));
 }
 
 export default async function DeleteRequestsPage() {

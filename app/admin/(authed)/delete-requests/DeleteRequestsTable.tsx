@@ -17,6 +17,7 @@ export type DeletionRequest = {
   requested_at: string;
   processed_at: string | null;
   processed_by: string | null;
+  nickname?: string | null;
 };
 
 function formatDate(iso: string): string {
@@ -106,7 +107,7 @@ export default function DeleteRequestsTable({
           <tr>
             <th className="text-left px-4 py-3 font-medium">상태</th>
             <th className="text-left px-4 py-3 font-medium">휴대폰</th>
-            <th className="text-left px-4 py-3 font-medium">user_id</th>
+            <th className="text-left px-4 py-3 font-medium">닉네임</th>
             <th className="text-left px-4 py-3 font-medium">신청 시각</th>
             <th className="text-left px-4 py-3 font-medium">처리 시각</th>
             <th className="text-right px-4 py-3 font-medium">액션</th>
@@ -128,10 +129,10 @@ export default function DeleteRequestsTable({
                   <div className="font-mono">{maskPhone(r.phone_number)}</div>
                   <div className="text-[11px] text-gray-500">{r.phone_e164}</div>
                 </td>
-                <td className="px-4 py-3 text-gray-300">
-                  <code className="text-[11px] text-gray-500">
-                    {r.user_id ? r.user_id.slice(0, 8) + "…" : "(없음)"}
-                  </code>
+                <td className="px-4 py-3 text-gray-300 text-xs">
+                  {r.nickname ?? (
+                    <span className="text-gray-600">(없음)</span>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">
                   {formatDate(r.requested_at)}

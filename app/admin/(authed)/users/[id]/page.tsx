@@ -304,14 +304,6 @@ export default async function UserDetailPage({
                   label="번호 인증"
                   value={formatDate(profile.phone_verified_at)}
                 />
-                <div>
-                  <dt className="text-gray-500">user_id</dt>
-                  <dd>
-                    <code className="text-[10px] text-gray-300">
-                      {profile.id}
-                    </code>
-                  </dd>
-                </div>
               </dl>
             </div>
           </div>
@@ -431,9 +423,7 @@ export default async function UserDetailPage({
               <div className="text-[11px] text-gray-500 mt-1">
                 →{" "}
                 {ownerMap.get(g.owner_user_id) ?? (
-                  <code className="text-gray-600">
-                    {g.owner_user_id.slice(0, 8)}…
-                  </code>
+                  <span className="text-gray-600">(없음)</span>
                 )}{" "}
                 · {formatDate(g.created_at)}
               </div>
