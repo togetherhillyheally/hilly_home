@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import mapboxgl, { type LngLatBoundsLike } from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { applyKoreanLabels } from "@/lib/mapbox-locale";
 
 const TRAIL_COLOR = "#DC2F55";
 const CP_COLOR = "#fb923c";
@@ -153,6 +154,7 @@ export default function CheckpointMap({
     });
 
     map.on("load", () => {
+      applyKoreanLabels(map);
       const routes = toRoutes(coordinates);
       const geometry =
         routes.length === 1

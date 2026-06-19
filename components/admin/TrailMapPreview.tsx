@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import mapboxgl, { type LngLatBoundsLike } from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { applyKoreanLabels } from "@/lib/mapbox-locale";
 
 const TRAIL_COLOR = "#DC2F55";
 const START_COLOR = "#22c55e";
@@ -133,6 +134,7 @@ export default function TrailMapPreview({
     });
 
     map.on("load", () => {
+      applyKoreanLabels(map);
       const routes = toRoutes(coordinates);
       const geometry =
         routes.length === 1

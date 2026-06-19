@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Search, MapPin, Plus } from "lucide-react";
 import { adminList, escapeIlike } from "@/lib/admin-rest";
 import Pagination from "../Pagination";
 
@@ -7,32 +7,39 @@ export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 50;
 
-type StampPoint = {
+type ActiveFilter = "all" | "active" | "inactive";
+
+const ACTIVE_LABELS: Record<ActiveFilter, string> = {
+  all: "전체",
+  active: "활성",
+  inactive: "비활성",
+};
+
+type StampTrail = {
   id: string;
-  trail_id: string;
-  title: string;
-  hint: string | null;
-  lng: number;
-  lat: number;
-  sort_order: number;
+  name: string;
+  series_name: string | null;
+  is_active: boolean;
+  sort_order: number | null;
   created_at: string;
 };
 
-type TrailMini = { id: string; name: string };
-
-function parseStampTitle(raw: string): { icon: string | null; label: string } {
-  const idx = raw.indexOf("|");
-  if (idx === -1) return { icon: null, label: raw };
-  return {
-    icon: raw.slice(0, idx).trim() || null,
-    label: raw.slice(idx + 1).trim() || raw,
-  };
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleString("ko-KR", {
+    year: "2-digit",
+    month: "2-digit",
+    day: "2-digit",
+  });
 }
 
-function buildHref(s: { q?: string; trail?: string; page?: number }): string {
+function buildHref(s: {
+  q?: string;
+  active?: ActiveFilter;
+  page?: number;
+}): string {
   const sp = new URLSearchParams();
   if (s.q) sp.set("q", s.q);
-  if (s.trail) sp.set("trail", s.trail);
+  if (s.active && s.active !== "all") sp.set("active", s.active);
   if (s.page && s.page > 1) sp.set("page", String(s.page));
   const qs = sp.toString();
   return qs ? `/admin/stamps?${qs}` : "/admin/stamps";
@@ -41,99 +48,129 @@ function buildHref(s: { q?: string; trail?: string; page?: number }): string {
 export default async function StampsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; trail?: string; page?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    active?: string;
+    page?: string;
+  }>;
 }) {
   const sp = await searchParams;
   const q = (sp.q ?? "").trim();
-  const trailFilter = (sp.trail ?? "").trim();
+  const active = (
+    ["active", "inactive"].includes(sp.active ?? "") ? sp.active : "all"
+  ) as ActiveFilter;
   const page = Math.max(1, Number(sp.page) || 1);
 
   const params = new URLSearchParams({
-    select: "id,trail_id,title,hint,lng,lat,sort_order,created_at",
-    order: "trail_id.asc,sort_order.asc",
+    select: "id,name,series_name,is_active,sort_order,created_at",
+    order: "sort_order.asc,created_at.desc",
   });
+  params.set("map_type", "eq.stamp");
   if (q) {
     const t = escapeIlike(q);
-    params.set("or", `(title.ilike.*${t}*,hint.ilike.*${t}*)`);
+    params.set("or", `(name.ilike.*${t}*,series_name.ilike.*${t}*)`);
   }
-  if (trailFilter) params.set("trail_id", `eq.${trailFilter}`);
+  if (active !== "all") {
+    params.set("is_active", active === "active" ? "eq.true" : "eq.false");
+  }
 
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
-  const { rows, total } = await adminList<StampPoint>(
-    `stamp_points?${params.toString()}`,
+  const { rows, total } = await adminList<StampTrail>(
+    `trails?${params.toString()}`,
     { from, to, count: true }
   );
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  const trailIds = Array.from(new Set(rows.map((r) => r.trail_id)));
-  const trailMap = new Map<string, string>();
+  // 각 스탬프 지도의 포인트 수 — stamp_points 한 번 조회 후 group
+  const trailIds = rows.map((r) => r.id);
+  const pointCountByTrail = new Map<string, number>();
   if (trailIds.length > 0) {
-    const { rows: trails } = await adminList<TrailMini>(
-      `trails?select=id,name&id=in.(${trailIds.join(",")})`
+    const { rows: pts } = await adminList<{ trail_id: string }>(
+      `stamp_points?select=trail_id&trail_id=in.(${trailIds.join(",")})`,
+      { from: 0, to: 4999 }
     );
-    trails.forEach((t) => trailMap.set(t.id, t.name));
+    for (const p of pts) {
+      pointCountByTrail.set(
+        p.trail_id,
+        (pointCountByTrail.get(p.trail_id) ?? 0) + 1
+      );
+    }
   }
 
-  // 트레일 필터 드롭다운용: 스탬프 맵 트레일 전체
-  const { rows: stampTrails } = await adminList<TrailMini>(
-    "trails?select=id,name&map_type=eq.stamp&order=name.asc"
-  );
+  const activeTabs: ActiveFilter[] = ["all", "active", "inactive"];
 
   return (
     <main className="p-6 lg:p-10">
-      <header className="mb-6">
-        <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
-          스탬프 지도
-        </h1>
-        <p className="text-sm text-gray-400 mt-1">
-          총 {total.toLocaleString()}개 포인트
-        </p>
+      <header className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
+            스탬프 지도
+          </h1>
+          <p className="text-sm text-gray-400 mt-1">
+            총 {total.toLocaleString()}개
+          </p>
+        </div>
+        <Link
+          href="/admin/stamps/new"
+          className="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium transition-colors"
+        >
+          <Plus className="h-4 w-4" />
+          새 스탬프 지도
+        </Link>
       </header>
 
-      <form
-        action="/admin/stamps"
-        method="get"
-        className="mb-4 flex flex-wrap gap-2"
-      >
-        <div className="relative flex-1 min-w-[200px] max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
-          <input
-            name="q"
-            type="text"
-            placeholder="제목 / 힌트"
-            defaultValue={q}
-            className="w-full h-10 pl-9 pr-3 rounded-lg bg-white/[0.04] border border-white/10 text-white placeholder:text-gray-600 text-sm focus:outline-none focus:border-orange-500/50"
-          />
-        </div>
-        <select
-          name="trail"
-          defaultValue={trailFilter}
-          className="h-10 px-3 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:outline-none focus:border-orange-500/50"
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <form
+          action="/admin/stamps"
+          method="get"
+          className="flex gap-2 flex-1 max-w-md min-w-[240px]"
         >
-          <option value="">모든 트레일</option>
-          {stampTrails.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name}
-            </option>
-          ))}
-        </select>
-        <button
-          type="submit"
-          className="px-4 h-10 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-white text-sm"
-        >
-          적용
-        </button>
-        {(q || trailFilter) && (
-          <Link
-            href="/admin/stamps"
-            className="px-3 h-10 inline-flex items-center rounded-lg bg-white/[0.02] border border-white/10 text-gray-400 text-xs hover:text-white"
+          <input type="hidden" name="active" value={active} />
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
+            <input
+              name="q"
+              type="text"
+              placeholder="이름 / 시리즈명"
+              defaultValue={q}
+              className="w-full h-10 pl-9 pr-3 rounded-lg bg-white/[0.04] border border-white/10 text-white placeholder:text-gray-600 text-sm focus:outline-none focus:border-orange-500/50"
+            />
+          </div>
+          <button
+            type="submit"
+            className="px-4 h-10 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-white text-sm"
           >
-            초기화
-          </Link>
-        )}
-      </form>
+            검색
+          </button>
+        </form>
+      </div>
+
+      <div className="mb-4 flex flex-wrap items-center gap-4 text-xs">
+        <div className="flex flex-wrap gap-1.5">
+          <span className="text-gray-500 self-center mr-1">상태</span>
+          {activeTabs.map((t) => {
+            const isActive = active === t;
+            return (
+              <Link
+                key={t}
+                href={buildHref({
+                  q: q || undefined,
+                  active: t,
+                })}
+                className={`px-3 h-7 inline-flex items-center rounded-md font-medium transition-colors ${
+                  isActive
+                    ? "bg-orange-500/20 text-orange-200 border border-orange-500/40"
+                    : "bg-white/[0.04] text-gray-400 border border-white/10 hover:text-white"
+                }`}
+              >
+                {ACTIVE_LABELS[t]}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
 
       {rows.length === 0 ? (
         <div className="rounded-xl border border-white/10 bg-white/[0.02] p-12 text-center text-sm text-gray-500">
@@ -142,67 +179,71 @@ export default async function StampsPage({
       ) : (
         <div className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[820px]">
+            <table className="w-full text-sm min-w-[800px]">
               <thead className="bg-white/[0.03] text-gray-400 text-xs">
                 <tr>
-                  <th className="text-center px-3 py-3 font-medium w-12">#</th>
-                  <th className="text-left px-4 py-3 font-medium">트레일</th>
-                  <th className="text-left px-4 py-3 font-medium">제목</th>
-                  <th className="text-left px-4 py-3 font-medium">힌트</th>
-                  <th className="text-right px-4 py-3 font-medium">좌표</th>
+                  <th className="text-left px-4 py-3 font-medium">스탬프 지도</th>
+                  <th className="text-left px-4 py-3 font-medium">시리즈</th>
+                  <th className="text-right px-4 py-3 font-medium">포인트</th>
+                  <th className="text-right px-3 py-3 font-medium">정렬 순서</th>
+                  <th className="text-left px-4 py-3 font-medium">생성일</th>
+                  <th className="text-center px-3 py-3 font-medium">활성</th>
                 </tr>
               </thead>
               <tbody>
-                {rows.map((p) => (
-                  <tr
-                    key={p.id}
-                    className="border-t border-white/5 hover:bg-white/[0.02]"
-                  >
-                    <td className="px-3 py-3 text-center text-xs text-gray-500 font-mono">
-                      {p.sort_order}
-                    </td>
-                    <td className="px-4 py-3 text-xs">
-                      <div className="text-gray-200 truncate max-w-[200px]">
-                        {trailMap.get(p.trail_id) ?? (
-                          <span className="text-gray-600">(없음)</span>
+                {rows.map((t) => {
+                  const pointCount = pointCountByTrail.get(t.id) ?? 0;
+                  return (
+                    <tr
+                      key={t.id}
+                      className="border-t border-white/5 hover:bg-white/[0.02]"
+                    >
+                      <td className="px-4 py-3">
+                        <Link
+                          href={`/admin/stamps/${t.id}`}
+                          className="text-white truncate max-w-[280px] block hover:text-orange-300 transition-colors"
+                        >
+                          {t.name}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-gray-300">
+                        {t.series_name ? (
+                          <span className="truncate inline-block max-w-[180px] align-middle">
+                            {t.series_name}
+                          </span>
+                        ) : (
+                          <span className="text-gray-600">—</span>
                         )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      {(() => {
-                        const { icon, label } = parseStampTitle(p.title);
-                        return (
-                          <div className="flex items-center gap-2">
-                            <span className="text-white">{label}</span>
-                            {icon ? (
-                              <code className="text-[10px] text-gray-500 bg-white/[0.04] border border-white/10 rounded px-1.5 py-0.5">
-                                {icon}
-                              </code>
-                            ) : null}
-                          </div>
-                        );
-                      })()}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-gray-300 max-w-[280px]">
-                      {p.hint ? (
-                        <span className="line-clamp-2">{p.hint}</span>
-                      ) : (
-                        <span className="text-gray-600">—</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-right text-[11px] font-mono text-gray-400 whitespace-nowrap">
-                      <a
-                        href={`https://map.kakao.com/link/map/${encodeURIComponent(p.title)},${p.lat},${p.lng}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="hover:text-orange-300"
-                        title="카카오맵에서 보기"
-                      >
-                        {p.lat.toFixed(5)}, {p.lng.toFixed(5)}
-                      </a>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
+                        <Link
+                          href={`/admin/stamps/${t.id}`}
+                          className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-orange-500/10 border border-orange-500/30 text-orange-200 text-xs font-medium hover:bg-orange-500/20"
+                        >
+                          <MapPin className="h-3 w-3" />
+                          {pointCount}개
+                        </Link>
+                      </td>
+                      <td className="px-3 py-3 text-right text-xs text-gray-400 font-mono">
+                        {t.sort_order ?? "—"}
+                      </td>
+                      <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">
+                        {formatDate(t.created_at)}
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        {t.is_active ? (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[10px] font-medium">
+                            활성
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-white/[0.06] border border-white/10 text-gray-500 text-[10px] font-medium">
+                            비활성
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -213,7 +254,10 @@ export default async function StampsPage({
         basePath="/admin/stamps"
         page={page}
         totalPages={totalPages}
-        query={{ q: q || undefined, trail: trailFilter || undefined }}
+        query={{
+          q: q || undefined,
+          active: active !== "all" ? active : undefined,
+        }}
       />
     </main>
   );
