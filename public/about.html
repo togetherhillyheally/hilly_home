@@ -1,0 +1,843 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#08080f" />
+  <title>회사소개서 · Hilly Heally</title>
+  <meta name="description" content="힐리힐리 회사소개서 — 지도 기반 아웃도어 플랫폼. 길을 걷고, 지역에 머물고, 경험을 기록합니다." />
+  <meta property="og:title" content="회사소개서 · Hilly Heally" />
+  <meta property="og:description" content="길을 걷고, 지역에 머물고, 경험을 기록합니다." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="/images/favicon/favicon.ico" />
+  <style>
+    *,
+    *::before,
+    *::after { box-sizing: border-box; }
+
+    :root {
+      --bg: #08080f;
+      --fg: #ffffff;
+      --muted: #d1d5db;
+      --muted-2: #9ca3af;
+      --line: rgba(255,255,255,0.08);
+      --line-strong: rgba(255,255,255,0.16);
+      --tile: rgba(255,255,255,0.04);
+      --tile-hover: rgba(255,255,255,0.07);
+      --orange: #fb923c;
+      --orange-300: #fdba74;
+      --pink: #ec4899;
+      --pink-300: #f9a8d4;
+      --grad: linear-gradient(90deg, #fdba74 0%, #fb923c 45%, #ec4899 100%);
+    }
+
+    html, body {
+      margin: 0; padding: 0;
+      height: 100%;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo",
+        "Segoe UI", Roboto, "Noto Sans KR", "Malgun Gothic", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      letter-spacing: -0.01em;
+      overflow: hidden;
+    }
+
+    body.print-mode { overflow: auto; }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ---------- Deck shell ---------- */
+    .deck {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .ambient {
+      position: absolute; inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 900px 600px at 50% 0%, rgba(251,146,60,0.12), transparent 65%),
+        radial-gradient(ellipse 500px 400px at 100% 10%, rgba(236,72,153,0.10), transparent 60%),
+        radial-gradient(ellipse 400px 300px at 0% 100%, rgba(139,92,246,0.08), transparent 60%);
+    }
+    .grid-overlay {
+      position: absolute; inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+      background-size: 72px 72px;
+    }
+
+    /* ---------- Top bar ---------- */
+    .topbar {
+      position: absolute; top: 0; left: 0; right: 0;
+      padding: 18px 24px;
+      display: flex; align-items: center; justify-content: flex-end;
+      z-index: 30;
+    }
+
+    .toolbar { display: inline-flex; align-items: center; gap: 6px; }
+    .toolbar button {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--tile); border: 1px solid var(--line-strong);
+      color: var(--muted); padding: 7px 11px; font-size: 12px;
+      border-radius: 8px; cursor: pointer; transition: all .2s;
+      font-family: inherit; letter-spacing: -0.01em;
+    }
+    .toolbar button:hover { background: var(--tile-hover); color: var(--fg); }
+    .toolbar button svg { width: 14px; height: 14px; }
+
+    /* ---------- Stage ---------- */
+    .stage {
+      position: relative;
+      width: 100%;
+      max-width: 1100px;
+      padding: 80px 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100%;
+      z-index: 10;
+    }
+    @media (max-width: 768px) {
+      .stage { padding: 90px 24px 110px; }
+    }
+
+    .slide { display: none; width: 100%; }
+    .slide.active { display: block; }
+    .slide.cover.active { display: flex; flex-direction: column; align-items: center; }
+    .slide.active .fadein { animation: fadeInUp 0.7s cubic-bezier(0.4, 0, 0.2, 1) both; }
+    .slide.active .fadein.delay-1 { animation-delay: 0.12s; }
+    .slide.active .fadein.delay-2 { animation-delay: 0.24s; }
+    .slide.active .fadein.delay-3 { animation-delay: 0.36s; }
+    .slide.active .fadein.delay-4 { animation-delay: 0.48s; }
+    .slide.active .fadein.delay-5 { animation-delay: 0.60s; }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translate3d(0, 24px, 0); }
+      to   { opacity: 1; transform: translate3d(0, 0, 0); }
+    }
+
+    /* ---------- Slide content ---------- */
+    .eyebrow {
+      display: inline-block;
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      color: #ffffff;
+      padding: 8px 16px;
+      border: 1px solid rgba(251,146,60,0.55);
+      border-radius: 999px;
+      background: rgba(251,146,60,0.18);
+      margin-bottom: 30px;
+    }
+
+    .title {
+      font-size: clamp(30px, 4.6vw, 54px);
+      font-weight: 800;
+      line-height: 1.18;
+      letter-spacing: -0.025em;
+      margin: 0 0 24px;
+    }
+    .title .grad {
+      background: var(--grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .headline {
+      font-size: clamp(18px, 1.7vw, 22px);
+      font-weight: 600;
+      line-height: 1.55;
+      color: #ffffff;
+      max-width: 900px;
+      margin: 0 0 34px;
+      padding-left: 18px;
+      border-left: 3px solid rgba(251,146,60,0.6);
+    }
+
+    .body {
+      font-size: clamp(15px, 1.15vw, 17px);
+      line-height: 1.85;
+      color: #e5e7eb;
+      max-width: 900px;
+    }
+    .body p { margin: 0 0 16px; }
+    .body p:last-child { margin-bottom: 0; }
+    .body strong,
+    .cap-card p strong {
+      color: #ffffff;
+      font-weight: 700;
+      background-image: linear-gradient(180deg, transparent 60%, rgba(252,165,165,0.5) 60%);
+      padding: 0 2px;
+    }
+    .headline strong {
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    .icon-row {
+      margin-top: 36px;
+      display: flex; flex-wrap: wrap; gap: 10px;
+    }
+    .icon-chip {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 11px 18px;
+      background: linear-gradient(135deg, rgba(251,146,60,0.12), rgba(236,72,153,0.06));
+      border: 1px solid rgba(251,146,60,0.3);
+      border-radius: 999px;
+      font-size: 14px; font-weight: 600;
+      color: #ffffff;
+      transition: all .25s;
+    }
+    .icon-chip:hover {
+      border-color: rgba(251,146,60,0.5);
+      transform: translateY(-1px);
+    }
+    .icon-chip svg { width: 16px; height: 16px; color: var(--orange-300); }
+
+    /* ---------- Cover slide ---------- */
+    .cover { text-align: center; }
+    .cover-eyebrow {
+      display: flex; align-items: center; justify-content: center;
+      gap: 16px;
+      margin-bottom: 56px;
+      color: var(--muted-2);
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 11px;
+      letter-spacing: 0.36em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .cover-eyebrow::before, .cover-eyebrow::after {
+      content: "";
+      display: block;
+      width: 40px; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    }
+    .cover .logo-mark {
+      height: clamp(112px, 12vw, 176px);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 48px;
+    }
+    .cover .logo-mark img { height: 100%; width: auto; display: block; }
+    .cover .tagline {
+      font-size: clamp(28px, 3.2vw, 46px);
+      color: #ffffff;
+      font-weight: 700;
+      max-width: 820px;
+      margin: 0 auto 28px;
+      line-height: 1.4;
+      letter-spacing: -0.02em;
+    }
+    .cover .tagline .accent {
+      background: var(--grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .cover-slogan {
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 11px;
+      letter-spacing: 0.42em;
+      color: var(--orange-300);
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 56px;
+      display: inline-flex; align-items: center; gap: 14px;
+    }
+    .cover-slogan .sep {
+      width: 4px; height: 4px;
+      background: var(--orange-300);
+      border-radius: 50%;
+      opacity: 0.5;
+    }
+    .cover .meta {
+      font-size: 13px; color: var(--muted);
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      display: flex; align-items: flex-start; justify-content: center;
+      gap: clamp(36px, 6vw, 80px);
+      max-width: 760px;
+      margin: 0 auto;
+      padding-top: 28px;
+      border-top: 1px solid var(--line);
+    }
+    .cover .meta .meta-group {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 8px;
+    }
+    .cover .meta .meta-label {
+      color: var(--muted-2);
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+
+    /* ---------- Timeline (slide 4) ---------- */
+    .timeline { list-style: none; padding: 0; margin: 0; }
+    .timeline li {
+      display: flex; gap: 24px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .timeline li:last-child { border-bottom: 0; }
+    .timeline .when {
+      flex-shrink: 0; width: 120px;
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--orange-300);
+    }
+    .timeline .when.late { color: var(--pink-300); }
+    .timeline .what {
+      flex: 1;
+      color: #e5e7eb;
+      font-size: clamp(15px, 1.15vw, 17px);
+      font-weight: 500;
+      line-height: 1.75;
+    }
+    .timeline .what strong {
+      color: #ffffff;
+      font-weight: 700;
+      background-image: linear-gradient(180deg, transparent 60%, rgba(167,139,250,0.32) 60%);
+      padding: 0 2px;
+    }
+
+    /* ---------- Capability cards (slide 5) ---------- */
+    .cap-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    @media (max-width: 768px) {
+      .cap-grid { grid-template-columns: 1fr; }
+    }
+    .cap-card {
+      background: var(--tile); border: 1px solid var(--line);
+      border-left-width: 2px;
+      border-radius: 14px;
+      padding: 22px;
+    }
+    .cap-card.digital { border-left-color: rgba(251,146,60,0.6); }
+    .cap-card.field { border-left-color: rgba(236,72,153,0.6); }
+    .cap-card .cap-head {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 12px;
+    }
+    .cap-card .cap-head svg { width: 20px; height: 20px; }
+    .cap-card.digital .cap-head svg { color: var(--orange); }
+    .cap-card.field .cap-head svg { color: var(--pink); }
+    .cap-card .cap-head h4 { margin: 0; font-size: 16px; font-weight: 700; color: var(--fg); }
+    .cap-card .cap-head .badge {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 2px 8px;
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--orange);
+      background: rgba(251,146,60,0.14);
+      border: 1px solid rgba(251,146,60,0.35);
+      border-radius: 999px;
+      vertical-align: middle;
+    }
+    .cap-card p {
+      margin: 0 0 14px;
+      font-size: clamp(15px, 1.15vw, 17px);
+      line-height: 1.85;
+      color: #e5e7eb;
+    }
+    .cap-card p:last-child { margin-bottom: 0; }
+
+    /* ---------- Catchphrase ---------- */
+    .catchphrase {
+      display: inline-block;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      padding: 5px 12px;
+      margin-bottom: 12px;
+      color: #ffffff;
+      background: linear-gradient(90deg, rgba(236,72,153,0.22), rgba(251,146,60,0.18));
+      border: 1px solid rgba(236,72,153,0.45);
+      border-radius: 8px;
+    }
+
+    /* ---------- POI chips (slide 6) ---------- */
+    .poi-chips {
+      margin-top: 14px;
+      display: flex; flex-wrap: wrap; gap: 6px;
+    }
+    .poi-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 11px;
+      background: rgba(251,146,60,0.1);
+      border: 1px solid rgba(251,146,60,0.3);
+      border-radius: 999px;
+      font-size: 12px; font-weight: 500;
+      color: var(--orange-300);
+    }
+    .poi-chip svg { width: 13px; height: 13px; }
+
+    /* ---------- Final closing line (slide 6) ---------- */
+    .closing {
+      margin-top: 40px;
+      padding-top: 28px;
+      border-top: 1px solid var(--line);
+      font-size: clamp(20px, 2.4vw, 30px);
+      font-weight: 700;
+      line-height: 1.4;
+      letter-spacing: -0.02em;
+    }
+    .closing span {
+      background: var(--grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    /* ---------- Navigation (arrows + dots) ---------- */
+    .nav-arrow {
+      position: absolute;
+      top: 50%; transform: translateY(-50%);
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--line-strong);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: all .25s;
+      opacity: 0;
+      z-index: 20;
+    }
+    .deck:hover .nav-arrow { opacity: 1; }
+    .nav-arrow:hover { background: rgba(255,255,255,0.1); transform: translateY(-50%) scale(1.05); }
+    .nav-arrow.prev { left: 18px; }
+    .nav-arrow.next { right: 18px; }
+    .nav-arrow svg { width: 20px; height: 20px; color: var(--fg); }
+    .nav-arrow:disabled { opacity: 0 !important; cursor: default; }
+    @media (max-width: 768px) {
+      .nav-arrow { display: none; }
+    }
+
+    .footer {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 22px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      z-index: 20;
+    }
+    .dots {
+      display: flex; gap: 8px;
+      flex: 1; justify-content: center;
+    }
+    .dot {
+      width: 28px; height: 4px; border-radius: 999px;
+      background: rgba(255,255,255,0.12);
+      border: 0; padding: 0;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .dot:hover { background: rgba(255,255,255,0.25); }
+    .dot.active {
+      background: var(--grad);
+      width: 44px;
+    }
+    .counter {
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 11px;
+      color: var(--muted-2);
+      letter-spacing: 0.08em;
+      min-width: 60px;
+      text-align: right;
+    }
+    .hint {
+      font-size: 11px; color: var(--muted-2);
+      min-width: 60px;
+    }
+    @media (max-width: 768px) {
+      .hint { display: none; }
+      .counter { min-width: auto; }
+      .footer { padding: 16px 18px; }
+    }
+
+    /* ---------- Print mode ---------- */
+    @media print {
+      @page { size: 297mm 210mm; margin: 0; }
+      html, body { background: #fff !important; color: #111 !important; overflow: visible !important; height: auto !important; }
+      .deck { position: static !important; display: block !important; height: auto !important; overflow: visible !important; }
+      .ambient, .grid-overlay, .topbar, .nav-arrow, .footer { display: none !important; }
+      .stage { display: block !important; max-width: none !important; padding: 30mm 25mm !important; min-height: 210mm; page-break-after: always; }
+      .slide { display: block !important; page-break-inside: avoid; }
+      .slide.active .fadein { animation: none !important; }
+      .title .grad,
+      .closing span { color: #fb923c !important; -webkit-text-fill-color: #fb923c !important; }
+      .headline { color: #111 !important; border-left-color: #fb923c !important; }
+      .body, .timeline .what, .cap-card p { color: #333 !important; }
+      .eyebrow { color: #b45309 !important; border-color: #fdba74 !important; background: #fff7ed !important; }
+      .icon-chip { color: #333; background: #f3f4f6 !important; border-color: #d1d5db !important; }
+      .cap-card { background: #f9fafb !important; border-color: #e5e7eb !important; }
+      .timeline li { border-color: #e5e7eb !important; }
+      .closing { border-color: #e5e7eb !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="deck" id="deck" tabindex="0">
+    <div class="ambient"></div>
+    <div class="grid-overlay"></div>
+
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="toolbar">
+        <button type="button" id="btn-fullscreen" aria-label="전체화면">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+          <span>전체화면</span>
+        </button>
+        <button type="button" id="btn-print" aria-label="PDF로 저장">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+          <span>PDF</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Side arrows -->
+    <button class="nav-arrow prev" id="btn-prev" aria-label="이전 슬라이드">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+    <button class="nav-arrow next" id="btn-next" aria-label="다음 슬라이드">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </button>
+
+    <!-- Stage -->
+    <main class="stage" id="stage">
+
+      <!-- Slide 1 — Cover -->
+      <section class="slide cover" data-index="0">
+        <div class="cover-eyebrow fadein">
+          <span>Company Brochure · 2026</span>
+        </div>
+        <div class="logo-mark fadein delay-1">
+          <img src="images/home_logo.png" alt="Hilly Heally" />
+        </div>
+        <p class="tagline fadein delay-2">
+          <span class="accent">함께 걷고,</span> 길에 머물고,<br/>
+          <span class="accent">경험을 기록합니다.</span>
+        </p>
+        <div class="meta fadein delay-3">
+          <div class="meta-group">
+            <span class="meta-label">Company</span>
+            <span>주식회사 힐리힐리</span>
+          </div>
+          <div class="meta-group">
+            <span class="meta-label">CEO</span>
+            <span>박준섭</span>
+          </div>
+          <div class="meta-group">
+            <span class="meta-label">Founded</span>
+            <span>2025.07. Seoul</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 2 — 기업 개요 및 설립목적 -->
+      <section class="slide" data-index="1">
+        <span class="eyebrow fadein">01. 기업 개요 및 설립목적</span>
+        <h2 class="title fadein delay-1"><span class="grad">지도 위에 길을 그리고,<br/>사람들을 잇습니다.</span></h2>
+        <p class="headline fadein delay-2">
+          힐리힐리는 지역의 길과 지도를 기반으로 사람들이 새로운 길을 발견하고, 함께 야외활동에 참여하며,
+          그 경험을 기록하고 공유할 수 있도록 돕는 아웃도어 플랫폼입니다.
+        </p>
+        <div class="body fadein delay-3">
+          <p>
+            누구나 <strong>더 쉽고 재미있게</strong> 야외활동에 참여하고, <strong>건강한 움직임을
+            지속</strong>할 수 있도록 돕기 위해 설립되었습니다.
+          </p>
+          <p>
+            나아가 지역의 <strong>자연·음식·문화 자원을 연결</strong>한 <strong>체류형 아웃도어 관광
+            콘텐츠</strong>를 만들고, 사람들의 <strong>건강한 활동과 지역 방문 및 소비 확대</strong>에<br/>
+            기여하고자 합니다.
+          </p>
+        </div>
+      </section>
+
+      <!-- Slide 3 — 보유 역량 -->
+      <section class="slide" data-index="2">
+        <span class="eyebrow fadein">02. 보유 역량</span>
+        <h2 class="title fadein delay-1"><span class="grad">두 가지 모험으로,<br/>지도 위에 다양성을 만듭니다.</span></h2>
+        <p class="headline fadein delay-2">
+          자체 개발한 <strong>코스 모험</strong>과 <strong>스탬프 모험</strong> — 두 가지 제품으로
+          사용자와 지역을 잇습니다.
+        </p>
+        <div class="cap-grid fadein delay-3">
+          <div class="cap-card digital">
+            <div class="cap-head">
+              <h4>코스 모험</h4>
+            </div>
+            <p>
+              등록된 <strong>코스 지도</strong>를 따라 걷고, 체크포인트를 지나며 모험을 완성합니다.
+              함께 걸을 사람을 모집해 동행하고, <strong>실시간 위치 공유</strong>와
+              <strong>GPS 자동 기록</strong>으로 모험자들이 안전하게 길을 이어갑니다.
+            </p>
+            <p>
+              <strong>체크포인트마다 누구나 댓글</strong>을 남길 수 있고, 완주 후에는 후기를 남깁니다.
+              모험자들의 기록이 차곡차곡 모여 다음 모험가의 길잡이가 됩니다.
+            </p>
+          </div>
+          <div class="cap-card field">
+            <div class="cap-head">
+              <h4>스탬프 모험</h4>
+            </div>
+            <p>
+              지역 명소를 직접 찾아가 스탬프를 찍는 미션형 모험. <strong>음식점·카페·학교·행사</strong>
+              등 지역 기관과 자유롭게 콜라보해 다양한 캠페인 및<br/>
+              이벤트를 운영할 수 있습니다.
+            </p>
+            <p>
+              단순한 스탬프 수집을 넘어, 참가자가 지역의 일상과 자연스럽게 만나는 새로운 경험이 됩니다.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4 — 주요사업 내용 -->
+      <section class="slide" data-index="3">
+        <span class="eyebrow fadein">03. 주요사업 내용</span>
+        <h2 class="title fadein delay-1"><span class="grad">지도를 만들고,<br/>길을 이어갑니다.</span></h2>
+        <p class="headline fadein delay-2">
+          로컬이 만드는 지도 콘텐츠와 지역 자원과 연계한 머무는 여행, 두 축으로 사업을 전개합니다.
+        </p>
+        <div class="body fadein delay-3">
+          <p>
+            그 동네에 살아본 사람만 아는 <strong>숨은 숲길·마을길·해안길</strong>을 <strong>로컬 주민이
+            직접 코스 지도</strong>로 등록합니다.<br/>
+            방문자는 <strong>체크포인트와 스탬프 미션</strong>을 따라 그 길 위의
+            <strong>문화·음식·자연·풍경</strong>을 자연스럽게 체험합니다.
+          </p>
+          <p>
+            야외활동을 <strong>지역 음식·숙박·문화 자원과 연계</strong>한 <strong>머무는
+            여행</strong>으로 기획하고, 모바일 앱으로 모집·기록·공유를 운영합니다.<br/>
+            향후 <strong>지자체·지역 단체와 협력</strong>해 지역 방문과 소비를 유도하는 관광 콘텐츠로
+            확장합니다.
+          </p>
+        </div>
+      </section>
+
+      <!-- Slide 5 — 주요 연혁 및 사업 실적 -->
+      <section class="slide" data-index="4">
+        <span class="eyebrow fadein">04. 주요 연혁 및 사업 실적</span>
+        <h2 class="title fadein delay-1"><span class="grad">2025 설립,<br/>2026 앱 출시.</span></h2>
+        <p class="headline fadein delay-2">
+          지도 기반 아웃도어 플랫폼을 설계·개발하고, <strong>자체 모바일 앱 출시</strong>로 운영 기반을
+          확보했습니다.
+        </p>
+        <ul class="timeline fadein delay-3">
+          <li>
+            <span class="when">2025.07</span>
+            <span class="what"><strong>주식회사 힐리힐리 설립</strong></span>
+          </li>
+          <li>
+            <span class="when">2025.하반기</span>
+            <span class="what"><strong>코스 모험·스탬프 모험</strong> 중심으로 서비스 구조 설계</span>
+          </li>
+          <li>
+            <span class="when late">2026.상반기</span>
+            <span class="what"><strong>모바일 앱 개발·출시</strong> (iOS / Android)</span>
+          </li>
+        </ul>
+        <div class="body fadein delay-4" style="margin-top: 28px;">
+          <p>
+            현재까지 공공사업·대규모 용역 수행 실적은 없으나, <strong>자체 앱 출시</strong>를 통해 지도
+            기반 아웃도어 콘텐츠 운영에 필요한<br/>
+            <strong>기술 기반</strong>을 확보하였습니다.
+          </p>
+          <p>
+            운영진은 <strong>장거리 하이킹·트레일러닝·백패킹</strong> 등 야외활동 경험을 바탕으로, 참가자
+            모집·코스 안내·현장 운영·지역 음식점 연계까지<br/>
+            <strong>모험을 직접 운영</strong>할 수 있습니다.
+          </p>
+        </div>
+      </section>
+
+      <!-- Slide 6 — 동서트레일 사업 연계 계획 -->
+      <section class="slide" data-index="5">
+        <span class="eyebrow fadein">05. 동서트레일 사업 연계 계획</span>
+        <h2 class="title fadein delay-1"><span class="grad">동서트레일 지도에<br/>콘텐츠를 차곡차곡 쌓아갑니다.</span></h2>
+        <p class="headline fadein delay-2">
+          단순한 1박 2일 하이킹 운영이 아니라, 앱 지도 위에 <strong>동서트레일의 지역 정보</strong>를
+          누적·공유하는<br/>
+          콘텐츠 자산을 함께 만들어 갑니다.
+        </p>
+        <div class="cap-grid fadein delay-3">
+          <div class="cap-card digital">
+            <div class="cap-head">
+              <h4>지도 콘텐츠 축적</h4>
+            </div>
+            <p>
+              앱 지도 위에 동서트레일 코스를 표시하고, <strong>음식점·카페·정상·대피소·화장실</strong>
+              같은 현장 정보를 <strong>지도 제작자가 직접 등록</strong>합니다.
+            </p>
+            <p>
+              참가자의 댓글과 완주자의 후기가 더해지며, 시간이 지날수록<br/>
+              더 풍부한 <strong>지역 가이드 자산</strong>으로 쌓여 갑니다.
+            </p>
+          </div>
+          <div class="cap-card field">
+            <div class="cap-head">
+              <h4>동서트레일 비움 하이킹 캠프</h4>
+            </div>
+            <p>
+              <strong>1박 2일</strong> 가볍게 짐을 꾸리고 동서트레일을 함께 걸으며, 지역에서 먹고 머물고
+              다시 걷는 모험. 참가자의 후기와 기록은 <strong>동서트레일 홍보 콘텐츠</strong>로
+              자연스럽게 이어집니다.
+            </p>
+            <p style="color: var(--muted-2); font-size: 14px; font-style: italic;">
+              2016년 PCT의 긴 걸음에서 얻은 영감 — 더 많은 사람이 몸과 마음을 회복할 수 있도록 돕습니다.
+            </p>
+          </div>
+        </div>
+        <p class="closing fadein delay-4">
+          <span>함께 걷고, 길에 머물고, 경험을 기록합니다.</span>
+        </p>
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <span class="hint">← → 키로 이동</span>
+      <div class="dots" id="dots"></div>
+      <span class="counter" id="counter">01 / 06</span>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      var slides = document.querySelectorAll('.slide');
+      var total = slides.length;
+      var current = 0;
+
+      var btnPrev = document.getElementById('btn-prev');
+      var btnNext = document.getElementById('btn-next');
+      var btnFs = document.getElementById('btn-fullscreen');
+      var btnPrint = document.getElementById('btn-print');
+      var counter = document.getElementById('counter');
+      var dotsHost = document.getElementById('dots');
+      var deck = document.getElementById('deck');
+
+      // build dots
+      for (var i = 0; i < total; i++) {
+        (function (idx) {
+          var b = document.createElement('button');
+          b.className = 'dot';
+          b.type = 'button';
+          b.setAttribute('aria-label', '슬라이드 ' + (idx + 1));
+          b.addEventListener('click', function () { goTo(idx); });
+          dotsHost.appendChild(b);
+        })(i);
+      }
+      var dots = dotsHost.querySelectorAll('.dot');
+
+      function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+      function render() {
+        slides.forEach(function (el, i) {
+          el.classList.toggle('active', i === current);
+        });
+        dots.forEach(function (d, i) {
+          d.classList.toggle('active', i === current);
+        });
+        counter.textContent = pad(current + 1) + ' / ' + pad(total);
+        btnPrev.disabled = current === 0;
+        btnNext.disabled = current === total - 1;
+        if (history && history.replaceState) {
+          history.replaceState(null, '', '#' + (current + 1));
+        }
+      }
+
+      function goTo(i) {
+        if (i < 0) i = 0;
+        if (i > total - 1) i = total - 1;
+        if (i === current) return;
+        current = i;
+        render();
+      }
+      function next() { goTo(current + 1); }
+      function prev() { goTo(current - 1); }
+
+      btnPrev.addEventListener('click', prev);
+      btnNext.addEventListener('click', next);
+
+      // initial slide from hash
+      var hash = parseInt((location.hash || '').replace('#', ''), 10);
+      if (!isNaN(hash) && hash >= 1 && hash <= total) current = hash - 1;
+
+      // keyboard
+      document.addEventListener('keydown', function (e) {
+        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+        switch (e.key) {
+          case 'ArrowRight':
+          case 'ArrowDown':
+          case 'PageDown':
+          case ' ':
+            e.preventDefault(); next(); break;
+          case 'ArrowLeft':
+          case 'ArrowUp':
+          case 'PageUp':
+            e.preventDefault(); prev(); break;
+          case 'Home':
+            e.preventDefault(); goTo(0); break;
+          case 'End':
+            e.preventDefault(); goTo(total - 1); break;
+        }
+      });
+
+      // touch
+      var touchStartX = null;
+      deck.addEventListener('touchstart', function (e) {
+        if (e.touches && e.touches.length === 1) touchStartX = e.touches[0].clientX;
+      }, { passive: true });
+      deck.addEventListener('touchend', function (e) {
+        if (touchStartX == null) return;
+        var endX = (e.changedTouches && e.changedTouches[0].clientX) || touchStartX;
+        var dx = endX - touchStartX;
+        if (Math.abs(dx) > 50) { if (dx < 0) next(); else prev(); }
+        touchStartX = null;
+      }, { passive: true });
+
+      // fullscreen
+      btnFs.addEventListener('click', function () {
+        var d = document.documentElement;
+        if (!document.fullscreenElement) {
+          if (d.requestFullscreen) d.requestFullscreen();
+          else if (d.webkitRequestFullscreen) d.webkitRequestFullscreen();
+        } else {
+          if (document.exitFullscreen) document.exitFullscreen();
+          else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+        }
+      });
+
+      // print
+      btnPrint.addEventListener('click', function () {
+        document.body.classList.add('print-mode');
+        setTimeout(function () {
+          window.print();
+          setTimeout(function () { document.body.classList.remove('print-mode'); }, 200);
+        }, 60);
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>
