@@ -169,3 +169,8 @@ body {
 .delay-1000 {
   animation-delay: 1s;
 }
+
+/* Mapbox 좌측 하단(로고/attribution/north 인디케이터) 숨김 — BO 내부용 */
+.mapboxgl-ctrl-bottom-left {
+  display: none !important;
+}

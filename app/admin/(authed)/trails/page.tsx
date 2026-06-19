@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Search, UploadCloud } from "lucide-react";
 import { adminList, escapeIlike } from "@/lib/admin-rest";
 import Pagination from "../Pagination";
 import TrailActiveToggle from "./TrailActiveToggle";
@@ -8,18 +8,18 @@ export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 50;
 
-type MapFilter = "all" | "course" | "stamp";
 type ActiveFilter = "all" | "active" | "inactive";
 
-const MAP_LABELS: Record<MapFilter, string> = {
-  all: "전체",
-  course: "코스",
-  stamp: "스탬프",
-};
 const ACTIVE_LABELS: Record<ActiveFilter, string> = {
   all: "전체",
   active: "활성",
   inactive: "비활성",
+};
+
+const ACTIVITY_LABELS: Record<string, string> = {
+  walking: "걷기",
+  running: "달리기",
+  cycling: "자전거",
 };
 
 type Trail = {
@@ -48,13 +48,11 @@ function formatDate(iso: string): string {
 
 function buildHref(s: {
   q?: string;
-  map?: MapFilter;
   active?: ActiveFilter;
   page?: number;
 }): string {
   const sp = new URLSearchParams();
   if (s.q) sp.set("q", s.q);
-  if (s.map && s.map !== "all") sp.set("map", s.map);
   if (s.active && s.active !== "all") sp.set("active", s.active);
   if (s.page && s.page > 1) sp.set("page", String(s.page));
   const qs = sp.toString();
@@ -66,16 +64,12 @@ export default async function TrailsPage({
 }: {
   searchParams: Promise<{
     q?: string;
-    map?: string;
     active?: string;
     page?: string;
   }>;
 }) {
   const sp = await searchParams;
   const q = (sp.q ?? "").trim();
-  const map = (
-    ["course", "stamp"].includes(sp.map ?? "") ? sp.map : "all"
-  ) as MapFilter;
   const active = (
     ["active", "inactive"].includes(sp.active ?? "") ? sp.active : "all"
   ) as ActiveFilter;
@@ -90,7 +84,7 @@ export default async function TrailsPage({
     const t = escapeIlike(q);
     params.set("or", `(name.ilike.*${t}*,series_name.ilike.*${t}*)`);
   }
-  if (map !== "all") params.set("map_type", `eq.${map}`);
+  params.set("map_type", "eq.adventure");
   if (active !== "all")
     params.set("is_active", active === "active" ? "eq.true" : "eq.false");
 
@@ -114,18 +108,26 @@ export default async function TrailsPage({
     cs.forEach((p) => creatorMap.set(p.id, p.nickname));
   }
 
-  const mapTabs: MapFilter[] = ["all", "course", "stamp"];
   const activeTabs: ActiveFilter[] = ["all", "active", "inactive"];
 
   return (
     <main className="p-6 lg:p-10">
-      <header className="mb-6">
-        <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
-          트레일 (코스 지도)
-        </h1>
-        <p className="text-sm text-gray-400 mt-1">
-          총 {total.toLocaleString()}개
-        </p>
+      <header className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
+            코스 지도
+          </h1>
+          <p className="text-sm text-gray-400 mt-1">
+            총 {total.toLocaleString()}개
+          </p>
+        </div>
+        <Link
+          href="/admin/trails/upload"
+          className="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium transition-colors"
+        >
+          <UploadCloud className="h-4 w-4" />
+          GPX 업로드
+        </Link>
       </header>
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -134,7 +136,6 @@ export default async function TrailsPage({
           method="get"
           className="flex gap-2 flex-1 max-w-md min-w-[240px]"
         >
-          <input type="hidden" name="map" value={map} />
           <input type="hidden" name="active" value={active} />
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
@@ -157,29 +158,6 @@ export default async function TrailsPage({
 
       <div className="mb-4 flex flex-wrap items-center gap-4 text-xs">
         <div className="flex flex-wrap gap-1.5">
-          <span className="text-gray-500 self-center mr-1">맵</span>
-          {mapTabs.map((t) => {
-            const isActive = map === t;
-            return (
-              <Link
-                key={t}
-                href={buildHref({
-                  q: q || undefined,
-                  map: t,
-                  active: active !== "all" ? active : undefined,
-                })}
-                className={`px-3 h-7 inline-flex items-center rounded-md font-medium transition-colors ${
-                  isActive
-                    ? "bg-orange-500/20 text-orange-200 border border-orange-500/40"
-                    : "bg-white/[0.04] text-gray-400 border border-white/10 hover:text-white"
-                }`}
-              >
-                {MAP_LABELS[t]}
-              </Link>
-            );
-          })}
-        </div>
-        <div className="flex flex-wrap gap-1.5">
           <span className="text-gray-500 self-center mr-1">상태</span>
           {activeTabs.map((t) => {
             const isActive = active === t;
@@ -188,7 +166,6 @@ export default async function TrailsPage({
                 key={t}
                 href={buildHref({
                   q: q || undefined,
-                  map: map !== "all" ? map : undefined,
                   active: t,
                 })}
                 className={`px-3 h-7 inline-flex items-center rounded-md font-medium transition-colors ${
@@ -215,7 +192,7 @@ export default async function TrailsPage({
               <thead className="bg-white/[0.03] text-gray-400 text-xs">
                 <tr>
                   <th className="text-left px-4 py-3 font-medium">트레일</th>
-                  <th className="text-left px-4 py-3 font-medium">타입</th>
+                  <th className="text-left px-4 py-3 font-medium">시리즈</th>
                   <th className="text-right px-3 py-3 font-medium">거리</th>
                   <th className="text-right px-3 py-3 font-medium">고도</th>
                   <th className="text-left px-4 py-3 font-medium">활동</th>
@@ -231,22 +208,21 @@ export default async function TrailsPage({
                     className="border-t border-white/5 hover:bg-white/[0.02]"
                   >
                     <td className="px-4 py-3">
-                      <div className="text-white truncate max-w-[260px]">
+                      <Link
+                        href={`/admin/trails/${t.id}`}
+                        className="text-white truncate max-w-[260px] block hover:text-orange-300 transition-colors"
+                      >
                         {t.name}
-                      </div>
-                      {t.series_name ? (
-                        <div className="text-[11px] text-gray-500 truncate max-w-[260px]">
-                          시리즈: {t.series_name}
-                        </div>
-                      ) : null}
-                      <code className="text-[10px] text-gray-600">
-                        {t.id.slice(0, 8)}…
-                      </code>
+                      </Link>
                     </td>
-                    <td className="px-4 py-3 text-xs">
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-white/[0.04] border border-white/10 text-gray-300 font-mono">
-                        {t.map_type ?? "—"}
-                      </span>
+                    <td className="px-4 py-3 text-xs text-gray-300">
+                      {t.series_name ? (
+                        <span className="truncate inline-block max-w-[180px] align-middle">
+                          {t.series_name}
+                        </span>
+                      ) : (
+                        <span className="text-gray-600">—</span>
+                      )}
                     </td>
                     <td className="px-3 py-3 text-right text-xs text-gray-300 whitespace-nowrap">
                       {t.distance_km != null
@@ -264,7 +240,7 @@ export default async function TrailsPage({
                               key={a}
                               className="px-1.5 py-0.5 rounded-md bg-white/[0.04] border border-white/10 text-gray-300 text-[10px]"
                             >
-                              {a}
+                              {ACTIVITY_LABELS[a] ?? a}
                             </span>
                           ))}
                         </div>
@@ -274,14 +250,9 @@ export default async function TrailsPage({
                     </td>
                     <td className="px-4 py-3 text-xs text-gray-300">
                       {t.created_by ? (
-                        <>
-                          {creatorMap.get(t.created_by) ?? (
-                            <span className="text-gray-600">(없음)</span>
-                          )}
-                          <code className="block text-[10px] text-gray-600">
-                            {t.created_by.slice(0, 8)}…
-                          </code>
-                        </>
+                        creatorMap.get(t.created_by) ?? (
+                          <span className="text-gray-600">(없음)</span>
+                        )
                       ) : (
                         <span className="text-gray-600">—</span>
                       )}
@@ -309,7 +280,6 @@ export default async function TrailsPage({
         totalPages={totalPages}
         query={{
           q: q || undefined,
-          map: map !== "all" ? map : undefined,
           active: active !== "all" ? active : undefined,
         }}
       />
