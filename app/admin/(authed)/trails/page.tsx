@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search, UploadCloud } from "lucide-react";
+import { Search, UploadCloud, Tags } from "lucide-react";
 import { adminList, escapeIlike } from "@/lib/admin-rest";
 import Pagination from "../Pagination";
 import TrailActiveToggle from "./TrailActiveToggle";
@@ -121,13 +121,22 @@ export default async function TrailsPage({
             총 {total.toLocaleString()}개
           </p>
         </div>
-        <Link
-          href="/admin/trails/upload"
-          className="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium transition-colors"
-        >
-          <UploadCloud className="h-4 w-4" />
-          GPX 업로드
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/admin/trails/series"
+            className="inline-flex items-center gap-2 px-3 h-10 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-gray-200 text-sm font-medium transition-colors"
+          >
+            <Tags className="h-4 w-4" />
+            시리즈 관리
+          </Link>
+          <Link
+            href="/admin/trails/upload"
+            className="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium transition-colors"
+          >
+            <UploadCloud className="h-4 w-4" />
+            GPX 업로드
+          </Link>
+        </div>
       </header>
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
