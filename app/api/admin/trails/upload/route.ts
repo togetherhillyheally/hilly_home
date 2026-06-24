@@ -10,6 +10,7 @@ import {
   TRAIL_GPX_STORAGE_BUCKET,
   ADMIN_UPLOADER_PROFILE_ID,
 } from "@/lib/trail-upload-constants";
+import { requestTrailThumbnail } from "@/lib/trail-thumbnail";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -252,6 +253,9 @@ export async function POST(req: Request) {
     const msg = e instanceof Error ? e.message : "DB INSERT 실패";
     return NextResponse.json({ error: msg }, { status: 500 });
   }
+
+  // 경로 썸네일 생성 (Edge Function, 비차단 — 실패해도 업로드는 성공)
+  await requestTrailThumbnail(inserted.id);
 
   return NextResponse.json({
     success: true,

@@ -9,6 +9,7 @@ import {
   TRAIL_GPX_STORAGE_BUCKET,
   ADMIN_UPLOADER_PROFILE_ID,
 } from "@/lib/trail-upload-constants";
+import { requestTrailThumbnail } from "@/lib/trail-thumbnail";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -147,6 +148,9 @@ export async function POST(
       { status: 500 }
     );
   }
+
+  // 경로가 바뀌었으니 썸네일 재생성 (Edge Function, 비차단)
+  await requestTrailThumbnail(id);
 
   return NextResponse.json({
     success: true,
