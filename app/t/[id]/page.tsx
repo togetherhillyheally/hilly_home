@@ -4,6 +4,7 @@ import { Route, Footprints, Mountain, Layers } from "lucide-react";
 import {
   fetchTrailSharePreview,
   trailCoverUrl,
+  trailMapCoverUrl,
   type TrailSharePreview,
 } from "@/lib/trail-preview";
 import OpenAppButton from "./OpenAppButton";
@@ -39,7 +40,8 @@ export async function generateMetadata({
     Boolean
   );
   const desc = descParts.join("\n") || "힐리힐리에서 이 지도를 만나보세요.";
-  const cover = trailCoverUrl(preview);
+  // 커버: 경로 선이 그려진 맵박스 정적 지도 우선, 없으면 체크포인트 사진
+  const cover = trailMapCoverUrl(preview) ?? trailCoverUrl(preview);
   return {
     title,
     description: desc,
@@ -61,7 +63,7 @@ export default async function TrailSharePage({
   const preview = await fetchTrailSharePreview(id);
   if (!preview) notFound();
 
-  const cover = trailCoverUrl(preview);
+  const cover = trailMapCoverUrl(preview) ?? trailCoverUrl(preview);
   const subtitle = subtitleOf(preview);
 
   return (
