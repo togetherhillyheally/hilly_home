@@ -2,15 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Calendar, MapPin, User, Lock, Clock } from "lucide-react";
 import { fetchSessionInvitePreview } from "@/lib/invite-preview";
+import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/store-links";
 import OpenAppButton from "./OpenAppButton";
 
 // 카톡 등에서 URL 캐싱 방지 — 코드가 회전될 수 있음
 export const dynamic = "force-dynamic";
-
-const PLAY_STORE_URL =
-  "https://play.google.com/store/apps/details?id=com.hillyheally.app";
-// TODO: App Store ID 발급 후 채우기
-const APP_STORE_URL: string | undefined = undefined;
 
 function formatMeetingAt(iso: string): string {
   const d = new Date(iso);

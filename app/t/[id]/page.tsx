@@ -7,15 +7,11 @@ import {
   trailMapCoverUrl,
   type TrailSharePreview,
 } from "@/lib/trail-preview";
+import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/store-links";
 import OpenAppButton from "./OpenAppButton";
 
 // 지도 정보가 갱신될 수 있어 캐싱 방지
 export const dynamic = "force-dynamic";
-
-const PLAY_STORE_URL =
-  "https://play.google.com/store/apps/details?id=com.hillyheally.app";
-// TODO: App Store ID 발급 후 채우기
-const APP_STORE_URL: string | undefined = undefined;
 
 function subtitleOf(p: TrailSharePreview): string {
   const parts: string[] = [];
