@@ -13,6 +13,7 @@ const SCALAR_FIELDS = new Set([
   "sort_order",
   "name",
   "series_name",
+  "course_summary",
 ]);
 
 const COORD_FIELDS = new Set([
@@ -62,6 +63,8 @@ export async function PATCH(
     if (k === "name" && typeof v === "string") {
       update[k] = v.trim();
     } else if (k === "series_name") {
+      update[k] = typeof v === "string" && v.trim() ? v.trim() : null;
+    } else if (k === "course_summary") {
       update[k] = typeof v === "string" && v.trim() ? v.trim() : null;
     } else {
       update[k] = v;

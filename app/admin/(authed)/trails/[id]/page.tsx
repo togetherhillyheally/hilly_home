@@ -12,6 +12,7 @@ import { adminList } from "@/lib/admin-rest";
 import EditForm from "./EditForm";
 import StartEndEditor from "./StartEndEditor";
 import ReplaceGpxForm from "./ReplaceGpxForm";
+import ShareImageButton from "./ShareImageButton";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,7 @@ type Trail = {
   id: string;
   name: string;
   series_name: string | null;
+  course_summary: string | null;
   map_type: string | null;
   distance_km: number | null;
   total_ascent_m: number | null;
@@ -72,7 +74,7 @@ export default async function TrailDetailPage({
   const { id } = await params;
 
   const { rows } = await adminList<Trail>(
-    `trails?select=id,name,series_name,map_type,distance_km,total_ascent_m,activity_types,sort_order,is_active,created_at,created_by,source,gpx_storage_bucket,gpx_storage_path,start_lat,start_lng,end_lat,end_lng,bounds,coordinates&id=eq.${id}`
+    `trails?select=id,name,series_name,course_summary,map_type,distance_km,total_ascent_m,activity_types,sort_order,is_active,created_at,created_by,source,gpx_storage_bucket,gpx_storage_path,start_lat,start_lng,end_lat,end_lng,bounds,coordinates&id=eq.${id}`
   );
   const trail = rows[0];
   if (!trail) notFound();
@@ -107,19 +109,33 @@ export default async function TrailDetailPage({
           <ChevronLeft className="h-4 w-4" />
           코스 지도 목록
         </Link>
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
-            {trail.name}
-          </h1>
-          {trail.is_active ? (
-            <span className="inline-flex items-center px-2 h-6 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-medium">
-              활성
-            </span>
-          ) : (
-            <span className="inline-flex items-center px-2 h-6 rounded-md bg-white/[0.06] border border-white/10 text-gray-400 text-[11px] font-medium">
-              비활성
-            </span>
-          )}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
+              {trail.name}
+            </h1>
+            {trail.is_active ? (
+              <span className="inline-flex items-center px-2 h-6 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-medium">
+                활성
+              </span>
+            ) : (
+              <span className="inline-flex items-center px-2 h-6 rounded-md bg-white/[0.06] border border-white/10 text-gray-400 text-[11px] font-medium">
+                비활성
+              </span>
+            )}
+          </div>
+          <ShareImageButton
+            trailId={trail.id}
+            trailName={trail.name}
+            seriesName={trail.series_name}
+            courseSummary={trail.course_summary}
+            distanceKm={trail.distance_km}
+            totalAscentM={trail.total_ascent_m}
+            mapType={
+              trail.map_type === "stamp" ? "stamp" : "adventure"
+            }
+            coordinates={trail.coordinates}
+          />
         </div>
         {trail.series_name && (
           <p className="text-sm text-gray-400 mt-1.5">
@@ -261,6 +277,7 @@ export default async function TrailDetailPage({
           trailId={trail.id}
           initialName={trail.name}
           initialSeriesName={trail.series_name}
+          initialCourseSummary={trail.course_summary}
           initialActivityTypes={
             (trail.activity_types ?? []) as (
               | "walking"

@@ -92,6 +92,36 @@ export function trailMapCoverUrl(p: TrailSharePreview): string | null {
   return `https://api.mapbox.com/styles/v1/mapbox/outdoors-v12/static/${overlay}/auto/600x315@2x?padding=40&access_token=${MAPBOX_TOKEN}`;
 }
 
+/**
+ * 가변 사이즈 Mapbox Static Images URL. BO 공유 카드(정사각형) 등에서 사용.
+ * width/height 는 논리 px (Mapbox 가 @2x 로 실제 픽셀 2배 렌더링).
+ * 좌표/토큰 없으면 null.
+ */
+export function buildTrailMapboxStaticUrl(
+  coordinates: TrailSharePreview["coordinates"],
+  opts?: {
+    width?: number;
+    height?: number;
+    padding?: number;
+    /** Mapbox style ID, 기본 outdoors-v12 */
+    style?: string;
+    /** path 스타일 프리픽스(괄호 앞). 기본 "path-5+dc2f55-0.95" */
+    pathStyle?: string;
+  }
+): string | null {
+  if (!MAPBOX_TOKEN) return null;
+  const line = sampleLine(extractLine(coordinates));
+  if (line.length < 2) return null;
+  const enc = encodeURIComponent(encodePolyline(line));
+  const pathStyle = opts?.pathStyle ?? "path-5+dc2f55-0.95";
+  const overlay = `${pathStyle}(${enc})`;
+  const width = opts?.width ?? 600;
+  const height = opts?.height ?? 600;
+  const padding = opts?.padding ?? 36;
+  const style = opts?.style ?? "outdoors-v12";
+  return `https://api.mapbox.com/styles/v1/mapbox/${style}/static/${overlay}/auto/${width}x${height}@2x?padding=${padding}&access_token=${MAPBOX_TOKEN}`;
+}
+
 export async function fetchTrailSharePreview(
   trailId: string
 ): Promise<TrailSharePreview | null> {

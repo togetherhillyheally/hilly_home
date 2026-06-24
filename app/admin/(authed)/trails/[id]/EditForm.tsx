@@ -26,6 +26,7 @@ type Props = {
   trailId: string;
   initialName: string;
   initialSeriesName: string | null;
+  initialCourseSummary: string | null;
   initialActivityTypes: ActivityType[];
   /** 메타 편집 박스와 위험 구역 사이에 끼워 넣을 추가 영역 (예: GPX 교체 폼). */
   children?: React.ReactNode;
@@ -35,12 +36,16 @@ export default function EditForm({
   trailId,
   initialName,
   initialSeriesName,
+  initialCourseSummary,
   initialActivityTypes,
   children,
 }: Props) {
   const router = useRouter();
   const [name, setName] = useState(initialName);
   const [seriesName, setSeriesName] = useState(initialSeriesName ?? "");
+  const [courseSummary, setCourseSummary] = useState(
+    initialCourseSummary ?? ""
+  );
   const [activityTypes, setActivityTypes] = useState<ActivityType[]>(
     initialActivityTypes
   );
@@ -53,6 +58,7 @@ export default function EditForm({
   const dirty =
     name.trim() !== initialName ||
     (seriesName.trim() || null) !== initialSeriesName ||
+    (courseSummary.trim() || null) !== initialCourseSummary ||
     activityTypes.slice().sort().join(",") !==
       initialActivityTypes.slice().sort().join(",");
 
@@ -77,6 +83,7 @@ export default function EditForm({
           body: JSON.stringify({
             name: name.trim(),
             series_name: seriesName.trim() || null,
+            course_summary: courseSummary.trim() || null,
             activity_types: activityTypes,
           }),
         });
@@ -143,6 +150,22 @@ export default function EditForm({
             onChange={setSeriesName}
             placeholder="예: 동서트레일"
           />
+        </div>
+
+        <div>
+          <label className="block text-xs text-gray-400 mb-1.5">
+            코스 요약
+          </label>
+          <textarea
+            value={courseSummary}
+            onChange={(e) => setCourseSummary(e.target.value)}
+            rows={5}
+            placeholder="앱 상세 화면에 표시되는 코스 설명. 예: 동서트레일 1구간으로 가벼운 워킹에 적합한 평탄한 길이 이어집니다."
+            className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white placeholder:text-gray-600 text-sm focus:outline-none focus:border-orange-500/50 resize-y leading-relaxed"
+          />
+          <p className="mt-1 text-[10px] text-gray-500">
+            {courseSummary.length}자
+          </p>
         </div>
 
         <div>
