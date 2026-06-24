@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://hillyheally.com"),
   title: "Hilly Heally",
   description: "나만의 지도를 만들고, 함께 움직이는 경험을 만드세요.",
   generator: "hillyheally.com",
