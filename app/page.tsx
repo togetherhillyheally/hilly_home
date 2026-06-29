@@ -75,7 +75,7 @@ export default function HillyheallyHomepage() {
             <div className="animate-fade-in-up">
               <h1 className="text-4xl lg:text-6xl font-bold text-white mb-6 leading-tight tracking-tight">
                 <span className="bg-gradient-to-r from-orange-300 via-orange-400 to-pink-500 bg-clip-text text-transparent">
-                  나만의 지도를 만들고,
+                  1나만의 지도를 만들고,
                 </span>
                 <br />
                 <span className="text-white">함께 걷는 경험을 만드세요.</span>
@@ -95,12 +95,20 @@ export default function HillyheallyHomepage() {
                 rel="noreferrer"
                 className="inline-flex items-center gap-2.5 px-6 py-3 rounded-xl bg-white/[0.06] border border-white/10 hover:bg-white/[0.1] transition-all duration-300 group"
               >
-                <svg viewBox="0 0 384 512" className="h-5 w-5 text-gray-300 group-hover:text-white transition-colors" fill="currentColor">
-                  <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-27.1-46.9-42.4-83.7-45.9-35.4-3.4-73.8 20.9-88 20.9-15 0-49-19.7-74.5-19.7C60.2 141.1 0 185.3 0 273.5c0 27.1 5 55.3 14.8 84.6 13.2 38.7 60.8 133.4 110.3 131.9 25.6-.6 43.6-18.3 73.3-18.3 28.6 0 45.3 18.3 74.5 18.3 50.1-.8 92.4-85.8 106.1-124.6-67.5-32-66.3-93.6-66.3-96.7zM266.7 79.6c28.5-34.5 25.8-66 25-77.6-24.2 1.5-52.3 16.7-68.6 35.8C203 61.4 186.7 96 190.5 127.4c26.6 2 51.2-13.4 76.2-47.8z"/>
+                <svg
+                  viewBox="0 0 384 512"
+                  className="h-5 w-5 text-gray-300 group-hover:text-white transition-colors"
+                  fill="currentColor"
+                >
+                  <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-27.1-46.9-42.4-83.7-45.9-35.4-3.4-73.8 20.9-88 20.9-15 0-49-19.7-74.5-19.7C60.2 141.1 0 185.3 0 273.5c0 27.1 5 55.3 14.8 84.6 13.2 38.7 60.8 133.4 110.3 131.9 25.6-.6 43.6-18.3 73.3-18.3 28.6 0 45.3 18.3 74.5 18.3 50.1-.8 92.4-85.8 106.1-124.6-67.5-32-66.3-93.6-66.3-96.7zM266.7 79.6c28.5-34.5 25.8-66 25-77.6-24.2 1.5-52.3 16.7-68.6 35.8C203 61.4 186.7 96 190.5 127.4c26.6 2 51.2-13.4 76.2-47.8z" />
                 </svg>
                 <div className="text-left">
-                  <div className="text-[10px] text-gray-500 leading-none">Download on the</div>
-                  <div className="text-sm font-semibold text-white leading-tight">App Store</div>
+                  <div className="text-[10px] text-gray-500 leading-none">
+                    Download on the
+                  </div>
+                  <div className="text-sm font-semibold text-white leading-tight">
+                    App Store
+                  </div>
                 </div>
               </a>
               <a
@@ -109,12 +117,20 @@ export default function HillyheallyHomepage() {
                 rel="noreferrer"
                 className="inline-flex items-center gap-2.5 px-6 py-3 rounded-xl bg-white/[0.06] border border-white/10 hover:bg-white/[0.1] transition-all duration-300 group"
               >
-                <svg viewBox="0 0 512 512" className="h-5 w-5 text-gray-300 group-hover:text-white transition-colors" fill="currentColor">
-                  <path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6l-58.9-34.1-65.7 64.5 65.7 64.5 60.1-34.1c18-14.3 18-46.5-1.2-60.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z"/>
+                <svg
+                  viewBox="0 0 512 512"
+                  className="h-5 w-5 text-gray-300 group-hover:text-white transition-colors"
+                  fill="currentColor"
+                >
+                  <path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6l-58.9-34.1-65.7 64.5 65.7 64.5 60.1-34.1c18-14.3 18-46.5-1.2-60.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z" />
                 </svg>
                 <div className="text-left">
-                  <div className="text-[10px] text-gray-500 leading-none">GET IT ON</div>
-                  <div className="text-sm font-semibold text-white leading-tight">Google Play</div>
+                  <div className="text-[10px] text-gray-500 leading-none">
+                    GET IT ON
+                  </div>
+                  <div className="text-sm font-semibold text-white leading-tight">
+                    Google Play
+                  </div>
                 </div>
               </a>
             </div>
@@ -332,12 +348,20 @@ export default function HillyheallyHomepage() {
               rel="noreferrer"
               className="inline-flex items-center gap-2.5 px-6 py-3 rounded-xl bg-white/[0.06] border border-white/10 hover:bg-white/[0.1] transition-all duration-300 group"
             >
-              <svg viewBox="0 0 384 512" className="h-5 w-5 text-gray-300 group-hover:text-white transition-colors" fill="currentColor">
-                <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-27.1-46.9-42.4-83.7-45.9-35.4-3.4-73.8 20.9-88 20.9-15 0-49-19.7-74.5-19.7C60.2 141.1 0 185.3 0 273.5c0 27.1 5 55.3 14.8 84.6 13.2 38.7 60.8 133.4 110.3 131.9 25.6-.6 43.6-18.3 73.3-18.3 28.6 0 45.3 18.3 74.5 18.3 50.1-.8 92.4-85.8 106.1-124.6-67.5-32-66.3-93.6-66.3-96.7zM266.7 79.6c28.5-34.5 25.8-66 25-77.6-24.2 1.5-52.3 16.7-68.6 35.8C203 61.4 186.7 96 190.5 127.4c26.6 2 51.2-13.4 76.2-47.8z"/>
+              <svg
+                viewBox="0 0 384 512"
+                className="h-5 w-5 text-gray-300 group-hover:text-white transition-colors"
+                fill="currentColor"
+              >
+                <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-27.1-46.9-42.4-83.7-45.9-35.4-3.4-73.8 20.9-88 20.9-15 0-49-19.7-74.5-19.7C60.2 141.1 0 185.3 0 273.5c0 27.1 5 55.3 14.8 84.6 13.2 38.7 60.8 133.4 110.3 131.9 25.6-.6 43.6-18.3 73.3-18.3 28.6 0 45.3 18.3 74.5 18.3 50.1-.8 92.4-85.8 106.1-124.6-67.5-32-66.3-93.6-66.3-96.7zM266.7 79.6c28.5-34.5 25.8-66 25-77.6-24.2 1.5-52.3 16.7-68.6 35.8C203 61.4 186.7 96 190.5 127.4c26.6 2 51.2-13.4 76.2-47.8z" />
               </svg>
               <div className="text-left">
-                <div className="text-[10px] text-gray-500 leading-none">Download on the</div>
-                <div className="text-sm font-semibold text-white leading-tight">App Store</div>
+                <div className="text-[10px] text-gray-500 leading-none">
+                  Download on the
+                </div>
+                <div className="text-sm font-semibold text-white leading-tight">
+                  App Store
+                </div>
               </div>
             </a>
             <a
@@ -346,12 +370,20 @@ export default function HillyheallyHomepage() {
               rel="noreferrer"
               className="inline-flex items-center gap-2.5 px-6 py-3 rounded-xl bg-white/[0.06] border border-white/10 hover:bg-white/[0.1] transition-all duration-300 group"
             >
-              <svg viewBox="0 0 512 512" className="h-5 w-5 text-gray-300 group-hover:text-white transition-colors" fill="currentColor">
-                <path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6l-58.9-34.1-65.7 64.5 65.7 64.5 60.1-34.1c18-14.3 18-46.5-1.2-60.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z"/>
+              <svg
+                viewBox="0 0 512 512"
+                className="h-5 w-5 text-gray-300 group-hover:text-white transition-colors"
+                fill="currentColor"
+              >
+                <path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6l-58.9-34.1-65.7 64.5 65.7 64.5 60.1-34.1c18-14.3 18-46.5-1.2-60.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z" />
               </svg>
               <div className="text-left">
-                <div className="text-[10px] text-gray-500 leading-none">GET IT ON</div>
-                <div className="text-sm font-semibold text-white leading-tight">Google Play</div>
+                <div className="text-[10px] text-gray-500 leading-none">
+                  GET IT ON
+                </div>
+                <div className="text-sm font-semibold text-white leading-tight">
+                  Google Play
+                </div>
               </div>
             </a>
           </div>
