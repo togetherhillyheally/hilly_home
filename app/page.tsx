@@ -75,7 +75,7 @@ export default function HillyheallyHomepage() {
             <div className="animate-fade-in-up">
               <h1 className="text-4xl lg:text-6xl font-bold text-white mb-6 leading-tight tracking-tight">
                 <span className="bg-gradient-to-r from-orange-300 via-orange-400 to-pink-500 bg-clip-text text-transparent">
-                  1나만의 지도를 만들고,
+                  나만의 지도를 만들고,
                 </span>
                 <br />
                 <span className="text-white">함께 걷는 경험을 만드세요.</span>
