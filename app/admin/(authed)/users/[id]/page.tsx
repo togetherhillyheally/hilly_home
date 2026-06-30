@@ -4,9 +4,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Coins,
-  Flame,
   MessageSquare,
   Mountain,
+  Sprout,
   Tent,
   Trophy,
   type LucideIcon,
@@ -17,6 +17,7 @@ import InventoryManager, {
   type CatalogObject,
   type OwnedObject,
 } from "./InventoryManager";
+import GrantSeedsButton from "./GrantSeedsButton";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +39,7 @@ type Profile = {
 };
 
 type CampfireBalance = { balance: number };
-type FirewoodBalance = { trail_id: string; pieces: number };
+type SeedBalance = { trail_id: string | null; pieces: number };
 type InventoryRow = {
   object_id: string;
   unlocked_at: string;
@@ -170,8 +171,8 @@ export default async function UserDetailPage({
     adminList<CampfireBalance>(
       `puzzle_campfire_balance?select=balance&user_id=eq.${id}&limit=1`
     ),
-    adminList<FirewoodBalance>(
-      `puzzle_firewood_balance?select=trail_id,pieces&user_id=eq.${id}`
+    adminList<SeedBalance>(
+      `garden_trail_seed_balance?select=trail_id,pieces&user_id=eq.${id}`
     ),
     adminList<InventoryRow>(
       `user_basecamp_inventory?select=object_id,unlocked_at,source&user_id=eq.${id}`,
@@ -203,8 +204,8 @@ export default async function UserDetailPage({
   ]);
 
   const campfireBalance = cf.rows[0]?.balance ?? 0;
-  const firewoodTotal = fw.rows.reduce((sum, r) => sum + r.pieces, 0);
-  const firewoodTrails = fw.rows.length;
+  const seedTotal = fw.rows.reduce((sum, r) => sum + r.pieces, 0);
+  const seedBrandTrails = fw.rows.filter((r) => r.trail_id).length;
   const inventoryCount = inv.rows.length;
   const activeCamp = camps.rows.find((c) => c.is_active);
 
@@ -311,18 +312,31 @@ export default async function UserDetailPage({
       </div>
 
       {/* 핵심 지표 */}
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-xs text-gray-400 uppercase tracking-wider font-medium">
+          잔액 · 인벤토리
+        </h2>
+        <GrantSeedsButton
+          userId={profile.id}
+          nickname={profile.nickname}
+          currentSeedBalance={seedTotal}
+          currentCampfireBalance={campfireBalance}
+        />
+      </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <MetricCard
-          icon={Coins}
-          label="모닥불 잔액"
-          value={campfireBalance.toLocaleString()}
-          accent="orange"
+          icon={Sprout}
+          label={`씨앗 합계${
+            seedBrandTrails > 0 ? ` (브랜드 ${seedBrandTrails})` : ""
+          }`}
+          value={seedTotal.toLocaleString()}
+          accent="emerald"
         />
         <MetricCard
-          icon={Flame}
-          label={`장작 합계 (${firewoodTrails}개 트레일)`}
-          value={firewoodTotal.toLocaleString()}
-          accent="pink"
+          icon={Coins}
+          label="정원 씨앗 잔액"
+          value={campfireBalance.toLocaleString()}
+          accent="orange"
         />
         <MetricCard
           icon={Tent}
@@ -338,7 +352,7 @@ export default async function UserDetailPage({
               : "활성 캠프 없음"
           }
           value={activeCamp ? `#${activeCamp.slot_index}` : "—"}
-          accent="emerald"
+          accent="pink"
         />
       </div>
 
@@ -494,10 +508,16 @@ export default async function UserDetailPage({
                             className={`inline-flex items-center px-1.5 py-0.5 rounded-md font-medium border ${
                               r.currency === "campfire"
                                 ? "bg-orange-500/15 text-orange-300 border-orange-500/30"
-                                : "bg-pink-500/15 text-pink-300 border-pink-500/30"
+                                : "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
                             }`}
                           >
-                            {r.currency}
+                            {r.currency === "campfire"
+                              ? "정원 씨앗"
+                              : r.currency === "seed"
+                                ? r.trail_id
+                                  ? "브랜드 씨앗"
+                                  : "씨앗"
+                                : r.currency}
                           </span>
                         </td>
                         <td

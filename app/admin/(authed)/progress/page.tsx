@@ -1,4 +1,4 @@
-import { Coins, Flame, Search, Trophy } from "lucide-react";
+import { Coins, Search, Sprout, Trophy } from "lucide-react";
 import { adminList, escapeIlike } from "@/lib/admin-rest";
 import Pagination from "../Pagination";
 
@@ -19,9 +19,9 @@ type CampfireBalance = {
   balance: number;
 };
 
-type FirewoodBalance = {
+type SeedBalance = {
   user_id: string;
-  trail_id: string;
+  trail_id: string | null;
   pieces: number;
 };
 
@@ -59,21 +59,21 @@ export default async function ProgressPage({
 
   const userIds = profiles.map((p) => p.id);
 
-  // 모닥불 잔액 / 장작 / 활성 퍼즐 일괄 조회
+  // 정원 씨앗(campfire) 잔액 / 씨앗 합계 / 활성 퍼즐 일괄 조회
   const campfireMap = new Map<string, number>();
-  const firewoodSumMap = new Map<string, number>();
-  const firewoodTrailCountMap = new Map<string, number>();
+  const seedSumMap = new Map<string, number>();
+  const seedBrandTrailCountMap = new Map<string, number>();
   const tierCountMap = new Map<string, number>();
 
   if (userIds.length > 0) {
     const inList = userIds.join(",");
 
-    const [{ rows: cf }, { rows: fw }, { rows: tiers }] = await Promise.all([
+    const [{ rows: cf }, { rows: sd }, { rows: tiers }] = await Promise.all([
       adminList<CampfireBalance>(
         `puzzle_campfire_balance?select=user_id,balance&user_id=in.(${inList})`
       ),
-      adminList<FirewoodBalance>(
-        `puzzle_firewood_balance?select=user_id,trail_id,pieces&user_id=in.(${inList})`
+      adminList<SeedBalance>(
+        `garden_trail_seed_balance?select=user_id,trail_id,pieces&user_id=in.(${inList})`
       ),
       adminList<TierRow>(
         `user_puzzle_tiers?select=user_id,puzzle_id&user_id=in.(${inList})`
@@ -81,15 +81,14 @@ export default async function ProgressPage({
     ]);
 
     cf.forEach((c) => campfireMap.set(c.user_id, c.balance));
-    fw.forEach((f) => {
-      firewoodSumMap.set(
-        f.user_id,
-        (firewoodSumMap.get(f.user_id) ?? 0) + f.pieces
-      );
-      firewoodTrailCountMap.set(
-        f.user_id,
-        (firewoodTrailCountMap.get(f.user_id) ?? 0) + 1
-      );
+    sd.forEach((f) => {
+      seedSumMap.set(f.user_id, (seedSumMap.get(f.user_id) ?? 0) + f.pieces);
+      if (f.trail_id) {
+        seedBrandTrailCountMap.set(
+          f.user_id,
+          (seedBrandTrailCountMap.get(f.user_id) ?? 0) + 1
+        );
+      }
     });
     tiers.forEach((t) =>
       tierCountMap.set(t.user_id, (tierCountMap.get(t.user_id) ?? 0) + 1)
@@ -103,7 +102,7 @@ export default async function ProgressPage({
           사용자 진행 상태
         </h1>
         <p className="text-sm text-gray-400 mt-1">
-          유저별 모닥불 / 장작 / 퍼즐 진행 요약 · 총 {total.toLocaleString()}명
+          유저별 씨앗 / 정원 씨앗 / 퍼즐 진행 요약 · 총 {total.toLocaleString()}명
         </p>
       </header>
 
@@ -144,17 +143,17 @@ export default async function ProgressPage({
                   <th className="text-left px-4 py-3 font-medium">연락처</th>
                   <th className="text-right px-4 py-3 font-medium">
                     <span className="inline-flex items-center gap-1">
-                      <Coins className="h-3 w-3 text-orange-300" />
-                      모닥불
+                      <Sprout className="h-3 w-3 text-emerald-300" />
+                      씨앗 합계
                     </span>
                   </th>
                   <th className="text-right px-4 py-3 font-medium">
                     <span className="inline-flex items-center gap-1">
-                      <Flame className="h-3 w-3 text-pink-300" />
-                      장작 합계
+                      <Coins className="h-3 w-3 text-orange-300" />
+                      정원 씨앗
                     </span>
                   </th>
-                  <th className="text-center px-4 py-3 font-medium">트레일</th>
+                  <th className="text-center px-4 py-3 font-medium">브랜드 트레일</th>
                   <th className="text-center px-4 py-3 font-medium">
                     <span className="inline-flex items-center gap-1">
                       <Trophy className="h-3 w-3 text-violet-300" />
@@ -166,8 +165,9 @@ export default async function ProgressPage({
               <tbody>
                 {profiles.map((p) => {
                   const cf = campfireMap.get(p.id) ?? 0;
-                  const fw = firewoodSumMap.get(p.id) ?? 0;
-                  const trailCount = firewoodTrailCountMap.get(p.id) ?? 0;
+                  const sd = seedSumMap.get(p.id) ?? 0;
+                  const brandTrailCount =
+                    seedBrandTrailCountMap.get(p.id) ?? 0;
                   const tierCount = tierCountMap.get(p.id) ?? 0;
                   return (
                     <tr
@@ -191,20 +191,20 @@ export default async function ProgressPage({
                       </td>
                       <td className="px-4 py-3 text-right">
                         <span
+                          className={`font-mono text-sm ${sd > 0 ? "text-emerald-200" : "text-gray-600"}`}
+                        >
+                          {sd.toLocaleString()}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span
                           className={`font-mono text-sm ${cf > 0 ? "text-orange-200" : "text-gray-600"}`}
                         >
                           {cf.toLocaleString()}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right">
-                        <span
-                          className={`font-mono text-sm ${fw > 0 ? "text-pink-200" : "text-gray-600"}`}
-                        >
-                          {fw.toLocaleString()}
-                        </span>
-                      </td>
                       <td className="px-4 py-3 text-center text-xs text-gray-300">
-                        {trailCount}
+                        {brandTrailCount}
                       </td>
                       <td className="px-4 py-3 text-center text-xs text-gray-300">
                         {tierCount}

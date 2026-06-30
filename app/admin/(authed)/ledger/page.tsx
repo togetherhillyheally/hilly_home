@@ -7,12 +7,12 @@ export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 100;
 
-type CurrencyFilter = "all" | "firewood" | "campfire";
+type CurrencyFilter = "all" | "seed" | "campfire";
 
 const LABELS: Record<CurrencyFilter, string> = {
   all: "전체",
-  firewood: "장작",
-  campfire: "모닥불",
+  seed: "씨앗",
+  campfire: "정원 씨앗",
 };
 
 type LedgerRow = {
@@ -64,7 +64,7 @@ export default async function LedgerPage({
   const sp = await searchParams;
   const q = (sp.q ?? "").trim();
   const currency = (
-    ["firewood", "campfire"].includes(sp.currency ?? "")
+    ["seed", "campfire"].includes(sp.currency ?? "")
       ? sp.currency
       : "all"
   ) as CurrencyFilter;
@@ -130,13 +130,13 @@ export default async function LedgerPage({
   const userMap = new Map(users.map((u) => [u.id, u.nickname]));
   const trailMap = new Map(trails.map((t) => [t.id, t.name]));
 
-  const tabs: CurrencyFilter[] = ["all", "firewood", "campfire"];
+  const tabs: CurrencyFilter[] = ["all", "seed", "campfire"];
 
   return (
     <main className="p-6 lg:p-10">
       <header className="mb-6">
         <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
-          통화 원장
+          씨앗 원장
         </h1>
         <p className="text-sm text-gray-400 mt-1">
           {LABELS[currency]} · 총 {total.toLocaleString()}건
@@ -234,13 +234,15 @@ export default async function LedgerPage({
                           className={`inline-flex items-center px-1.5 py-0.5 rounded-md font-medium border ${
                             r.currency === "campfire"
                               ? "bg-orange-500/15 text-orange-300 border-orange-500/30"
-                              : "bg-pink-500/15 text-pink-300 border-pink-500/30"
+                              : "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
                           }`}
                         >
                           {r.currency === "campfire"
-                            ? "모닥불"
-                            : r.currency === "firewood"
-                              ? "장작"
+                            ? "정원 씨앗"
+                            : r.currency === "seed"
+                              ? r.trail_id
+                                ? "브랜드 씨앗"
+                                : "씨앗"
                               : r.currency}
                         </span>
                       </td>
