@@ -201,6 +201,14 @@ function SpeciesCard({
   const render = PLANT_SVG[species.svg_key] ?? PLANT_SVG.Sprout;
   const stageNames = Array.isArray(species.stage_names) ? species.stage_names : [];
   const finalStage = stageNames[stageNames.length - 1];
+  const stageCount = Math.max(1, species.max_stage) + 1;
+  const stages = Array.from({ length: stageCount }, (_, i) => ({
+    idx: i,
+    // stage 0 = 씨앗(seedling), 이후는 species svg 를 성장도(i/max_stage) 로 렌더
+    growth: species.max_stage > 0 ? i / species.max_stage : 1,
+    name: stageNames[i],
+    isSeedling: i === 0,
+  }));
 
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden hover:border-emerald-500/30 transition-colors">
@@ -241,6 +249,35 @@ function SpeciesCard({
           <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-white/[0.05] border border-white/10 text-[10px] text-gray-400">
             {species.max_stage}단계
           </span>
+        </div>
+
+        {/* 성장 스트립 */}
+        <div>
+          <div className="text-[9px] text-gray-500 uppercase tracking-wider mb-1">
+            성장 단계
+          </div>
+          <div
+            className="grid gap-1"
+            style={{ gridTemplateColumns: `repeat(${stageCount}, minmax(0, 1fr))` }}
+          >
+            {stages.map((st) => (
+              <div
+                key={st.idx}
+                className="aspect-square rounded bg-gradient-to-b from-sky-900/15 to-emerald-900/10 border border-white/5 flex items-end justify-center"
+                title={st.name ?? `stage ${st.idx}`}
+              >
+                <svg
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="xMidYMax meet"
+                  className="w-full h-full"
+                >
+                  {st.isSeedling
+                    ? PLANT_SVG.Seed(0)
+                    : render(0, Math.max(0.05, Math.min(1, st.growth)))}
+                </svg>
+              </div>
+            ))}
+          </div>
         </div>
 
         {grantPuzzleName ? (
