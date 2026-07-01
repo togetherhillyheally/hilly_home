@@ -79,6 +79,30 @@ type LedgerRow = {
   created_at: string;
 };
 
+const LEDGER_REASON_LABELS: Record<string, string> = {
+  session_complete: "모험 완료",
+  puzzle_reveal: "조각 뽑기",
+  puzzle_milestone: "퍼즐 마일스톤",
+  puzzle_complete: "퍼즐 완성",
+  tier_upgrade: "퍼즐 티어업",
+  basecamp_unlock: "오브젝트 해금",
+  signup_bonus: "가입 보너스",
+  admin_adjust: "관리자 조정",
+  admin_grant: "관리자 지급",
+  walk_exchange: "걸음 교환",
+  garden_seed_earn: "정원 씨앗 획득",
+  garden_plant_care: "식물 돌보기",
+  garden_plant_seed: "식물 심기",
+  trail_download: "지도 다운로드",
+  stamp_completion_bonus: "스탬프 완주 보너스",
+  stamp_rank_bonus: "스탬프 등수 보너스",
+  companion_bonus: "함께 걷기 보너스",
+  campfire_migration: "모닥불 이관",
+  campfire_retired: "모닥불 폐지",
+  firewood_merge: "장작 병합",
+  legacy_unknown: "이전 이력",
+};
+
 type ProfileMini = { id: string; nickname: string | null };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -535,8 +559,11 @@ export default async function UserDetailPage({
                         </td>
                         <td className="px-4 py-2 text-xs text-gray-300 max-w-[260px]">
                           {r.reason ? (
-                            <span className="truncate inline-block max-w-full align-bottom">
-                              {r.reason}
+                            <span
+                              className="truncate inline-block max-w-full align-bottom"
+                              title={r.reason}
+                            >
+                              {LEDGER_REASON_LABELS[r.reason] ?? r.reason}
                             </span>
                           ) : (
                             <span className="text-gray-600">—</span>
