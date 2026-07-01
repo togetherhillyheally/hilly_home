@@ -1,6 +1,6 @@
 import {
   Bell,
-  Boxes,
+  BookOpen,
   ClipboardList,
   Coins,
   Flag,
@@ -81,7 +81,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   {
     title: "정원",
     items: [
-      { href: "/admin/objects", label: "오브젝트 카탈로그", icon: Boxes },
+      { href: "/admin/objects", label: "정원 도감", icon: BookOpen },
       { href: "/admin/user-camps", label: "사용자 정원", icon: Tent },
       { href: "/admin/guestbook", label: "방명록", icon: MessageSquare },
     ],

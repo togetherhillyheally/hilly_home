@@ -1,4 +1,5 @@
-import { Search, Tent } from "lucide-react";
+import Link from "next/link";
+import { ChevronRight, Search, Sprout } from "lucide-react";
 import { adminList, escapeIlike } from "@/lib/admin-rest";
 import Pagination from "../Pagination";
 
@@ -13,36 +14,17 @@ type Profile = {
   created_at: string;
 };
 
-type CampRow = {
+type Plant = {
   user_id: string;
-  is_active: boolean;
-  name: string | null;
-  status_message: string | null;
-  placed_objects: unknown;
-  slot_index: number;
-  updated_at: string;
+  species_id: string;
+  is_mature: boolean;
+  placed: boolean;
+  planted_at: string;
 };
 
-type InventoryRow = { user_id: string };
+type SeedBalance = { user_id: string; balance: number };
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("ko-KR", {
-    year: "2-digit",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function placedCount(placed: unknown): number {
-  if (Array.isArray(placed)) return placed.length;
-  if (placed && typeof placed === "object")
-    return Object.keys(placed as Record<string, unknown>).length;
-  return 0;
-}
-
-export default async function UserCampsPage({
+export default async function UserGardensPage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string; page?: string }>;
@@ -72,48 +54,47 @@ export default async function UserCampsPage({
   );
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  const userIds = profiles.map((p) => p.id);
-  type AggregatedCamp = {
-    activeSlot: CampRow | null;
-    slotCount: number;
-    latestUpdated: string | null;
+  type Agg = {
+    total: number;
+    placed: number;
+    mature: number;
+    brand: number;
+    speciesSet: Set<string>;
+    latest: string | null;
   };
-  const campMap = new Map<string, AggregatedCamp>();
-  const invCountMap = new Map<string, number>();
+  const plantAgg = new Map<string, Agg>();
+  const seedMap = new Map<string, number>();
 
-  if (userIds.length > 0) {
-    const inList = userIds.join(",");
-    const [{ rows: camps }, { rows: invs }] = await Promise.all([
-      adminList<CampRow>(
-        `user_basecamp?select=user_id,is_active,name,status_message,placed_objects,slot_index,updated_at&user_id=in.(${inList})&order=user_id.asc,slot_index.asc`
+  if (profiles.length > 0) {
+    const inList = profiles.map((p) => p.id).join(",");
+    const [{ rows: plants }, { rows: seeds }] = await Promise.all([
+      adminList<Plant>(
+        `garden_plants?select=user_id,species_id,is_mature,placed,planted_at&user_id=in.(${inList})`,
+        { from: 0, to: 9999 }
       ),
-      adminList<InventoryRow>(
-        `user_basecamp_inventory?select=user_id&user_id=in.(${inList})`,
-        { from: 0, to: 4999 }
+      adminList<SeedBalance>(
+        `garden_seed_balance?select=user_id,balance&user_id=in.(${inList})`
       ),
     ]);
 
-    camps.forEach((c) => {
-      const cur = campMap.get(c.user_id) ?? {
-        activeSlot: null,
-        slotCount: 0,
-        latestUpdated: null,
+    plants.forEach((p) => {
+      const cur = plantAgg.get(p.user_id) ?? {
+        total: 0,
+        placed: 0,
+        mature: 0,
+        brand: 0,
+        speciesSet: new Set<string>(),
+        latest: null,
       };
-      cur.slotCount += 1;
-      if (c.is_active && !cur.activeSlot) cur.activeSlot = c;
-      if (
-        !cur.latestUpdated ||
-        new Date(c.updated_at).getTime() >
-          new Date(cur.latestUpdated).getTime()
-      ) {
-        cur.latestUpdated = c.updated_at;
-      }
-      campMap.set(c.user_id, cur);
+      cur.total += 1;
+      if (p.placed) cur.placed += 1;
+      if (p.is_mature) cur.mature += 1;
+      cur.speciesSet.add(p.species_id);
+      if (!cur.latest || p.planted_at > cur.latest) cur.latest = p.planted_at;
+      plantAgg.set(p.user_id, cur);
     });
 
-    invs.forEach((i) =>
-      invCountMap.set(i.user_id, (invCountMap.get(i.user_id) ?? 0) + 1)
-    );
+    seeds.forEach((s) => seedMap.set(s.user_id, s.balance));
   }
 
   return (
@@ -123,7 +104,7 @@ export default async function UserCampsPage({
           사용자 정원
         </h1>
         <p className="text-sm text-gray-400 mt-1">
-          유저별 정원 배치/인벤토리 요약 · 총 {total.toLocaleString()}명
+          유저별 정원 요약 · 총 {total.toLocaleString()}명
         </p>
       </header>
 
@@ -157,95 +138,130 @@ export default async function UserCampsPage({
       ) : (
         <div className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[860px]">
+            <table className="w-full text-sm min-w-[820px]">
               <thead className="bg-white/[0.03] text-gray-400 text-xs">
                 <tr>
                   <th className="text-left px-4 py-3 font-medium">유저</th>
-                  <th className="text-left px-4 py-3 font-medium">
+                  <th className="text-right px-4 py-3 font-medium">
                     <span className="inline-flex items-center gap-1">
-                      <Tent className="h-3 w-3 text-emerald-300" />
-                      활성 정원
+                      <Sprout className="h-3 w-3 text-emerald-300" />
+                      정원 씨앗
                     </span>
                   </th>
-                  <th className="text-left px-4 py-3 font-medium">상태메시지</th>
-                  <th className="text-center px-4 py-3 font-medium">슬롯</th>
+                  <th className="text-center px-4 py-3 font-medium">보유</th>
                   <th className="text-center px-4 py-3 font-medium">배치</th>
-                  <th className="text-center px-4 py-3 font-medium">인벤토리</th>
-                  <th className="text-left px-4 py-3 font-medium">마지막 수정</th>
+                  <th className="text-center px-4 py-3 font-medium">성숙</th>
+                  <th className="text-center px-4 py-3 font-medium">종류</th>
+                  <th className="text-left px-4 py-3 font-medium">마지막 심음</th>
+                  <th className="px-2 py-3" />
                 </tr>
               </thead>
               <tbody>
                 {profiles.map((p) => {
-                  const camp = campMap.get(p.id);
-                  const inv = invCountMap.get(p.id) ?? 0;
-                  const placed = placedCount(
-                    camp?.activeSlot?.placed_objects ?? null
-                  );
+                  const agg = plantAgg.get(p.id);
+                  const seeds = seedMap.get(p.id) ?? 0;
+                  const speciesCount = agg?.speciesSet.size ?? 0;
                   return (
-                    <tr
-                      key={p.id}
-                      className="border-t border-white/5 hover:bg-white/[0.02]"
-                    >
-                      <td className="px-4 py-3">
-                        <div className="text-white">
-                          {p.nickname ?? (
-                            <span className="text-gray-600">(없음)</span>
-                          )}
-                        </div>
-                        <div className="text-[11px] font-mono text-gray-500">
-                          {p.phone_number ?? ""}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-xs">
-                        {camp?.activeSlot ? (
+                    <tr key={p.id} className="border-t border-white/5 group">
+                      <td className="p-0">
+                        <Link
+                          href={`/admin/users/${p.id}`}
+                          className="block px-4 py-3 group-hover:bg-white/[0.03]"
+                        >
                           <div className="text-white">
-                            {camp.activeSlot.name ?? (
-                              <span className="text-gray-500">
-                                (이름 없음)
-                              </span>
+                            {p.nickname ?? (
+                              <span className="text-gray-600">(없음)</span>
                             )}
-                            <span className="ml-2 text-[10px] text-gray-500">
-                              슬롯 #{camp.activeSlot.slot_index}
-                            </span>
                           </div>
-                        ) : (
-                          <span className="text-gray-600">—</span>
-                        )}
+                          <div className="text-[11px] font-mono text-gray-500">
+                            {p.phone_number ?? ""}
+                          </div>
+                        </Link>
                       </td>
-                      <td className="px-4 py-3 text-xs text-gray-300 max-w-[220px]">
-                        {camp?.activeSlot?.status_message ? (
-                          <span className="truncate inline-block max-w-full align-bottom">
-                            {camp.activeSlot.status_message}
+                      <td className="p-0">
+                        <Link
+                          href={`/admin/users/${p.id}`}
+                          className="block px-4 py-3 text-right group-hover:bg-white/[0.03]"
+                        >
+                          <span
+                            className={`font-mono text-sm ${seeds > 0 ? "text-emerald-200" : "text-gray-600"}`}
+                          >
+                            {seeds.toLocaleString()}
                           </span>
-                        ) : (
-                          <span className="text-gray-600">—</span>
-                        )}
+                        </Link>
                       </td>
-                      <td className="px-4 py-3 text-center text-xs text-gray-300">
-                        {camp?.slotCount ?? 0}
-                      </td>
-                      <td className="px-4 py-3 text-center text-xs">
-                        <span
-                          className={
-                            placed > 0 ? "text-pink-200" : "text-gray-600"
-                          }
+                      <td className="p-0">
+                        <Link
+                          href={`/admin/users/${p.id}`}
+                          className="block px-4 py-3 text-center group-hover:bg-white/[0.03] text-xs text-gray-300"
                         >
-                          {placed}
-                        </span>
+                          {agg?.total ?? 0}
+                        </Link>
                       </td>
-                      <td className="px-4 py-3 text-center text-xs">
-                        <span
-                          className={
-                            inv > 0 ? "text-orange-200" : "text-gray-600"
-                          }
+                      <td className="p-0">
+                        <Link
+                          href={`/admin/users/${p.id}`}
+                          className="block px-4 py-3 text-center group-hover:bg-white/[0.03] text-xs"
                         >
-                          {inv}
-                        </span>
+                          <span
+                            className={
+                              (agg?.placed ?? 0) > 0
+                                ? "text-emerald-200"
+                                : "text-gray-600"
+                            }
+                          >
+                            {agg?.placed ?? 0}
+                          </span>
+                        </Link>
                       </td>
-                      <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">
-                        {camp?.latestUpdated
-                          ? formatDate(camp.latestUpdated)
-                          : "—"}
+                      <td className="p-0">
+                        <Link
+                          href={`/admin/users/${p.id}`}
+                          className="block px-4 py-3 text-center group-hover:bg-white/[0.03] text-xs"
+                        >
+                          <span
+                            className={
+                              (agg?.mature ?? 0) > 0
+                                ? "text-yellow-200"
+                                : "text-gray-600"
+                            }
+                          >
+                            {agg?.mature ?? 0}
+                          </span>
+                        </Link>
+                      </td>
+                      <td className="p-0">
+                        <Link
+                          href={`/admin/users/${p.id}`}
+                          className="block px-4 py-3 text-center group-hover:bg-white/[0.03] text-xs text-gray-300"
+                        >
+                          {speciesCount}
+                        </Link>
+                      </td>
+                      <td className="p-0">
+                        <Link
+                          href={`/admin/users/${p.id}`}
+                          className="block px-4 py-3 text-xs text-gray-400 whitespace-nowrap group-hover:bg-white/[0.03]"
+                        >
+                          {agg?.latest
+                            ? new Date(agg.latest).toLocaleString("ko-KR", {
+                                year: "2-digit",
+                                month: "2-digit",
+                                day: "2-digit",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
+                            : "—"}
+                        </Link>
+                      </td>
+                      <td className="p-0 w-8">
+                        <Link
+                          href={`/admin/users/${p.id}`}
+                          className="flex items-center justify-center h-full px-2 py-3 text-gray-500 group-hover:text-emerald-300 group-hover:bg-white/[0.03]"
+                          aria-label="정원 상세"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Link>
                       </td>
                     </tr>
                   );
