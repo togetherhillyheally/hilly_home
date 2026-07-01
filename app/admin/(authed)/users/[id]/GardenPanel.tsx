@@ -1,5 +1,15 @@
 import { Sprout } from "lucide-react";
 import { adminList } from "@/lib/admin-rest";
+import {
+  bandPath,
+  Cloud,
+  dim,
+  hillPath,
+  MiniTree,
+  PLANT_SVG,
+  plantScale,
+  ridgePath,
+} from "./garden-svgs";
 
 type Species = {
   id: string;
@@ -10,6 +20,7 @@ type Species = {
   max_stage: number;
   is_brand: boolean;
   svg_key: string;
+  scale_m: number | string;
 };
 
 type Plant = {
@@ -24,39 +35,6 @@ type Plant = {
   source_puzzle_id: string | null;
   planted_at: string;
 };
-
-// 카테고리 → 이모지 (BO 배치도용 마커; 실제 앱 SVG 는 react-native-svg 라 재사용 불가)
-const CATEGORY_EMOJI: Record<string, string> = {
-  flower: "🌸",
-  tree: "🌳",
-  bush: "🌿",
-  mushroom: "🍄",
-  animal: "🐾",
-  product: "🚩",
-};
-
-// 특정 브랜드 종은 좀 더 구체적 이모지
-const SPECIES_EMOJI: Record<string, string> = {
-  daisy: "🌼",
-  tulip: "🌷",
-  sunflower: "🌻",
-  bush: "🌿",
-  mushroom: "🍄",
-  round_tree: "🌳",
-  big_pine: "🌲",
-  hallasan_tree: "🎋",
-  rabbit: "🐇",
-  duck: "🦆",
-  deer: "🦌",
-  white_deer: "🦌",
-  tent: "⛺",
-  flag: "🚩",
-  sign: "🪧",
-};
-
-function speciesEmoji(sp: Species): string {
-  return SPECIES_EMOJI[sp.key] ?? CATEGORY_EMOJI[sp.category] ?? "🌱";
-}
 
 const ZONE_LABEL: Record<string, string> = {
   ground: "땅",
@@ -74,7 +52,7 @@ export default async function GardenPanel({ userId }: { userId: string }) {
       `garden_seed_balance?select=balance&user_id=eq.${userId}&limit=1`
     ),
     adminList<Species>(
-      `garden_species?select=id,key,name,category,zone,max_stage,is_brand,svg_key`,
+      `garden_species?select=id,key,name,category,zone,max_stage,is_brand,svg_key,scale_m`,
       { from: 0, to: 999 }
     ),
   ]);
@@ -139,15 +117,12 @@ export default async function GardenPanel({ userId }: { userId: string }) {
         </div>
       ) : (
         <div className="p-5 space-y-5">
-          {/* 배치도 미니 SVG */}
+          {/* 배치도 — 앱과 동일 풍경 + 실제 식물 SVG */}
           <div>
             <div className="text-[11px] text-gray-400 mb-1.5 uppercase tracking-wider">
               배치도 (placed = {placedCount})
             </div>
-            <GardenMap
-              plants={placedPlants}
-              speciesMap={speciesMap}
-            />
+            <GardenScene plants={placedPlants} speciesMap={speciesMap} />
           </div>
 
           {/* 종별 요약 */}
@@ -175,8 +150,8 @@ export default async function GardenPanel({ userId }: { userId: string }) {
                       className="border-t border-white/5 hover:bg-white/[0.02]"
                     >
                       <td className="px-3 py-2 text-xs text-white">
-                        <span className="mr-1.5">{speciesEmoji(r.species)}</span>
-                        {r.species.name}
+                        <SpeciesThumb species={r.species} />
+                        <span className="ml-1.5">{r.species.name}</span>
                       </td>
                       <td className="px-3 py-2 text-xs text-gray-400">
                         {r.species.category}
@@ -214,21 +189,41 @@ export default async function GardenPanel({ userId }: { userId: string }) {
   );
 }
 
-/* ────── 배치도 미니 SVG ──────
- * (xf, yf) 는 0..1 정규화 좌표. 상단 = 하늘/둔덕, 하단 = 땅.
- * 아이콘 위치만 표시 (앱과 정확히 같은 SVG 는 재현하지 않음).
+/* ────── 정원 씬 — hilly_rn/components/garden/GardenCanvas.tsx GardenScene 이식 ──────
+ * (xf, yf) 는 0..1 정규화 좌표.
+ * 하늘/능선/언덕/모래톱/강 + 배치된 식물의 실제 svg_key 렌더 (원근 스케일).
+ * wilt 는 고정 0 (관리자 뷰는 시들기 상태 무관).
  */
-function GardenMap({
+function GardenScene({
   plants,
   speciesMap,
 }: {
   plants: Plant[];
   speciesMap: Map<string, Species>;
 }) {
-  const W = 640;
-  const H = 320;
+  const W = 960;
+  const H = 640;
+  const wilt = 0;
+
+  const skyTop = dim("#7FC8EE", wilt);
+  const skyBot = dim("#E6F4F8", wilt);
+  const mtn = dim("#8FC9B0", wilt);
+  const mtn2 = dim("#7BBBA0", wilt);
+  const hill = dim("#71C089", wilt);
+  const fore1 = dim("#67BE69", wilt);
+  const fore2 = dim("#4E9E4E", wilt);
+  const treeBack = dim("#4F9E86", wilt);
+  const treeFore = dim("#3C8E5E", wilt);
+
+  const sBase = W / 360;
+
+  // 뒤→앞 정렬 (yf 오름)
+  const order = plants
+    .map((p, i) => ({ p, i }))
+    .sort((a, b) => a.p.yf - b.p.yf);
+
   return (
-    <div className="relative rounded-lg overflow-hidden border border-white/10 bg-black/40">
+    <div className="rounded-lg overflow-hidden border border-white/10 bg-black/40">
       <svg
         viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="xMidYMid meet"
@@ -236,71 +231,139 @@ function GardenMap({
       >
         <defs>
           <linearGradient id="gp-sky" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#7FC8EE" />
-            <stop offset="1" stopColor="#E6F4F8" />
+            <stop offset="0" stopColor={skyTop} />
+            <stop offset="1" stopColor={skyBot} />
           </linearGradient>
-          <linearGradient id="gp-ground" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#71C089" />
-            <stop offset="1" stopColor="#4E9E4E" />
+          <radialGradient id="gp-sun" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stopColor={dim("#FFC684", wilt)} />
+            <stop offset="1" stopColor={dim("#FF8E5E", wilt)} />
+          </radialGradient>
+          <linearGradient id="gp-fore" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor={fore1} />
+            <stop offset="1" stopColor={fore2} />
+          </linearGradient>
+          <linearGradient id="gp-river" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor={dim("#9FD6EA", wilt)} />
+            <stop offset="1" stopColor={dim("#5EAACB", wilt)} />
           </linearGradient>
         </defs>
 
-        <rect x={0} y={0} width={W} height={H * 0.55} fill="url(#gp-sky)" />
-        <rect
-          x={0}
-          y={H * 0.55}
-          width={W}
-          height={H * 0.45}
-          fill="url(#gp-ground)"
-        />
-        {/* 경계선 */}
-        <line
-          x1={0}
-          x2={W}
-          y1={H * 0.55}
-          y2={H * 0.55}
-          stroke="#ffffff"
-          strokeOpacity={0.2}
-          strokeDasharray="4 4"
-        />
-        <line
-          x1={0}
-          x2={W}
-          y1={H * 0.82}
-          y2={H * 0.82}
-          stroke="#ffffff"
-          strokeOpacity={0.15}
-          strokeDasharray="4 4"
-        />
+        {/* 하늘 */}
+        <rect x={0} y={0} width={W} height={H} fill="url(#gp-sky)" />
+        {wilt === 0 && (
+          <circle cx={W * 0.6} cy={H * 0.3} r={W * 0.045} fill="url(#gp-sun)" />
+        )}
+        <Cloud x={W * 0.32} y={H * 0.25} s={1.1} />
+        <Cloud x={W * 0.74} y={H * 0.29} s={0.9} />
 
-        {/* 식물 마커 (텍스트 이모지) */}
-        {plants.map((p) => {
+        {/* 능선·언덕 */}
+        <path d={ridgePath(W, H, H * 0.46, H * 0.34, 7)} fill={mtn} />
+        <path d={hillPath(W, H, H * 0.5, H * 0.015, 8)} fill={mtn2} />
+        {Array.from({ length: 16 }).map((_, i) => (
+          <MiniTree
+            key={`bt-${i}`}
+            x={W * (0.04 + i * 0.06)}
+            y={H * (0.49 + (i % 2) * 0.006)}
+            h={H * 0.013}
+            c={treeBack}
+          />
+        ))}
+        <path d={hillPath(W, H, H * 0.53, H * 0.013, 7)} fill={hill} />
+
+        <path d={hillPath(W, H, H * 0.56, H * 0.016, 7)} fill="url(#gp-fore)" />
+        {Array.from({ length: 8 }).map((_, i) => (
+          <MiniTree
+            key={`ft-${i}`}
+            x={W * (0.05 + i * 0.13)}
+            y={H * (0.585 + (i % 2) * 0.006)}
+            h={H * 0.017}
+            c={treeFore}
+          />
+        ))}
+
+        {/* 모래톱 + 앞쪽 강 */}
+        <path
+          d={bandPath(W, H * 0.82, H * 0.845, H * 0.005, 6)}
+          fill={dim("#E6D6AC", wilt)}
+        />
+        <path d={hillPath(W, H, H * 0.845, H * 0.006, 6)} fill="url(#gp-river)" />
+        {[0.875, 0.91, 0.945].map((fy, i) => (
+          <path
+            key={i}
+            d={`M${(W * 0.05).toFixed(1)} ${(H * fy).toFixed(1)} Q ${(W * 0.3).toFixed(1)} ${(H * (fy - 0.004)).toFixed(1)} ${(W * 0.58).toFixed(1)} ${(H * fy).toFixed(1)} T ${(W * 0.95).toFixed(1)} ${(H * fy).toFixed(1)}`}
+            stroke="#ffffff"
+            strokeOpacity={0.3}
+            strokeWidth={W * 0.003}
+            fill="none"
+          />
+        ))}
+
+        {/* 식물 (뒤→앞) */}
+        {order.map(({ p, i }) => {
           const sp = speciesMap.get(p.species_id);
           if (!sp) return null;
-          const cx = Math.max(6, Math.min(W - 6, p.xf * W));
-          const cy = Math.max(12, Math.min(H - 6, p.yf * H));
+          const render = PLANT_SVG[sp.svg_key] ?? PLANT_SVG.Sprout;
+          const m = Number(sp.scale_m) || 1;
+          const g = sp.max_stage > 0 ? p.stage / sp.max_stage : 1;
+          const cx = p.xf * W;
+          if (p.zone === "sky") {
+            const s = sBase * m;
+            const cy = p.yf * H;
+            return (
+              <g
+                key={i}
+                transform={`translate(${(cx - 50 * s).toFixed(2)} ${(cy - 50 * s).toFixed(2)}) scale(${s.toFixed(3)})`}
+              >
+                <title>
+                  {sp.name} · 단계 {p.stage}/{sp.max_stage}
+                  {p.is_mature ? " · 성숙" : ""}
+                </title>
+                {render(wilt, Math.max(0.05, Math.min(1, g)))}
+              </g>
+            );
+          }
+          const baseY = p.yf * H;
+          const s = plantScale(p.yf, m, sBase);
           return (
-            <text
-              key={p.id}
-              x={cx}
-              y={cy}
-              fontSize={18}
-              textAnchor="middle"
-              dominantBaseline="central"
-              style={{ userSelect: "none" }}
-            >
+            <g key={i}>
               <title>
                 {sp.name} · 단계 {p.stage}/{sp.max_stage}
                 {p.is_mature ? " · 성숙" : ""}
               </title>
-              {speciesEmoji(sp)}
-            </text>
+              <ellipse
+                cx={cx}
+                cy={baseY + 3}
+                rx={20 * s}
+                ry={4 * s}
+                fill="#000"
+                opacity={0.1}
+              />
+              <g
+                transform={`translate(${(cx - 50 * s).toFixed(2)} ${(baseY - 86 * s).toFixed(2)}) scale(${s.toFixed(3)})`}
+              >
+                {render(wilt, Math.max(0.05, Math.min(1, g)))}
+              </g>
+            </g>
           );
         })}
       </svg>
-      <div className="absolute bottom-1.5 right-2 text-[10px] text-white/50 font-mono">
-        {plants.length}개 배치
-      </div>
     </div>
+  );
+}
+
+/** 종 카탈로그 썸네일 (표 내부용, 40x40) — 씬과 동일한 SVG 재사용 */
+function SpeciesThumb({ species }: { species: Species }) {
+  const render = PLANT_SVG[species.svg_key] ?? PLANT_SVG.Sprout;
+  return (
+    <span className="inline-block align-middle">
+      <svg
+        width={28}
+        height={28}
+        viewBox="0 0 100 100"
+        preserveAspectRatio="xMidYMax meet"
+      >
+        {render(0, 1)}
+      </svg>
+    </span>
   );
 }
