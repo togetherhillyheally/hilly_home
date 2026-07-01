@@ -7,17 +7,12 @@ import {
   MessageSquare,
   Mountain,
   Sprout,
-  Tent,
-  Trophy,
   type LucideIcon,
 } from "lucide-react";
 import { adminList } from "@/lib/admin-rest";
 import RoleBadge from "../../RoleBadge";
-import InventoryManager, {
-  type CatalogObject,
-  type OwnedObject,
-} from "./InventoryManager";
 import GrantSeedsButton from "./GrantSeedsButton";
+import GardenPanel from "./GardenPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -40,16 +35,6 @@ type Profile = {
 
 type CampfireBalance = { balance: number };
 type SeedBalance = { trail_id: string | null; pieces: number };
-type InventoryRow = {
-  object_id: string;
-  unlocked_at: string;
-  source: string | null;
-};
-type CampRow = {
-  is_active: boolean;
-  name: string | null;
-  slot_index: number;
-};
 type SessionMini = {
   id: string;
   title: string;
@@ -183,9 +168,8 @@ export default async function UserDetailPage({
   // 한 번에 평행 fetch
   const [
     cf,
-    fw,
-    inv,
-    camps,
+    seedGen,
+    seedTrail,
     hosted,
     participations,
     guestbookAuthored,
@@ -195,15 +179,11 @@ export default async function UserDetailPage({
     adminList<CampfireBalance>(
       `puzzle_campfire_balance?select=balance&user_id=eq.${id}&limit=1`
     ),
+    adminList<{ balance: number }>(
+      `garden_seed_balance?select=balance&user_id=eq.${id}&limit=1`
+    ),
     adminList<SeedBalance>(
       `garden_trail_seed_balance?select=trail_id,pieces&user_id=eq.${id}`
-    ),
-    adminList<InventoryRow>(
-      `user_basecamp_inventory?select=object_id,unlocked_at,source&user_id=eq.${id}`,
-      { from: 0, to: 999 }
-    ),
-    adminList<CampRow>(
-      `user_basecamp?select=is_active,name,slot_index&user_id=eq.${id}&order=slot_index.asc`
     ),
     adminList<SessionMini>(
       `hiking_sessions?select=id,title,mountain_name,status,meeting_at&host_id=eq.${id}&order=meeting_at.desc`,
@@ -228,10 +208,11 @@ export default async function UserDetailPage({
   ]);
 
   const campfireBalance = cf.rows[0]?.balance ?? 0;
-  const seedTotal = fw.rows.reduce((sum, r) => sum + r.pieces, 0);
-  const seedBrandTrails = fw.rows.filter((r) => r.trail_id).length;
-  const inventoryCount = inv.rows.length;
-  const activeCamp = camps.rows.find((c) => c.is_active);
+  const seedGeneric = seedGen.rows[0]?.balance ?? 0;
+  const seedBrandTotal = seedTrail.rows
+    .filter((r) => r.trail_id)
+    .reduce((sum, r) => sum + r.pieces, 0);
+  const seedBrandTrails = seedTrail.rows.filter((r) => r.trail_id).length;
 
   // 참가 모험의 session 정보 일괄 조회
   const sessionIds = participations.rows.map((p) => p.session_id);
@@ -242,24 +223,6 @@ export default async function UserDetailPage({
     );
     rows.forEach((s) => sessionMap.set(s.id, s));
   }
-
-  // 카탈로그 + 인벤토리 객체 정보 매핑
-  const { rows: catalog } = await adminList<CatalogObject>(
-    "basecamp_objects?select=id,name,category,storage_path&order=category.asc,sort_order.asc.nullslast,name.asc",
-    { from: 0, to: 999 }
-  );
-  const catalogMap = new Map(catalog.map((c) => [c.id, c]));
-  const ownedObjects: OwnedObject[] = inv.rows
-    .map((i) => {
-      const obj = catalogMap.get(i.object_id);
-      if (!obj) return null;
-      return {
-        ...obj,
-        unlocked_at: i.unlocked_at,
-        source: i.source,
-      } as OwnedObject;
-    })
-    .filter((x): x is OwnedObject => x !== null);
 
   // 방명록 owner 닉네임 매핑
   const ownerIds = Array.from(
@@ -338,45 +301,33 @@ export default async function UserDetailPage({
       {/* 핵심 지표 */}
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-xs text-gray-400 uppercase tracking-wider font-medium">
-          잔액 · 인벤토리
+          잔액
         </h2>
         <GrantSeedsButton
           userId={profile.id}
           nickname={profile.nickname}
-          currentSeedBalance={seedTotal}
+          currentSeedBalance={seedGeneric}
           currentCampfireBalance={campfireBalance}
         />
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <MetricCard
           icon={Sprout}
-          label={`씨앗 합계${
-            seedBrandTrails > 0 ? ` (브랜드 ${seedBrandTrails})` : ""
-          }`}
-          value={seedTotal.toLocaleString()}
+          label="씨앗 (일반)"
+          value={seedGeneric.toLocaleString()}
           accent="emerald"
         />
         <MetricCard
-          icon={Coins}
-          label="정원 씨앗 잔액"
-          value={campfireBalance.toLocaleString()}
-          accent="orange"
-        />
-        <MetricCard
-          icon={Tent}
-          label={`인벤토리 / 정원 슬롯`}
-          value={`${inventoryCount} / ${camps.rows.length}`}
+          icon={Sprout}
+          label={`브랜드 씨앗${seedBrandTrails > 0 ? ` (${seedBrandTrails} 트레일)` : ""}`}
+          value={seedBrandTotal.toLocaleString()}
           accent="violet"
         />
         <MetricCard
-          icon={Trophy}
-          label={
-            activeCamp
-              ? `활성: ${activeCamp.name ?? "이름 없음"}`
-              : "활성 정원 없음"
-          }
-          value={activeCamp ? `#${activeCamp.slot_index}` : "—"}
-          accent="pink"
+          icon={Coins}
+          label="정원 씨앗"
+          value={campfireBalance.toLocaleString()}
+          accent="orange"
         />
       </div>
 
@@ -470,13 +421,9 @@ export default async function UserDetailPage({
         </Section>
       </div>
 
-      {/* 인벤토리 관리 */}
+      {/* 정원 (garden_plants 기반) */}
       <div className="mt-6">
-        <InventoryManager
-          userId={profile.id}
-          owned={ownedObjects}
-          catalog={catalog}
-        />
+        <GardenPanel userId={profile.id} />
       </div>
 
       {/* 씨앗 변동 이력 */}
