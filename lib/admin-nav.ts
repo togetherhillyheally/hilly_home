@@ -71,18 +71,18 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     ],
   },
   {
-    title: "퍼즐 & 화폐",
+    title: "퍼즐 & 씨앗",
     items: [
       { href: "/admin/puzzles", label: "퍼즐 정의", icon: Puzzle },
       { href: "/admin/progress", label: "사용자 진행", icon: Trophy },
-      { href: "/admin/ledger", label: "통화 원장", icon: Coins },
+      { href: "/admin/ledger", label: "씨앗 원장", icon: Coins },
     ],
   },
   {
-    title: "캠프",
+    title: "정원",
     items: [
       { href: "/admin/objects", label: "오브젝트 카탈로그", icon: Boxes },
-      { href: "/admin/user-camps", label: "사용자 캠프", icon: Tent },
+      { href: "/admin/user-camps", label: "사용자 정원", icon: Tent },
       { href: "/admin/guestbook", label: "방명록", icon: MessageSquare },
     ],
   },

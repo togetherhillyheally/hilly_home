@@ -149,9 +149,9 @@ function GrantModal({
           </button>
         </div>
 
-        {/* 통화 토글 */}
+        {/* 종류 토글 */}
         <div>
-          <div className="text-xs text-gray-400 mb-1.5">통화</div>
+          <div className="text-xs text-gray-400 mb-1.5">종류</div>
           <div className="flex gap-1.5">
             {(["seed", "campfire"] as const).map((c) => {
               const active = currency === c;
@@ -170,7 +170,7 @@ function GrantModal({
                       : "bg-white/[0.04] text-gray-400 border-white/10 hover:text-white"
                   }`}
                 >
-                  {c === "seed" ? "씨앗 (일반/브랜드)" : "정원 씨앗 (구 모닥불)"}
+                  {c === "seed" ? "씨앗 (일반/브랜드)" : "정원 씨앗"}
                 </button>
               );
             })}

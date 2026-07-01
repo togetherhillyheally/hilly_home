@@ -204,7 +204,7 @@ export default async function LedgerPage({
                 <tr>
                   <th className="text-left px-4 py-3 font-medium">시각</th>
                   <th className="text-left px-4 py-3 font-medium">유저</th>
-                  <th className="text-left px-3 py-3 font-medium">통화</th>
+                  <th className="text-left px-3 py-3 font-medium">종류</th>
                   <th className="text-left px-4 py-3 font-medium">트레일</th>
                   <th className="text-right px-4 py-3 font-medium">변동</th>
                   <th className="text-right px-4 py-3 font-medium">잔액</th>

@@ -19,7 +19,7 @@ export default function NewObjectPage() {
           새 오브젝트
         </h1>
         <p className="text-sm text-gray-400 mt-1">
-          이미지와 메타정보를 입력해 베이스캠프 카탈로그에 등록하세요.
+          이미지와 메타정보를 입력해 정원 카탈로그에 등록하세요.
         </p>
       </header>
 

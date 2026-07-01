@@ -120,10 +120,10 @@ export default async function UserCampsPage({
     <main className="p-6 lg:p-10">
       <header className="mb-6">
         <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
-          사용자 캠프
+          사용자 정원
         </h1>
         <p className="text-sm text-gray-400 mt-1">
-          유저별 캠프 배치/인벤토리 요약 · 총 {total.toLocaleString()}명
+          유저별 정원 배치/인벤토리 요약 · 총 {total.toLocaleString()}명
         </p>
       </header>
 
@@ -163,8 +163,8 @@ export default async function UserCampsPage({
                   <th className="text-left px-4 py-3 font-medium">유저</th>
                   <th className="text-left px-4 py-3 font-medium">
                     <span className="inline-flex items-center gap-1">
-                      <Tent className="h-3 w-3 text-orange-300" />
-                      활성 캠프
+                      <Tent className="h-3 w-3 text-emerald-300" />
+                      활성 정원
                     </span>
                   </th>
                   <th className="text-left px-4 py-3 font-medium">상태메시지</th>

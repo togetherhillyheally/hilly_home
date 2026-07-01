@@ -73,7 +73,7 @@ export default function GuestbookTable({ rows }: { rows: GuestbookRow[] }) {
           <thead className="bg-white/[0.03] text-gray-400 text-xs">
             <tr>
               <th className="text-left px-4 py-3 font-medium">작성자</th>
-              <th className="text-left px-4 py-3 font-medium">캠프 주인</th>
+              <th className="text-left px-4 py-3 font-medium">정원 주인</th>
               <th className="text-left px-4 py-3 font-medium">내용</th>
               <th className="text-left px-4 py-3 font-medium">신고</th>
               <th className="text-left px-4 py-3 font-medium">작성 시각</th>

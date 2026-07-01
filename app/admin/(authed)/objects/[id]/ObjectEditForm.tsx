@@ -321,7 +321,7 @@ export default function ObjectEditForm({
             위험 구역
           </h3>
           <p className="text-xs text-gray-400 mb-3 leading-relaxed">
-            오브젝트와 Storage 의 이미지가 영구 삭제됩니다. 사용자 캠프에 이미
+            오브젝트와 Storage 의 이미지가 영구 삭제됩니다. 사용자 정원에 이미
             배치된 오브젝트는 그대로 남지만, 카탈로그에서는 더 이상 사용할 수
             없습니다.
           </p>

@@ -102,7 +102,7 @@ export default function InventoryManager({
     <section className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden">
       <div className="flex items-center justify-between px-5 py-3 border-b border-white/5">
         <h2 className="text-sm font-semibold text-white">
-          캠프 인벤토리 ·{" "}
+          정원 인벤토리 ·{" "}
           <span className="text-gray-500 font-normal">{owned.length}개</span>
         </h2>
         <button

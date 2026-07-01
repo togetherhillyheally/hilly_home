@@ -340,7 +340,7 @@ export default async function UserDetailPage({
         />
         <MetricCard
           icon={Tent}
-          label={`인벤토리 / 캠프 슬롯`}
+          label={`인벤토리 / 정원 슬롯`}
           value={`${inventoryCount} / ${camps.rows.length}`}
           accent="violet"
         />
@@ -349,7 +349,7 @@ export default async function UserDetailPage({
           label={
             activeCamp
               ? `활성: ${activeCamp.name ?? "이름 없음"}`
-              : "활성 캠프 없음"
+              : "활성 정원 없음"
           }
           value={activeCamp ? `#${activeCamp.slot_index}` : "—"}
           accent="pink"
@@ -455,14 +455,14 @@ export default async function UserDetailPage({
         />
       </div>
 
-      {/* 통화 변동 이력 */}
+      {/* 씨앗 변동 이력 */}
       <div className="mt-6">
         <section className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden">
           <div className="flex items-center justify-between px-5 py-3 border-b border-white/5">
             <div className="flex items-center gap-2">
               <Coins className="h-4 w-4 text-gray-400" />
               <h2 className="text-sm font-semibold text-white">
-                통화 변동 이력
+                씨앗 변동 이력
               </h2>
               <span className="text-[11px] text-gray-500">
                 · 최근 {ledger.rows.length}건 / 총 {ledger.total}
@@ -486,7 +486,7 @@ export default async function UserDetailPage({
                 <thead className="bg-white/[0.03] text-gray-400 text-xs">
                   <tr>
                     <th className="text-left px-4 py-2 font-medium">시각</th>
-                    <th className="text-left px-3 py-2 font-medium">통화</th>
+                    <th className="text-left px-3 py-2 font-medium">종류</th>
                     <th className="text-right px-3 py-2 font-medium">변동</th>
                     <th className="text-right px-3 py-2 font-medium">잔액</th>
                     <th className="text-left px-4 py-2 font-medium">사유</th>
@@ -552,13 +552,13 @@ export default async function UserDetailPage({
         </section>
       </div>
 
-      {/* 내 캠프 방명록 별도 */}
+      {/* 내 정원 방명록 별도 */}
       <div className="mt-6">
         <Section
-          title="내 캠프에 작성된 방명록"
+          title="내 정원에 작성된 방명록"
           count={guestbookOnCamp.total}
           icon={MessageSquare}
-          empty="내 캠프에 작성된 방명록이 없어요."
+          empty="내 정원에 작성된 방명록이 없어요."
         >
           {guestbookOnCamp.rows.map((g) => (
             <li

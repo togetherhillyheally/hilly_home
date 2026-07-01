@@ -30,7 +30,7 @@ function formatDate(iso: string): string {
 }
 
 const TARGET_LABELS: Record<string, string> = {
-  basecamp_guestbook: "캠프 방명록",
+  basecamp_guestbook: "정원 방명록",
   hiking_session_reviews: "모험 후기",
   hiking_session_chat_messages: "모험 채팅",
 };
