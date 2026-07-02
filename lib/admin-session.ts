@@ -5,7 +5,9 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export const ADMIN_COOKIE = "hh_admin_session";
-export const SESSION_TTL_MS = 12 * 60 * 60 * 1000; // 12시간
+export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30일
+/** 남은 TTL 이 이 값보다 적어지면 DB expires_at 을 슬라이딩 갱신 */
+const REFRESH_THRESHOLD_MS = SESSION_TTL_MS * 0.5;
 
 export function generateToken(): string {
   return randomBytes(48).toString("hex"); // 96 chars
@@ -78,7 +80,27 @@ export async function readAdminSession(): Promise<AdminSession | null> {
   const row = rows[0];
   if (!row) return null;
   if (row.revoked_at) return null;
-  if (new Date(row.expires_at).getTime() < Date.now()) return null;
+  const expiresMs = new Date(row.expires_at).getTime();
+  const nowMs = Date.now();
+  if (expiresMs < nowMs) return null;
+
+  // 슬라이딩 갱신 — 남은 TTL 이 절반 이하면 DB expires_at 을 재연장 (fire-and-forget)
+  if (expiresMs - nowMs < REFRESH_THRESHOLD_MS) {
+    const newExpires = new Date(nowMs + SESSION_TTL_MS).toISOString();
+    fetch(
+      `${SUPABASE_URL}/rest/v1/admin_sessions?token_hash=eq.${tokenHash}`,
+      {
+        method: "PATCH",
+        headers: {
+          apikey: SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+          "Content-Type": "application/json",
+          Prefer: "return=minimal",
+        },
+        body: JSON.stringify({ expires_at: newExpires }),
+      }
+    ).catch(() => {});
+  }
 
   // is_super_admin 재검증 — 권한 박탈 즉시 반영
   const profRes = await fetch(
