@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Loader2 } from "lucide-react";
+import { ChevronRight, Loader2, Sprout } from "lucide-react";
 
 export type RoleField =
   | "is_super_admin"
@@ -83,9 +83,11 @@ function RoleToggle({
 export default function UsersTable({
   rows,
   currentUserId,
+  seedByUser,
 }: {
   rows: UserRow[];
   currentUserId: string;
+  seedByUser: Record<string, { generic: number; brand: number }>;
 }) {
   const router = useRouter();
   const [pendingKey, setPendingKey] = useState<string | null>(null);
@@ -137,6 +139,12 @@ export default function UsersTable({
               <th className="text-left px-4 py-3 font-medium">휴대폰</th>
               <th className="text-left px-4 py-3 font-medium">이메일</th>
               <th className="text-left px-4 py-3 font-medium">가입일</th>
+              <th className="text-right px-3 py-3 font-medium whitespace-nowrap">
+                <span className="inline-flex items-center gap-1">
+                  <Sprout className="h-3 w-3 text-emerald-300" />
+                  씨앗
+                </span>
+              </th>
               {FIELDS.map((f) => (
                 <th
                   key={f.key}
@@ -203,6 +211,27 @@ export default function UsersTable({
                   </td>
                   <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">
                     {formatDate(p.created_at)}
+                  </td>
+                  <td className="px-3 py-3 text-right whitespace-nowrap">
+                    {(() => {
+                      const s = seedByUser[p.id];
+                      const gen = s?.generic ?? 0;
+                      const brand = s?.brand ?? 0;
+                      return (
+                        <>
+                          <span
+                            className={`font-mono text-sm ${gen > 0 ? "text-emerald-200" : "text-gray-600"}`}
+                          >
+                            {gen.toLocaleString()}
+                          </span>
+                          {brand > 0 ? (
+                            <span className="ml-1 font-mono text-[10px] text-violet-300">
+                              +{brand.toLocaleString()}
+                            </span>
+                          ) : null}
+                        </>
+                      );
+                    })()}
                   </td>
                   {FIELDS.map((f) => {
                     const value = Boolean(p[f.key]);
