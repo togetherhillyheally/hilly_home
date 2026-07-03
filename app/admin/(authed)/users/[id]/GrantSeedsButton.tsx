@@ -10,10 +10,7 @@ type Props = {
   userId: string;
   nickname: string | null;
   currentSeedBalance: number;
-  currentCampfireBalance: number;
 };
-
-type Currency = "seed" | "campfire";
 
 export default function GrantSeedsButton(props: Props) {
   const [open, setOpen] = useState(false);
@@ -38,12 +35,10 @@ function GrantModal({
   userId,
   nickname,
   currentSeedBalance,
-  currentCampfireBalance,
   onClose,
 }: Props & { onClose: () => void }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
-  const [currency, setCurrency] = useState<Currency>("seed");
   const [delta, setDelta] = useState<string>("10");
   const [memo, setMemo] = useState("");
   const [trailQuery, setTrailQuery] = useState("");
@@ -55,7 +50,6 @@ function GrantModal({
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (currency !== "seed") return;
     if (trail) return;
     const q = trailQuery.trim();
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -79,7 +73,7 @@ function GrantModal({
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [trailQuery, currency, trail]);
+  }, [trailQuery, trail]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,8 +89,8 @@ function GrantModal({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          currency,
-          trail_id: currency === "seed" && trail ? trail.id : null,
+          currency: "seed",
+          trail_id: trail ? trail.id : null,
           delta: n,
           memo: memo.trim() || null,
         }),
@@ -117,9 +111,6 @@ function GrantModal({
     }
   };
 
-  const currentBalance =
-    currency === "seed" ? currentSeedBalance : currentCampfireBalance;
-
   return (
     <div
       className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
@@ -136,7 +127,10 @@ function GrantModal({
               씨앗 지급 / 차감
             </h2>
             <p className="text-xs text-gray-500 mt-0.5">
-              대상: {nickname ?? "(닉네임 없음)"}
+              대상: {nickname ?? "(닉네임 없음)"} · 일반 잔액{" "}
+              <span className="text-gray-300 font-mono">
+                {currentSeedBalance.toLocaleString()}
+              </span>
             </p>
           </div>
           <button
@@ -149,102 +143,66 @@ function GrantModal({
           </button>
         </div>
 
-        {/* 종류 토글 */}
+        {/* 트레일 선택 (선택 시 브랜드 씨앗) */}
         <div>
-          <div className="text-xs text-gray-400 mb-1.5">종류</div>
-          <div className="flex gap-1.5">
-            {(["seed", "campfire"] as const).map((c) => {
-              const active = currency === c;
-              return (
-                <button
-                  type="button"
-                  key={c}
-                  onClick={() => {
-                    setCurrency(c);
-                    setTrail(null);
-                    setTrailQuery("");
-                  }}
-                  className={`flex-1 px-3 h-9 rounded-lg text-xs font-medium border transition-colors ${
-                    active
-                      ? "bg-emerald-500/20 text-emerald-200 border-emerald-500/40"
-                      : "bg-white/[0.04] text-gray-400 border-white/10 hover:text-white"
-                  }`}
-                >
-                  {c === "seed" ? "씨앗 (일반/브랜드)" : "정원 씨앗"}
-                </button>
-              );
-            })}
+          <div className="text-xs text-gray-400 mb-1.5">
+            트레일 (선택 시 브랜드 씨앗, 미선택 시 일반 씨앗)
           </div>
-          <p className="text-[11px] text-gray-500 mt-1.5">
-            현재 잔액 ·{" "}
-            <span className="text-gray-300 font-mono">
-              {currentBalance.toLocaleString()}
-            </span>
-          </p>
-        </div>
-
-        {/* 트레일 선택 (seed만) */}
-        {currency === "seed" ? (
-          <div>
-            <div className="text-xs text-gray-400 mb-1.5">
-              트레일 (선택 — 없으면 일반 풀)
-            </div>
-            {trail ? (
-              <div className="flex items-center justify-between gap-2 px-3 h-9 rounded-lg border border-emerald-500/40 bg-emerald-500/10 text-emerald-100 text-xs">
-                <div className="truncate">
-                  {trail.series_name ? `${trail.series_name} · ` : ""}
-                  {trail.name}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTrail(null);
-                    setTrailQuery("");
-                  }}
-                  className="text-emerald-300 hover:text-white"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
+          {trail ? (
+            <div className="flex items-center justify-between gap-2 px-3 h-9 rounded-lg border border-emerald-500/40 bg-emerald-500/10 text-emerald-100 text-xs">
+              <div className="truncate">
+                {trail.series_name ? `${trail.series_name} · ` : ""}
+                {trail.name}
               </div>
-            ) : (
-              <>
-                <input
-                  type="text"
-                  value={trailQuery}
-                  onChange={(e) => setTrailQuery(e.target.value)}
-                  placeholder="트레일명 또는 시리즈명 검색"
-                  className="w-full h-9 px-3 rounded-lg bg-white/[0.04] border border-white/10 text-white placeholder:text-gray-600 text-sm focus:outline-none focus:border-emerald-500/50"
-                />
-                {trailLoading ? (
-                  <div className="mt-1.5 text-[11px] text-gray-500">검색 중…</div>
-                ) : trails.length > 0 ? (
-                  <ul className="mt-1.5 max-h-48 overflow-y-auto rounded-lg border border-white/10 bg-white/[0.02] divide-y divide-white/5">
-                    {trails.map((t) => (
-                      <li key={t.id}>
-                        <button
-                          type="button"
-                          onClick={() => setTrail(t)}
-                          className="w-full text-left px-3 py-2 text-xs text-gray-200 hover:bg-emerald-500/10 hover:text-white"
-                        >
-                          {t.series_name ? (
-                            <span className="text-gray-500">
-                              {t.series_name} ·{" "}
-                            </span>
-                          ) : null}
-                          {t.name}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                ) : trailQuery.trim() ? (
-                  <div className="mt-1.5 text-[11px] text-gray-500">
-                    일치하는 트레일이 없어요.
-                  </div>
-                ) : null}
-              </>
-            )}
-          </div>
-        ) : null}
+              <button
+                type="button"
+                onClick={() => {
+                  setTrail(null);
+                  setTrailQuery("");
+                }}
+                className="text-emerald-300 hover:text-white"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ) : (
+            <>
+              <input
+                type="text"
+                value={trailQuery}
+                onChange={(e) => setTrailQuery(e.target.value)}
+                placeholder="트레일명 또는 시리즈명 검색"
+                className="w-full h-9 px-3 rounded-lg bg-white/[0.04] border border-white/10 text-white placeholder:text-gray-600 text-sm focus:outline-none focus:border-emerald-500/50"
+              />
+              {trailLoading ? (
+                <div className="mt-1.5 text-[11px] text-gray-500">검색 중…</div>
+              ) : trails.length > 0 ? (
+                <ul className="mt-1.5 max-h-48 overflow-y-auto rounded-lg border border-white/10 bg-white/[0.02] divide-y divide-white/5">
+                  {trails.map((t) => (
+                    <li key={t.id}>
+                      <button
+                        type="button"
+                        onClick={() => setTrail(t)}
+                        className="w-full text-left px-3 py-2 text-xs text-gray-200 hover:bg-emerald-500/10 hover:text-white"
+                      >
+                        {t.series_name ? (
+                          <span className="text-gray-500">
+                            {t.series_name} ·{" "}
+                          </span>
+                        ) : null}
+                        {t.name}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : trailQuery.trim() ? (
+                <div className="mt-1.5 text-[11px] text-gray-500">
+                  일치하는 트레일이 없어요.
+                </div>
+              ) : null}
+            </>
+          )}
+        </div>
 
         {/* 수량 */}
         <div>

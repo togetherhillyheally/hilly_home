@@ -7,12 +7,11 @@ export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 100;
 
-type CurrencyFilter = "all" | "seed" | "campfire";
+type CurrencyFilter = "all" | "seed";
 
 const LABELS: Record<CurrencyFilter, string> = {
   all: "전체",
   seed: "씨앗",
-  campfire: "정원 씨앗",
 };
 
 const REASON_LABELS: Record<string, string> = {
@@ -93,9 +92,7 @@ export default async function LedgerPage({
   const sp = await searchParams;
   const q = (sp.q ?? "").trim();
   const currency = (
-    ["seed", "campfire"].includes(sp.currency ?? "")
-      ? sp.currency
-      : "all"
+    sp.currency === "seed" ? "seed" : "all"
   ) as CurrencyFilter;
   const page = Math.max(1, Number(sp.page) || 1);
 
@@ -159,7 +156,7 @@ export default async function LedgerPage({
   const userMap = new Map(users.map((u) => [u.id, u.nickname]));
   const trailMap = new Map(trails.map((t) => [t.id, t.name]));
 
-  const tabs: CurrencyFilter[] = ["all", "seed", "campfire"];
+  const tabs: CurrencyFilter[] = ["all", "seed"];
 
   return (
     <main className="p-6 lg:p-10">

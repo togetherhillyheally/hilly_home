@@ -33,7 +33,6 @@ type Profile = {
   is_tester: boolean | null;
 };
 
-type CampfireBalance = { balance: number };
 type SeedBalance = { trail_id: string | null; pieces: number };
 type SessionMini = {
   id: string;
@@ -167,7 +166,6 @@ export default async function UserDetailPage({
 
   // 한 번에 평행 fetch
   const [
-    cf,
     seedGen,
     seedTrail,
     hosted,
@@ -176,9 +174,6 @@ export default async function UserDetailPage({
     guestbookOnCamp,
     ledger,
   ] = await Promise.all([
-    adminList<CampfireBalance>(
-      `puzzle_campfire_balance?select=balance&user_id=eq.${id}&limit=1`
-    ),
     adminList<{ balance: number }>(
       `garden_seed_balance?select=balance&user_id=eq.${id}&limit=1`
     ),
@@ -207,7 +202,6 @@ export default async function UserDetailPage({
     ),
   ]);
 
-  const campfireBalance = cf.rows[0]?.balance ?? 0;
   const seedGeneric = seedGen.rows[0]?.balance ?? 0;
   const seedBrandTotal = seedTrail.rows
     .filter((r) => r.trail_id)
@@ -307,10 +301,9 @@ export default async function UserDetailPage({
           userId={profile.id}
           nickname={profile.nickname}
           currentSeedBalance={seedGeneric}
-          currentCampfireBalance={campfireBalance}
         />
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <MetricCard
           icon={Sprout}
           label="씨앗 (일반)"
@@ -322,12 +315,6 @@ export default async function UserDetailPage({
           label={`브랜드 씨앗${seedBrandTrails > 0 ? ` (${seedBrandTrails} 트레일)` : ""}`}
           value={seedBrandTotal.toLocaleString()}
           accent="violet"
-        />
-        <MetricCard
-          icon={Coins}
-          label="정원 씨앗"
-          value={campfireBalance.toLocaleString()}
-          accent="orange"
         />
       </div>
 
