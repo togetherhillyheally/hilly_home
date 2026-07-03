@@ -130,7 +130,11 @@ function GrantModal({
               <button
                 key={n}
                 type="button"
-                onClick={() => setDelta(String(n))}
+                onClick={() => {
+                  const cur = Number(delta);
+                  const base = Number.isFinite(cur) ? cur : 0;
+                  setDelta(String(base + n));
+                }}
                 className="px-2 h-9 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-gray-300 text-xs font-mono border border-white/10"
               >
                 {n > 0 ? `+${n}` : n}
