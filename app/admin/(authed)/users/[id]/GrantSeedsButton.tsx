@@ -126,7 +126,7 @@ function GrantModal({
               className="flex-1 h-9 px-3 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm font-mono focus:outline-none focus:border-emerald-500/50"
               required
             />
-            {[10, 50, 100, -10].map((n) => (
+            {[10, 50, 100, -10, -100].map((n) => (
               <button
                 key={n}
                 type="button"
