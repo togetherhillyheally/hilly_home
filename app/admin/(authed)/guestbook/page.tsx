@@ -174,7 +174,7 @@ function PageHeader({ total, mode }: { total: number; mode: FilterMode }) {
   return (
     <header className="mb-6">
       <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
-        방명록
+        발자국
       </h1>
       <p className="text-sm text-gray-400 mt-1">
         {LABELS[mode]} · 총 {total.toLocaleString()}건

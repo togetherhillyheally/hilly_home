@@ -101,10 +101,10 @@ export default async function UserGardensPage({
     <main className="p-6 lg:p-10">
       <header className="mb-6">
         <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
-          사용자 정원
+          모험자 정원
         </h1>
         <p className="text-sm text-gray-400 mt-1">
-          유저별 정원 요약 · 총 {total.toLocaleString()}명
+          모험자별 정원 요약 · 총 {total.toLocaleString()}명
         </p>
       </header>
 

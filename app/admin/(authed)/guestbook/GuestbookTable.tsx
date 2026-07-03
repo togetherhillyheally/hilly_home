@@ -34,7 +34,7 @@ export default function GuestbookTable({ rows }: { rows: GuestbookRow[] }) {
   const remove = async (row: GuestbookRow) => {
     if (
       !window.confirm(
-        `이 방명록 메시지를 삭제할까요?\n\n작성자: ${row.author_nickname ?? row.author_user_id.slice(0, 8) + "…"}\n내용: ${row.content.slice(0, 80)}`
+        `이 발자국을 삭제할까요?\n\n작성자: ${row.author_nickname ?? row.author_user_id.slice(0, 8) + "…"}\n내용: ${row.content.slice(0, 80)}`
       )
     )
       return;

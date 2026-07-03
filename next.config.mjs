@@ -9,6 +9,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // 좌하단 Next.js dev 인디케이터(N 아이콘) 숨김
+  devIndicators: false,
 }
 
 export default nextConfig

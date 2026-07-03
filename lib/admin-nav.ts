@@ -3,6 +3,7 @@ import {
   BookOpen,
   ClipboardList,
   Coins,
+  FileText,
   Flag,
   Home,
   Image as ImageIcon,
@@ -67,7 +68,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     items: [
       { href: "/admin/trails", label: "코스 지도", icon: Map },
       { href: "/admin/stamps", label: "스탬프 지도", icon: Stamp },
-      { href: "/admin/sessions", label: "모험 (세션)", icon: Mountain },
+      { href: "/admin/sessions", label: "모험", icon: Mountain },
     ],
   },
   {
@@ -82,13 +83,14 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     title: "정원",
     items: [
       { href: "/admin/objects", label: "정원 도감", icon: BookOpen },
-      { href: "/admin/user-camps", label: "사용자 정원", icon: Tent },
-      { href: "/admin/guestbook", label: "방명록", icon: MessageSquare },
+      { href: "/admin/user-camps", label: "모험자 정원", icon: Tent },
+      { href: "/admin/guestbook", label: "발자국", icon: MessageSquare },
     ],
   },
   {
     title: "시스템",
     items: [
+      { href: "/admin/legal", label: "약관 · 방침", icon: FileText },
       { href: "/admin/app-versions", label: "앱 버전", icon: Smartphone },
       { href: "/admin/bgm", label: "BGM 트랙", icon: Music },
       { href: "/admin/backgrounds", label: "프로필 배경", icon: ImageIcon },

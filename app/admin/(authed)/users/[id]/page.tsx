@@ -73,10 +73,12 @@ const LEDGER_REASON_LABELS: Record<string, string> = {
   signup_bonus: "가입 보너스",
   admin_adjust: "관리자 조정",
   admin_grant: "관리자 지급",
+  admin_grant_move: "관리자 이관",
   walk_exchange: "걸음 교환",
   garden_seed_earn: "정원 씨앗 획득",
-  garden_plant_care: "식물 돌보기",
   garden_plant_seed: "식물 심기",
+  garden_plant_care: "식물 돌보기",
+  garden_help_care: "정원 돌봄 도움",
   trail_download: "지도 다운로드",
   stamp_completion_bonus: "스탬프 완주 보너스",
   stamp_rank_bonus: "스탬프 등수 보너스",
@@ -218,7 +220,7 @@ export default async function UserDetailPage({
     rows.forEach((s) => sessionMap.set(s.id, s));
   }
 
-  // 방명록 owner 닉네임 매핑
+  // 발자국 owner 닉네임 매핑
   const ownerIds = Array.from(
     new Set(guestbookAuthored.rows.map((g) => g.owner_user_id))
   );
@@ -381,12 +383,12 @@ export default async function UserDetailPage({
           })}
         </Section>
 
-        {/* 작성한 방명록 */}
+        {/* 남긴 발자국 */}
         <Section
-          title="작성한 방명록"
+          title="남긴 발자국"
           count={guestbookAuthored.total}
           icon={MessageSquare}
-          empty="작성한 방명록이 없어요."
+          empty="남긴 발자국이 없어요."
         >
           {guestbookAuthored.rows.map((g) => (
             <li
@@ -513,13 +515,13 @@ export default async function UserDetailPage({
         </section>
       </div>
 
-      {/* 내 정원 방명록 별도 */}
+      {/* 내 정원에 남긴 발자국 별도 */}
       <div className="mt-6">
         <Section
-          title="내 정원에 작성된 방명록"
+          title="내 정원에 남긴 발자국"
           count={guestbookOnCamp.total}
           icon={MessageSquare}
-          empty="내 정원에 작성된 방명록이 없어요."
+          empty="내 정원에 남긴 발자국이 없어요."
         >
           {guestbookOnCamp.rows.map((g) => (
             <li
