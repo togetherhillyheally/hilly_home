@@ -117,13 +117,13 @@ function GrantModal({
           <div className="text-xs text-gray-400 mb-1.5">
             수량 (음수면 차감)
           </div>
-          <div className="flex gap-1.5">
+          <div className="flex flex-wrap gap-1.5">
             <input
               type="number"
               value={delta}
               onChange={(e) => setDelta(e.target.value)}
               step={1}
-              className="flex-1 h-9 px-3 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm font-mono focus:outline-none focus:border-emerald-500/50"
+              className="w-24 h-9 px-3 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm font-mono focus:outline-none focus:border-emerald-500/50"
               required
             />
             {[10, 50, 100, -10, -100].map((n) => (
