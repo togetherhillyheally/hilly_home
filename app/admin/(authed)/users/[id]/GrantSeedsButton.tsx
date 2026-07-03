@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Sprout, X } from "lucide-react";
-
-type TrailMini = { id: string; name: string; series_name: string | null };
+import TrailPicker, { type TrailMini } from "@/components/admin/TrailPicker";
 
 type Props = {
   userId: string;
@@ -41,39 +40,9 @@ function GrantModal({
   const [, startTransition] = useTransition();
   const [delta, setDelta] = useState<string>("10");
   const [memo, setMemo] = useState("");
-  const [trailQuery, setTrailQuery] = useState("");
   const [trail, setTrail] = useState<TrailMini | null>(null);
-  const [trails, setTrails] = useState<TrailMini[]>([]);
-  const [trailLoading, setTrailLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (trail) return;
-    const q = trailQuery.trim();
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(async () => {
-      setTrailLoading(true);
-      try {
-        const res = await fetch(
-          `/api/admin/trails/search?q=${encodeURIComponent(q)}&limit=12`,
-          { cache: "no-store" }
-        );
-        if (res.ok) {
-          const data = (await res.json()) as { rows: TrailMini[] };
-          setTrails(data.rows ?? []);
-        }
-      } catch {
-        // ignore
-      } finally {
-        setTrailLoading(false);
-      }
-    }, 200);
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [trailQuery, trail]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -143,67 +112,6 @@ function GrantModal({
           </button>
         </div>
 
-        {/* 트레일 선택 (선택 시 브랜드 씨앗) */}
-        <div>
-          <div className="text-xs text-gray-400 mb-1.5">
-            트레일 (선택 시 브랜드 씨앗, 미선택 시 일반 씨앗)
-          </div>
-          {trail ? (
-            <div className="flex items-center justify-between gap-2 px-3 h-9 rounded-lg border border-emerald-500/40 bg-emerald-500/10 text-emerald-100 text-xs">
-              <div className="truncate">
-                {trail.series_name ? `${trail.series_name} · ` : ""}
-                {trail.name}
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setTrail(null);
-                  setTrailQuery("");
-                }}
-                className="text-emerald-300 hover:text-white"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          ) : (
-            <>
-              <input
-                type="text"
-                value={trailQuery}
-                onChange={(e) => setTrailQuery(e.target.value)}
-                placeholder="트레일명 또는 시리즈명 검색"
-                className="w-full h-9 px-3 rounded-lg bg-white/[0.04] border border-white/10 text-white placeholder:text-gray-600 text-sm focus:outline-none focus:border-emerald-500/50"
-              />
-              {trailLoading ? (
-                <div className="mt-1.5 text-[11px] text-gray-500">검색 중…</div>
-              ) : trails.length > 0 ? (
-                <ul className="mt-1.5 max-h-48 overflow-y-auto rounded-lg border border-white/10 bg-white/[0.02] divide-y divide-white/5">
-                  {trails.map((t) => (
-                    <li key={t.id}>
-                      <button
-                        type="button"
-                        onClick={() => setTrail(t)}
-                        className="w-full text-left px-3 py-2 text-xs text-gray-200 hover:bg-emerald-500/10 hover:text-white"
-                      >
-                        {t.series_name ? (
-                          <span className="text-gray-500">
-                            {t.series_name} ·{" "}
-                          </span>
-                        ) : null}
-                        {t.name}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : trailQuery.trim() ? (
-                <div className="mt-1.5 text-[11px] text-gray-500">
-                  일치하는 트레일이 없어요.
-                </div>
-              ) : null}
-            </>
-          )}
-        </div>
-
         {/* 수량 */}
         <div>
           <div className="text-xs text-gray-400 mb-1.5">
@@ -244,6 +152,14 @@ function GrantModal({
             placeholder="예: 이벤트 보상, 어뷰징 회수…"
             className="w-full h-9 px-3 rounded-lg bg-white/[0.04] border border-white/10 text-white placeholder:text-gray-600 text-sm focus:outline-none focus:border-emerald-500/50"
           />
+        </div>
+
+        {/* 트레일 (선택 시 브랜드 씨앗) */}
+        <div>
+          <div className="text-xs text-gray-400 mb-1.5">
+            트레일 (선택 시 브랜드 씨앗, 미선택 시 일반 씨앗)
+          </div>
+          <TrailPicker value={trail} onChange={setTrail} />
         </div>
 
         {error ? (
