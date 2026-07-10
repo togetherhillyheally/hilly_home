@@ -137,7 +137,7 @@ export default async function GardenPanel({ userId }: { userId: string }) {
                     <th className="text-left px-3 py-2 font-medium">종</th>
                     <th className="text-left px-3 py-2 font-medium">종류</th>
                     <th className="text-left px-3 py-2 font-medium">영역</th>
-                    <th className="text-center px-3 py-2 font-medium">브랜드</th>
+                    <th className="text-center px-3 py-2 font-medium">한정</th>
                     <th className="text-right px-3 py-2 font-medium">배치</th>
                     <th className="text-right px-3 py-2 font-medium">성숙</th>
                     <th className="text-right px-3 py-2 font-medium">보유</th>
@@ -161,8 +161,8 @@ export default async function GardenPanel({ userId }: { userId: string }) {
                       </td>
                       <td className="px-3 py-2 text-center">
                         {r.species.is_brand ? (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-violet-500/15 text-violet-300 border border-violet-500/30 text-[10px] font-medium">
-                            브랜드
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[10px] font-medium">
+                            ✨ 한정
                           </span>
                         ) : (
                           <span className="text-gray-600">—</span>

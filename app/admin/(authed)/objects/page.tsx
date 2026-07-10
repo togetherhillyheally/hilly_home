@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { adminList } from "@/lib/admin-rest";
 import { PLANT_SVG } from "../users/[id]/garden-svgs";
+import StageStrip from "./StageStrip";
+import PublishToggle from "./PublishToggle";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +14,7 @@ type Species = {
   zone: "ground" | "bank" | "sky";
   max_stage: number;
   is_brand: boolean;
+  is_published: boolean;
   svg_key: string;
   scale_m: number | string;
   grant_puzzle_id: string | null;
@@ -56,7 +59,7 @@ export default async function ObjectsCatalogPage({
   const brand = (sp.brand ?? "all").trim();
 
   const { rows: allSpecies } = await adminList<Species>(
-    "garden_species?select=id,key,name,category,zone,max_stage,is_brand,svg_key,scale_m,grant_puzzle_id,stage_names,sort_order&order=sort_order.asc.nullslast,key.asc",
+    "garden_species?select=id,key,name,category,zone,max_stage,is_brand,is_published,svg_key,scale_m,grant_puzzle_id,stage_names,sort_order&order=sort_order.asc.nullslast,key.asc",
     { from: 0, to: 999 }
   );
 
@@ -122,7 +125,7 @@ export default async function ObjectsCatalogPage({
         <FilterChip
           href={buildHref({ cat, brand: "all" })}
           active={brand === "all"}
-          label="일반+브랜드"
+          label="일반+한정"
         />
         <FilterChip
           href={buildHref({ cat, brand: "regular" })}
@@ -132,7 +135,7 @@ export default async function ObjectsCatalogPage({
         <FilterChip
           href={buildHref({ cat, brand: "brand" })}
           active={brand === "brand"}
-          label="브랜드"
+          label="✨ 한정"
         />
       </div>
 
@@ -201,18 +204,16 @@ function SpeciesCard({
   const render = PLANT_SVG[species.svg_key] ?? PLANT_SVG.Sprout;
   const stageNames = Array.isArray(species.stage_names) ? species.stage_names : [];
   const finalStage = stageNames[stageNames.length - 1];
-  const stageCount = Math.max(1, species.max_stage) + 1;
-  const stages = Array.from({ length: stageCount }, (_, i) => ({
-    idx: i,
-    // stage 0 = 씨앗(seedling), 이후는 species svg 를 성장도(i/max_stage) 로 렌더
-    growth: species.max_stage > 0 ? i / species.max_stage : 1,
-    name: stageNames[i],
-    isSeedling: i === 0,
-  }));
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden hover:border-emerald-500/30 transition-colors">
-      <div className="aspect-square bg-gradient-to-b from-sky-900/20 to-emerald-900/10 flex items-end justify-center">
+    <div
+      className={`rounded-xl border bg-white/[0.02] overflow-hidden transition-colors ${
+        species.is_published
+          ? "border-white/10 hover:border-emerald-500/30"
+          : "border-amber-500/30 hover:border-amber-500/50"
+      }`}
+    >
+      <div className="aspect-square bg-gradient-to-b from-sky-900/20 to-emerald-900/10 flex items-end justify-center relative">
         <svg
           viewBox="0 0 100 100"
           preserveAspectRatio="xMidYMax meet"
@@ -220,6 +221,11 @@ function SpeciesCard({
         >
           {render(0, 1)}
         </svg>
+        {!species.is_published ? (
+          <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md bg-amber-500/90 text-black text-[10px] font-semibold">
+            미공개
+          </div>
+        ) : null}
       </div>
 
       <div className="p-3 space-y-1.5">
@@ -233,8 +239,11 @@ function SpeciesCard({
             </div>
           </div>
           {species.is_brand ? (
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-violet-500/15 text-violet-300 border border-violet-500/30 text-[10px] font-medium flex-shrink-0">
-              브랜드
+            <span
+              className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[10px] font-medium flex-shrink-0"
+              title="퍼즐 완성으로만 얻는 한정 종"
+            >
+              ✨ 한정
             </span>
           ) : null}
         </div>
@@ -251,33 +260,18 @@ function SpeciesCard({
           </span>
         </div>
 
-        {/* 성장 스트립 */}
+        {/* 성장 스트립 — 클릭 시 크게 미리보기 */}
         <div>
           <div className="text-[9px] text-gray-500 uppercase tracking-wider mb-1">
-            성장 단계
+            성장 단계 (클릭)
           </div>
-          <div
-            className="grid gap-1"
-            style={{ gridTemplateColumns: `repeat(${stageCount}, minmax(0, 1fr))` }}
-          >
-            {stages.map((st) => (
-              <div
-                key={st.idx}
-                className="aspect-square rounded bg-gradient-to-b from-sky-900/15 to-emerald-900/10 border border-white/5 flex items-end justify-center"
-                title={st.name ?? `stage ${st.idx}`}
-              >
-                <svg
-                  viewBox="0 0 100 100"
-                  preserveAspectRatio="xMidYMax meet"
-                  className="w-full h-full"
-                >
-                  {st.isSeedling
-                    ? PLANT_SVG.Seed(0)
-                    : render(0, Math.max(0.05, Math.min(1, st.growth)))}
-                </svg>
-              </div>
-            ))}
-          </div>
+          <StageStrip
+            svgKey={species.svg_key}
+            category={species.category}
+            maxStage={species.max_stage}
+            stageNames={stageNames}
+            speciesName={species.name}
+          />
         </div>
 
         {grantPuzzleName ? (
@@ -302,6 +296,10 @@ function SpeciesCard({
           </span>
         </div>
       </div>
+      <PublishToggle
+        speciesId={species.id}
+        isPublished={species.is_published}
+      />
     </div>
   );
 }
