@@ -8,7 +8,8 @@
 import { useState } from "react";
 import { ChevronDown, Footprints, Users } from "lucide-react";
 
-/** 구간별 한계 요율 곡선 — 서버 earn_seeds / 앱 seedReward.ts 와 동일 */
+/** 구간별 한계 요율 곡선 — 서버 earn_seeds / 앱 seedReward.ts 와 동일.
+ *  최소 3 보장은 0.5km 이상만 (초단거리 세션 스팸 방지). */
 function gardenSeedsForKm(km: number): number {
   if (!(km > 0)) return 0;
   const s =
@@ -16,7 +17,8 @@ function gardenSeedsForKm(km: number): number {
     Math.max(0, Math.min(km, 7) - 3) * 3 +
     Math.max(0, Math.min(km, 15) - 7) * 2 +
     Math.max(0, km - 15) * 1;
-  return Math.max(3, Math.floor(s));
+  const seeds = Math.floor(s);
+  return km >= 0.5 ? Math.max(3, seeds) : seeds;
 }
 
 /** 함께 걷기 보너스 — 기본 씨앗의 30%, 최소 3 (2명 이상 함께 적립 시) */
@@ -192,9 +194,10 @@ export default function SeedSimulator() {
               </div>
 
               <p className="text-[10px] leading-relaxed text-gray-600">
-                세션당 1회 적립(멱등) · 최소 3 씨앗 · 지오펜스(보상 영역) 밖
-                이동은 미적립 · 실제 지급은 서버 earn_seeds 가 재계산 — 이
-                화면은 미리보기입니다.
+                세션당 1회 적립(멱등) · 0.5km 이상만 최소 3 보장 (미만은
+                공식값 그대로 0~1) · 지오펜스(보상 영역) 밖 이동은 미적립 ·
+                실제 지급은 서버 earn_seeds 가 재계산 — 이 화면은
+                미리보기입니다.
               </p>
             </div>
 

@@ -35,6 +35,7 @@ const REASON_LABELS: Record<string, string> = {
   stamp_completion_bonus: "스탬프 완주 보너스",
   stamp_rank_bonus: "스탬프 등수 보너스",
   companion_bonus: "함께 걷기 보너스",
+  companion_bonus_brand: "함께 걷기 브랜드 보너스",
   campfire_migration: "모닥불 이관",
   campfire_retired: "모닥불 폐지",
   firewood_merge: "장작 병합",
