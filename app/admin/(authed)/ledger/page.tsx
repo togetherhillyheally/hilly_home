@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 import { adminList, escapeIlike } from "@/lib/admin-rest";
 import Pagination from "../Pagination";
+import SeedSimulator from "./SeedSimulator";
 
 export const dynamic = "force-dynamic";
 
@@ -170,6 +171,8 @@ export default async function LedgerPage({
           {LABELS[currency]} · 총 {total.toLocaleString()}건
         </p>
       </header>
+
+      <SeedSimulator />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <form
