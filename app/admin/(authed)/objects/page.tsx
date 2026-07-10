@@ -3,6 +3,7 @@ import { adminList } from "@/lib/admin-rest";
 import { PLANT_SVG } from "../users/[id]/garden-svgs";
 import StageStrip from "./StageStrip";
 import PublishToggle from "./PublishToggle";
+import PlantCostEditor from "./PlantCostEditor";
 
 export const dynamic = "force-dynamic";
 
@@ -20,10 +21,13 @@ type Species = {
   grant_puzzle_id: string | null;
   stage_names: string[] | null;
   sort_order: number;
+  tint: string | null;
+  is_variant: boolean;
+  plant_cost: number;
+  plant_cost_manual: boolean;
 };
 
 type PlantRow = { species_id: string; is_mature: boolean };
-type PuzzleMini = { id: string; name: string };
 
 const CATEGORY_LABELS: Record<string, string> = {
   flower: "꽃",
@@ -59,7 +63,7 @@ export default async function ObjectsCatalogPage({
   const brand = (sp.brand ?? "all").trim();
 
   const { rows: allSpecies } = await adminList<Species>(
-    "garden_species?select=id,key,name,category,zone,max_stage,is_brand,is_published,svg_key,scale_m,grant_puzzle_id,stage_names,sort_order&order=sort_order.asc.nullslast,key.asc",
+    "garden_species?select=id,key,name,category,zone,max_stage,is_brand,is_published,svg_key,scale_m,grant_puzzle_id,stage_names,sort_order,tint,is_variant,plant_cost,plant_cost_manual&order=sort_order.asc.nullslast,key.asc",
     { from: 0, to: 999 }
   );
 
@@ -84,15 +88,19 @@ export default async function ObjectsCatalogPage({
       matureMap.set(p.species_id, (matureMap.get(p.species_id) ?? 0) + 1);
   }
 
-  const puzzleIds = Array.from(
-    new Set(species.map((s) => s.grant_puzzle_id).filter(Boolean) as string[])
-  );
-  const puzzleMap = new Map<string, string>();
-  if (puzzleIds.length > 0) {
-    const { rows: puzzles } = await adminList<PuzzleMini>(
-      `puzzles?select=id,name&id=in.(${puzzleIds.join(",")})`
-    );
-    puzzles.forEach((p) => puzzleMap.set(p.id, p.name));
+  // 종 → 연결 퍼즐명 (garden_puzzle_rewards junction 기준 — 1:1)
+  const rewardPuzzleMap = new Map<string, string>();
+  {
+    const { rows: links } = await adminList<{
+      species_id: string;
+      puzzles: { name: string } | null;
+    }>(`garden_puzzle_rewards?select=species_id,puzzles(name)`, {
+      from: 0,
+      to: 999,
+    });
+    links.forEach((l) => {
+      if (l.puzzles?.name) rewardPuzzleMap.set(l.species_id, l.puzzles.name);
+    });
   }
 
   return (
@@ -148,9 +156,7 @@ export default async function ObjectsCatalogPage({
           {species.map((s) => {
             const total = totalMap.get(s.id) ?? 0;
             const mature = matureMap.get(s.id) ?? 0;
-            const grantName = s.grant_puzzle_id
-              ? puzzleMap.get(s.grant_puzzle_id) ?? null
-              : null;
+            const grantName = rewardPuzzleMap.get(s.id) ?? null;
             return (
               <SpeciesCard
                 key={s.id}
@@ -204,6 +210,9 @@ function SpeciesCard({
   const render = PLANT_SVG[species.svg_key] ?? PLANT_SVG.Sprout;
   const stageNames = Array.isArray(species.stage_names) ? species.stage_names : [];
   const finalStage = stageNames[stageNames.length - 1];
+  // 히든(이스터에그) 종·단일 형태 종은 성장 단계 미표시 (유니콘·무지개 데이지 등)
+  const showStages =
+    !species.key.startsWith("hidden_") && stageNames.length > 1;
 
   return (
     <div
@@ -219,7 +228,7 @@ function SpeciesCard({
           preserveAspectRatio="xMidYMax meet"
           className="w-full h-full"
         >
-          {render(0, 1)}
+          {render(0, 1, false, species.tint)}
         </svg>
         {!species.is_published ? (
           <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md bg-amber-500/90 text-black text-[10px] font-semibold">
@@ -255,43 +264,68 @@ function SpeciesCard({
           <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-white/[0.05] border border-white/10 text-[10px] text-gray-300">
             {ZONE_LABELS[species.zone] ?? species.zone}
           </span>
-          <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-white/[0.05] border border-white/10 text-[10px] text-gray-400">
-            {species.max_stage}단계
-          </span>
+          {showStages ? (
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-white/[0.05] border border-white/10 text-[10px] text-gray-400">
+              {species.max_stage}단계
+            </span>
+          ) : null}
         </div>
 
-        {/* 성장 스트립 — 클릭 시 크게 미리보기 */}
-        <div>
-          <div className="text-[9px] text-gray-500 uppercase tracking-wider mb-1">
-            성장 단계 (클릭)
-          </div>
-          <StageStrip
-            svgKey={species.svg_key}
-            category={species.category}
-            maxStage={species.max_stage}
-            stageNames={stageNames}
-            speciesName={species.name}
-          />
-        </div>
-
-        {grantPuzzleName ? (
-          <div className="text-[10px] text-violet-300 truncate">
-            🧩 {grantPuzzleName}
+        {/* 성장 스트립 — 클릭 시 크게 미리보기 (히든/단일 형태 종은 미표시) */}
+        {showStages ? (
+          <div>
+            <div className="text-[9px] text-gray-500 uppercase tracking-wider mb-1">
+              성장 단계 (클릭)
+            </div>
+            <StageStrip
+              svgKey={species.svg_key}
+              category={species.category}
+              maxStage={species.max_stage}
+              stageNames={stageNames}
+              speciesName={species.name}
+              tint={species.tint}
+            />
           </div>
         ) : null}
 
-        {finalStage ? (
+        {grantPuzzleName ? (
+          <div
+            className="text-[10px] text-violet-300 truncate"
+            title={`"${grantPuzzleName}" 퍼즐 완성 시 지급`}
+          >
+            🧩 보상 퍼즐 · {grantPuzzleName}
+          </div>
+        ) : null}
+
+        {showStages && finalStage ? (
           <div className="text-[10px] text-gray-500 truncate">
             성숙: {finalStage}
           </div>
         ) : null}
 
-        <div className="flex items-center justify-between pt-1 border-t border-white/5 mt-2">
-          <span className="text-[10px] text-gray-500">유저 심음</span>
+        {/* 재심기 비용 — 브랜드(비변이) 종만: 퍼즐 해금 후 씨앗으로 재획득 */}
+        {species.is_brand && !species.is_variant ? (
+          <div className="flex items-center justify-between pt-1 border-t border-white/5 mt-2">
+            <span className="text-[10px] text-gray-500">재심기 비용</span>
+            <PlantCostEditor
+              speciesId={species.id}
+              cost={species.plant_cost}
+              manual={species.plant_cost_manual}
+            />
+          </div>
+        ) : null}
+
+        <div
+          className="flex items-center justify-between pt-1 border-t border-white/5 mt-2"
+          title="전체 유저 정원에 심긴 이 종의 그루 수 (그중 최종 단계까지 자란 수)"
+        >
+          <span className="text-[10px] text-gray-500">전체 정원에 심긴 수</span>
           <span className="text-xs font-mono text-emerald-200">
-            {total.toLocaleString()}
+            {total.toLocaleString()}그루
             {mature > 0 ? (
-              <span className="text-yellow-200 ml-1">/{mature}성숙</span>
+              <span className="text-yellow-200 ml-1">
+                · 성숙 {mature.toLocaleString()}
+              </span>
             ) : null}
           </span>
         </div>

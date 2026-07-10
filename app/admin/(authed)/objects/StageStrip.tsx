@@ -10,23 +10,30 @@ type Props = {
   maxStage: number;
   stageNames: string[];
   speciesName: string;
+  tint?: string | null;
 };
 
 /** 식물처럼 씨앗(흙 둔덕)에서 자라는 카테고리 */
 const SEED_CATEGORIES = new Set(["flower", "bush", "mushroom", "tree"]);
 
 function renderStage(
-  render: (w: number, g?: number, front?: boolean) => React.ReactNode,
+  render: (
+    w: number,
+    g?: number,
+    front?: boolean,
+    tint?: string | null
+  ) => React.ReactNode,
   category: string,
   idx: number,
   growth: number,
-  front = false
+  front = false,
+  tint: string | null = null
 ): React.ReactNode {
   if (idx === 0 && SEED_CATEGORIES.has(category)) {
     return PLANT_SVG.Seed(0);
   }
   // 동물/구름/제품 등: stage 0 도 자신의 SVG 로 (g 를 아주 작게 = 아기)
-  return render(0, Math.max(0.05, Math.min(1, growth)), front);
+  return render(0, Math.max(0.05, Math.min(1, growth)), front, tint);
 }
 
 export default function StageStrip({
@@ -35,6 +42,7 @@ export default function StageStrip({
   maxStage,
   stageNames,
   speciesName,
+  tint = null,
 }: Props) {
   const render = PLANT_SVG[svgKey] ?? PLANT_SVG.Sprout;
   const stageCount = Math.max(1, maxStage) + 1;
@@ -62,7 +70,7 @@ export default function StageStrip({
               preserveAspectRatio="xMidYMax meet"
               className="w-full h-full pointer-events-none"
             >
-              {renderStage(render, category, i, stageGrowth(i))}
+              {renderStage(render, category, i, stageGrowth(i), false, tint)}
             </svg>
           </button>
         ))}
@@ -75,6 +83,7 @@ export default function StageStrip({
           maxStage={maxStage}
           stageNames={stageNames}
           speciesName={speciesName}
+          tint={tint}
           idx={openIdx}
           onIdxChange={setOpenIdx}
           onClose={() => setOpenIdx(null)}
@@ -90,6 +99,7 @@ function StageModal({
   maxStage,
   stageNames,
   speciesName,
+  tint = null,
   idx,
   onIdxChange,
   onClose,
@@ -99,6 +109,7 @@ function StageModal({
   maxStage: number;
   stageNames: string[];
   speciesName: string;
+  tint?: string | null;
   idx: number;
   onIdxChange: (i: number) => void;
   onClose: () => void;
@@ -182,7 +193,7 @@ function StageModal({
             preserveAspectRatio="xMidYMax meet"
             className="w-full h-full"
           >
-            {renderStage(render, category, idx, growth, front)}
+            {renderStage(render, category, idx, growth, front, tint)}
           </svg>
 
           {/* 좌/우 네비 */}

@@ -54,8 +54,22 @@ const stem = (d: string, c: string, w = 4) => (
 export type Render = (
   w: number,
   g?: number,
-  front?: boolean
+  front?: boolean,
+  tint?: string | null
 ) => React.ReactNode;
+
+/** 꽃 색 변이 — null=기본, hex=파스텔, 'gold'=황금, 'rainbow'=무지개(꽃잎별 색순환). hilly_rn 과 동일 */
+function petalColor(
+  tint: string | null | undefined,
+  def: string,
+  w: number,
+  i = 0
+): string {
+  if (!tint) return wiltC(def, w);
+  if (tint === "rainbow") return wiltC(RAINBOW[i % RAINBOW.length], w);
+  if (tint === "gold") return wiltC("#D4A017", w);
+  return wiltC(tint, w);
+}
 
 /** svg_key 별 앞모습(front) 지원 여부 — 없으면 옆모습(default) 만 렌더 */
 export const HAS_FRONT_VIEW = new Set<string>([
@@ -87,10 +101,9 @@ function Sprout(w: number, g = 1) {
     </g>
   );
 }
-function Daisy(w: number, g = 1) {
+function Daisy(w: number, g = 1, _front = false, tint: string | null = null) {
   const lf = wiltC("#4FB257", w);
   const st = wiltC("#3E9E48", w);
-  const pet = wiltC("#FFFFFF", w);
   const top = 86 - (8 + 26 * g);
   const sH = 86 - top;
   const bloom = seg(g, 0.45, 1);
@@ -107,14 +120,14 @@ function Daisy(w: number, g = 1) {
         <Leaf x={50 + 5 * l2} y={86 - sH * 0.62} rot={-46} c={lf} len={5 + 11 * l2} />
       )}
       {bloom > 0 &&
-        [0, 45, 90, 135, 180, 225, 270, 315].map((a) => (
+        [0, 45, 90, 135, 180, 225, 270, 315].map((a, i) => (
           <ellipse
             key={a}
             cx={50}
             cy={top}
             rx={3.4 * bloom}
             ry={8 * bloom}
-            fill={pet}
+            fill={petalColor(tint, "#FFFFFF", w, i)}
             transform={`rotate(${a} 50 ${top.toFixed(1)}) translate(0 ${(
               -8 * bloom
             ).toFixed(1)})`}
@@ -124,7 +137,7 @@ function Daisy(w: number, g = 1) {
     </g>
   );
 }
-function Tulip(w: number, g = 1) {
+function Tulip(w: number, g = 1, _front = false, tint: string | null = null) {
   const lf = wiltC("#3FA84F", w);
   const st = wiltC("#3E9E48", w);
   const top = 86 - (8 + 26 * g);
@@ -132,11 +145,19 @@ function Tulip(w: number, g = 1) {
   const l1 = seg(g, 0.1, 0.55);
   const l2 = seg(g, 0.38, 0.9);
   const open = seg(g, 0.42, 1);
-  const petBase = mix(
+  const petMorph = mix(
     mix("#86C566", "#FF9FB6", seg(g, 0.42, 0.7)),
     "#E0466A",
     seg(g, 0.7, 1)
   );
+  // 색 변이면 꽃잎 색 override (황금/무지개/파스텔), 아니면 성장 모프 색
+  const petBase = !tint
+    ? petMorph
+    : tint === "gold"
+      ? "#F4CE5A"
+      : tint === "rainbow"
+        ? "#FF6B6B"
+        : tint;
   const pet = wiltC(petBase, w);
   const wd = 3 + 5.5 * open;
   const bh = 13 + 3 * open;
@@ -174,11 +195,18 @@ function Tulip(w: number, g = 1) {
     </g>
   );
 }
-function Sunflower(w: number, g = 1) {
+function Sunflower(
+  w: number,
+  g = 1,
+  _front = false,
+  tint: string | null = null
+) {
   const lf = wiltC("#4FB257", w);
   const st = wiltC("#3E9E48", w);
-  const pet = wiltC("#FFC42E", w);
-  const petDk = wiltC("#F0A21E", w);
+  // 꽃잎 색(안쪽/바깥 어두운 링). tint 있으면 변이색, 없으면 노랑.
+  const petC = (i: number) => petalColor(tint, "#FFC42E", w, i);
+  const petDkC = (i: number) =>
+    tint ? mix(petC(i), "#7A4F10", 0.28) : wiltC("#F0A21E", w);
   const top = 86 - (10 + 32 * g);
   const sH = 86 - top;
   const bloom = seg(g, 0.5, 1);
@@ -199,28 +227,28 @@ function Sunflower(w: number, g = 1) {
         <Leaf x={50 - 6 * l3} y={86 - sH * 0.7} rot={50} c={lf} len={6 + 10 * l3} />
       )}
       {bloom > 0 &&
-        [18, 54, 90, 126, 162, 198, 234, 270, 306, 342].map((a) => (
+        [18, 54, 90, 126, 162, 198, 234, 270, 306, 342].map((a, i) => (
           <ellipse
             key={`o${a}`}
             cx={50}
             cy={top}
             rx={3.4 * bloom}
             ry={7 * bloom}
-            fill={petDk}
+            fill={petDkC(i)}
             transform={`rotate(${a} 50 ${top.toFixed(1)}) translate(0 ${(
               -11 * bloom
             ).toFixed(1)})`}
           />
         ))}
       {bloom > 0 &&
-        [0, 36, 72, 108, 144, 180, 216, 252, 288, 324].map((a) => (
+        [0, 36, 72, 108, 144, 180, 216, 252, 288, 324].map((a, i) => (
           <ellipse
             key={a}
             cx={50}
             cy={top}
             rx={4 * bloom}
             ry={8.5 * bloom}
-            fill={pet}
+            fill={petC(i)}
             transform={`rotate(${a} 50 ${top.toFixed(1)}) translate(0 ${(
               -10 * bloom
             ).toFixed(1)})`}
@@ -1763,14 +1791,46 @@ function Seed(w: number) {
     </g>
   );
 }
-function CloudPlant(w: number) {
-  const c = mix("#FFFFFF", "#C9D2D8", w * 0.4);
+// 구름 — 성장값 g 로 크기 모핑, tint 로 색 변이(무지개/황금). hilly_rn 과 동일
+function CloudPlant(
+  w: number,
+  g = 1,
+  _front = false,
+  tint: string | null = null
+) {
+  const isRainbow = tint === "rainbow";
+  const body =
+    !tint || isRainbow
+      ? mix("#FFFFFF", "#C9D2D8", w * 0.4)
+      : tint === "gold"
+        ? mix("#E8B93A", "#FFFFFF", 0.12)
+        : mix(tint, "#FFFFFF", 0.3);
+  const sh = mix(body, "#AEB8C0", 0.35);
+  const s = 0.5 + 0.5 * g;
   return (
-    <g>
-      <ellipse cx={50} cy={55} rx={27} ry={12} fill={c} />
-      <ellipse cx={35} cy={50} rx={15} ry={11} fill={c} />
-      <ellipse cx={63} cy={49} rx={17} ry={12} fill={c} />
-      <ellipse cx={50} cy={43} rx={16} ry={12} fill={c} />
+    <g transform={`translate(50 49) scale(${s.toFixed(3)}) translate(-50 -49)`}>
+      {/* 무지개 아치 — 구름 아래 살짝 삐져나오게 */}
+      {isRainbow &&
+        ["#FF6B6B", "#FFA94D", "#FFE066", "#7CD97C", "#74C0FC", "#B197FC"].map(
+          (col, i) => {
+            const r = 17 - i * 2.2;
+            return (
+              <path
+                key={col}
+                d={`M${(50 - r).toFixed(1)} 55 Q 50 ${(55 + r * 0.9).toFixed(1)} ${(50 + r).toFixed(1)} 55`}
+                stroke={col}
+                strokeWidth={2.1}
+                fill="none"
+                strokeLinecap="round"
+              />
+            );
+          }
+        )}
+      <ellipse cx={50} cy={55} rx={22} ry={9.5} fill={sh} opacity={0.6} />
+      <ellipse cx={50} cy={53} rx={22} ry={9.5} fill={body} />
+      <ellipse cx={37} cy={49} rx={12.5} ry={9.5} fill={body} />
+      <ellipse cx={62} cy={48} rx={14} ry={10} fill={body} />
+      <ellipse cx={50} cy={43} rx={13} ry={10} fill={body} />
     </g>
   );
 }

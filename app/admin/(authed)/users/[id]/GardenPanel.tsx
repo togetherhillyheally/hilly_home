@@ -21,6 +21,7 @@ type Species = {
   is_brand: boolean;
   svg_key: string;
   scale_m: number | string;
+  tint: string | null;
 };
 
 type Plant = {
@@ -34,6 +35,7 @@ type Plant = {
   zone: string;
   source_puzzle_id: string | null;
   planted_at: string;
+  tint: string | null;
 };
 
 const ZONE_LABEL: Record<string, string> = {
@@ -45,14 +47,14 @@ const ZONE_LABEL: Record<string, string> = {
 export default async function GardenPanel({ userId }: { userId: string }) {
   const [plantsRes, balanceRes, speciesRes] = await Promise.all([
     adminList<Plant>(
-      `garden_plants?select=id,species_id,stage,is_mature,placed,xf,yf,zone,source_puzzle_id,planted_at&user_id=eq.${userId}&order=planted_at.desc`,
+      `garden_plants?select=id,species_id,stage,is_mature,placed,xf,yf,zone,source_puzzle_id,planted_at,tint&user_id=eq.${userId}&order=planted_at.desc`,
       { from: 0, to: 999 }
     ),
     adminList<{ balance: number }>(
       `garden_seed_balance?select=balance&user_id=eq.${userId}&limit=1`
     ),
     adminList<Species>(
-      `garden_species?select=id,key,name,category,zone,max_stage,is_brand,svg_key,scale_m`,
+      `garden_species?select=id,key,name,category,zone,max_stage,is_brand,svg_key,scale_m,tint`,
       { from: 0, to: 999 }
     ),
   ]);
@@ -305,6 +307,8 @@ function GardenScene({
           const render = PLANT_SVG[sp.svg_key] ?? PLANT_SVG.Sprout;
           const m = Number(sp.scale_m) || 1;
           const g = sp.max_stage > 0 ? p.stage / sp.max_stage : 1;
+          // 개별 식물의 뽑기 tint 우선, 없으면 종 고정 tint
+          const tint = p.tint ?? sp.tint;
           const cx = p.xf * W;
           if (p.zone === "sky") {
             const s = sBase * m;
@@ -318,7 +322,7 @@ function GardenScene({
                   {sp.name} · 단계 {p.stage}/{sp.max_stage}
                   {p.is_mature ? " · 성숙" : ""}
                 </title>
-                {render(wilt, Math.max(0.05, Math.min(1, g)))}
+                {render(wilt, Math.max(0.05, Math.min(1, g)), false, tint)}
               </g>
             );
           }
@@ -341,7 +345,7 @@ function GardenScene({
               <g
                 transform={`translate(${(cx - 50 * s).toFixed(2)} ${(baseY - 86 * s).toFixed(2)}) scale(${s.toFixed(3)})`}
               >
-                {render(wilt, Math.max(0.05, Math.min(1, g)))}
+                {render(wilt, Math.max(0.05, Math.min(1, g)), false, tint)}
               </g>
             </g>
           );
@@ -362,7 +366,7 @@ function SpeciesThumb({ species }: { species: Species }) {
         viewBox="0 0 100 100"
         preserveAspectRatio="xMidYMax meet"
       >
-        {render(0, 1)}
+        {render(0, 1, false, species.tint)}
       </svg>
     </span>
   );
