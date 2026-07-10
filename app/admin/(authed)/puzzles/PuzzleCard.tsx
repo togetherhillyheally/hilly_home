@@ -11,6 +11,7 @@ export type RewardSpecies = {
   name: string;
   category: string;
   svg_key: string;
+  tint: string | null;
 };
 
 // puzzle_type 은 셀 이미지 노출 방식 (브랜드 연결 여부와 무관)
@@ -205,7 +206,7 @@ export default function PuzzleCard({
                         preserveAspectRatio="xMidYMax meet"
                         className="w-full h-full"
                       >
-                        {render(0, 1)}
+                        {render(0, 1, false, sp.tint)}
                       </svg>
                     </div>
                   );

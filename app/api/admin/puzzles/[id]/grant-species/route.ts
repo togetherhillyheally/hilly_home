@@ -59,9 +59,9 @@ export async function PUT(
       );
     }
   }
-  if (uniq.length > 200) {
+  if (uniq.length > 1) {
     return NextResponse.json(
-      { error: "종은 최대 200개까지 연결할 수 있어요." },
+      { error: "퍼즐당 보상 종은 1종만 연결할 수 있어요." },
       { status: 400 }
     );
   }

@@ -57,7 +57,7 @@ export default async function PuzzlesPage({
         puzzle_id: string;
         garden_species: RewardSpecies | null;
       }>(
-        `garden_puzzle_rewards?puzzle_id=in.(${inList})&select=puzzle_id,garden_species(id,name,category,svg_key)`,
+        `garden_puzzle_rewards?puzzle_id=in.(${inList})&select=puzzle_id,garden_species(id,name,category,svg_key,tint)`,
         { from: 0, to: 999 }
       ),
       trailIds.length > 0

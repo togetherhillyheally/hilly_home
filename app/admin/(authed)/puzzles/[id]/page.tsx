@@ -16,24 +16,38 @@ export default async function PuzzleDetailPage({
 }) {
   const { id } = await params;
 
-  const [{ rows: puzzleRows }, { rows: allSpecies }, { rows: grantRows }] =
+  const [{ rows: puzzleRows }, { rows: allSpecies }, { rows: allLinks }] =
     await Promise.all([
       adminList<PuzzleFull>(
         `puzzles?id=eq.${id}&select=id,name,description,total_pieces,cover_image_url,image_url,is_active,grid_rows,grid_cols,reward_description,trail_id,base_tier,puzzle_type,series_name,collab_title,collab_description,created_at`
       ),
       adminList<SpeciesMini>(
         // 완성 보상 후보: is_hidden 제외, product 제외 (하늘·식물·동물만)
-        "garden_species?select=id,key,name,category,zone,svg_key,is_brand,is_hidden,is_published&is_hidden=eq.false&category=neq.product&order=sort_order.asc.nullslast,key.asc",
+        "garden_species?select=id,key,name,category,zone,svg_key,is_brand,is_hidden,is_published,tint&is_hidden=eq.false&category=neq.product&order=sort_order.asc.nullslast,key.asc",
         { from: 0, to: 999 }
       ),
-      adminList<{ species_id: string }>(
-        `garden_puzzle_rewards?puzzle_id=eq.${id}&select=species_id`,
+      // 전체 보상 연결 — 이 퍼즐의 현재 연결 + 타 퍼즐 선점 표시용
+      adminList<{
+        species_id: string;
+        puzzle_id: string;
+        puzzles: { name: string } | null;
+      }>(
+        `garden_puzzle_rewards?select=species_id,puzzle_id,puzzles(name)`,
         { from: 0, to: 999 }
       ),
     ]);
   const puzzle = puzzleRows[0];
   if (!puzzle) notFound();
-  const initialGrantIds = grantRows.map((r) => r.species_id);
+
+  const initialGrantSpeciesId =
+    allLinks.find((l) => l.puzzle_id === id)?.species_id ?? null;
+  // 다른 퍼즐이 선점한 종 → 퍼즐명 매핑 (선택 비활성 표시용)
+  const linkedByOthers: Record<string, string> = {};
+  for (const l of allLinks) {
+    if (l.puzzle_id !== id) {
+      linkedByOthers[l.species_id] = l.puzzles?.name ?? "다른 퍼즐";
+    }
+  }
 
   return (
     <main className="p-6 lg:p-10">
@@ -65,7 +79,8 @@ export default async function PuzzleDetailPage({
       <PuzzleEditForm
         puzzle={puzzle}
         allSpecies={allSpecies}
-        initialGrantSpeciesIds={initialGrantIds}
+        initialGrantSpeciesId={initialGrantSpeciesId}
+        linkedByOthers={linkedByOthers}
       />
     </main>
   );
