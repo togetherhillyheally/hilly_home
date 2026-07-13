@@ -303,10 +303,8 @@ function Mushroom(w: number, g = 1) {
         d={`M${(50 - capW).toFixed(1)} ${capTop.toFixed(1)} Q 50 ${(
           capTop +
           3 * s
-        ).toFixed(1)} ${(50 + capW).toFixed(1)} ${capTop.toFixed(1)}`}
-        stroke={capDk}
-        strokeWidth={1.5}
-        fill="none"
+        ).toFixed(1)} ${(50 + capW).toFixed(1)} ${capTop.toFixed(1)} Z`}
+        fill={capDk}
       />
       {g > 0.4 && (
         <>
@@ -318,14 +316,22 @@ function Mushroom(w: number, g = 1) {
     </g>
   );
 }
-function Pine(w: number) {
+// 소나무 — 굽은 적갈색 줄기 + 우산형 수관 (삼각 침엽수인 뾰족나무와 구분)
+function Pine(w: number, g = 1) {
   const lf = wiltC("#2E8B57", w);
-  const tr = wiltC("#8A5A3A", w);
+  const lfD = mix(wiltC("#2E8B57", w), "#1F6E43", 0.3);
+  const tr = wiltC("#96603E", w);
+  const s = 0.55 + 0.45 * g;
   return (
-    <g>
-      <rect x={47} y={70} width={6} height={17} rx={2} fill={tr} />
-      <path d="M50 36 L62 56 L38 56 Z" fill={lf} />
-      <path d="M50 48 L66 70 L34 70 Z" fill={mix(lf, "#1F6E43", 0.15)} />
+    <g transform={`translate(50 87) scale(${s.toFixed(3)}) translate(-50 -87)`}>
+      <path d="M50 87 Q 46.5 74 51 65 Q 53 61 51.5 56" stroke={tr} strokeWidth={5} strokeLinecap="round" fill="none" />
+      <path d="M50.5 71 Q 57 67 61 64" stroke={tr} strokeWidth={3} strokeLinecap="round" fill="none" />
+      <ellipse cx={63} cy={59} rx={8.5} ry={5} fill={lfD} />
+      <ellipse cx={37.5} cy={57} rx={9} ry={5.5} fill={lfD} />
+      <ellipse cx={50} cy={49} rx={17} ry={9.5} fill={lf} />
+      <ellipse cx={41} cy={43.5} rx={8} ry={5} fill={lf} />
+      <ellipse cx={59} cy={44} rx={7} ry={4.5} fill={lf} />
+      <ellipse cx={46} cy={45} rx={6} ry={3.5} fill="#fff" opacity={0.12} />
     </g>
   );
 }
@@ -882,8 +888,8 @@ function Bird(w: number, g = 1, front = false) {
     <g
       transform={`translate(50 86) scale(${s.toFixed(3)}) translate(-50 -86)`}
     >
-      {/* 꼬리 */}
-      <path d="M41 74 l-9 3 l8 3 Z" fill={dk} />
+      {/* 꼬리 — 앵커를 몸통 안쪽에 두어 분리돼 보이지 않게 */}
+      <path d="M45 73.5 l-11 2 l9.5 5 Z" fill={dk} />
       {/* 몸통 */}
       <ellipse cx={52} cy={75} rx={11} ry={10} fill={c} />
       {/* 배 */}
@@ -1590,9 +1596,9 @@ function CherryBlossom(w: number, g = 1) {
       {stem(`M50 86 L50 ${top.toFixed(1)}`, st, 2.5 + g)}
       {g > 0.4 && stem(`M50 ${(top + 4).toFixed(1)} q -6 -4 -10 -6`, st, 1.8)}
       {g > 0.4 && stem(`M50 ${(top + 4).toFixed(1)} q 6 -4 10 -6`, st, 1.8)}
-      {/* 잎 */}
-      {g > 0.35 && <Leaf x={38} y={top + 2} rot={20} c={lf} len={7} />}
-      {g > 0.5 && <Leaf x={62} y={top + 2} rot={-20} c={lf} len={7} />}
+      {/* 잎 — 가지 중간에 붙도록 안쪽으로 */}
+      {g > 0.35 && <Leaf x={44.5} y={top + 1.5} rot={25} c={lf} len={7} />}
+      {g > 0.5 && <Leaf x={55.5} y={top + 1.5} rot={-25} c={lf} len={7} />}
       {bloom > 0 && (
         <>
           {/* 꽃 3개: 중앙, 왼, 오 */}
