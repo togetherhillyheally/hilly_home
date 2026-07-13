@@ -109,7 +109,7 @@ export default async function UserGardensPage({
       </header>
 
       <form
-        action="/admin/user-camps"
+        action="/admin/user-gardens"
         method="get"
         className="mb-4 flex gap-2 max-w-md"
       >
@@ -273,7 +273,7 @@ export default async function UserGardensPage({
       )}
 
       <Pagination
-        basePath="/admin/user-camps"
+        basePath="/admin/user-gardens"
         page={page}
         totalPages={totalPages}
         query={{ q: q || undefined }}

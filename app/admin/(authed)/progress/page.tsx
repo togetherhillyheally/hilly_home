@@ -14,7 +14,7 @@ type Profile = {
   created_at: string;
 };
 
-type CampfireBalance = {
+type GardenSeedBalance = {
   user_id: string;
   balance: number;
 };
@@ -59,8 +59,8 @@ export default async function ProgressPage({
 
   const userIds = profiles.map((p) => p.id);
 
-  // 정원 씨앗(campfire) 잔액 / 씨앗 합계 / 활성 퍼즐 일괄 조회
-  const campfireMap = new Map<string, number>();
+  // 정원 씨앗 잔액 / 씨앗 합계 / 활성 퍼즐 일괄 조회
+  const gardenSeedMap = new Map<string, number>();
   const seedSumMap = new Map<string, number>();
   const seedBrandTrailCountMap = new Map<string, number>();
   const tierCountMap = new Map<string, number>();
@@ -68,9 +68,9 @@ export default async function ProgressPage({
   if (userIds.length > 0) {
     const inList = userIds.join(",");
 
-    const [{ rows: cf }, { rows: sd }, { rows: tiers }] = await Promise.all([
-      adminList<CampfireBalance>(
-        `puzzle_campfire_balance?select=user_id,balance&user_id=in.(${inList})`
+    const [{ rows: gs }, { rows: sd }, { rows: tiers }] = await Promise.all([
+      adminList<GardenSeedBalance>(
+        `garden_seed_balance?select=user_id,balance&user_id=in.(${inList})`
       ),
       adminList<SeedBalance>(
         `garden_trail_seed_balance?select=user_id,trail_id,pieces&user_id=in.(${inList})`
@@ -80,7 +80,7 @@ export default async function ProgressPage({
       ),
     ]);
 
-    cf.forEach((c) => campfireMap.set(c.user_id, c.balance));
+    gs.forEach((c) => gardenSeedMap.set(c.user_id, c.balance));
     sd.forEach((f) => {
       seedSumMap.set(f.user_id, (seedSumMap.get(f.user_id) ?? 0) + f.pieces);
       if (f.trail_id) {
@@ -164,7 +164,7 @@ export default async function ProgressPage({
               </thead>
               <tbody>
                 {profiles.map((p) => {
-                  const cf = campfireMap.get(p.id) ?? 0;
+                  const cf = gardenSeedMap.get(p.id) ?? 0;
                   const sd = seedSumMap.get(p.id) ?? 0;
                   const brandTrailCount =
                     seedBrandTrailCountMap.get(p.id) ?? 0;

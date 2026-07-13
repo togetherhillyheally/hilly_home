@@ -13,8 +13,8 @@ import {
   Music,
   Puzzle,
   Smartphone,
+  Sprout,
   Stamp,
-  Tent,
   Trophy,
   UserMinus,
   Users,
@@ -83,7 +83,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     title: "정원",
     items: [
       { href: "/admin/objects", label: "정원 도감", icon: BookOpen },
-      { href: "/admin/user-camps", label: "모험자 정원", icon: Tent },
+      { href: "/admin/user-gardens", label: "모험자 정원", icon: Sprout },
       { href: "/admin/guestbook", label: "발자국", icon: MessageSquare },
     ],
   },

@@ -7,7 +7,7 @@ import {
   Navigation,
   Puzzle,
   Stamp,
-  Tent,
+  Sprout,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -83,9 +83,9 @@ export default function HillyheallyHomepage() {
             </div>
             <div className="animate-fade-in-up delay-500">
               <p className="text-lg text-gray-500 mb-10 max-w-xl mx-auto leading-relaxed">
-                코스를 찾고, 모험을 만들고, 퍼즐을 완성해 씨앗을 얻고,
+                코스를 찾고, 모험을 만들고, 걸어서 씨앗을 모아,
                 <br />
-                나만의 캠프를 꾸미는 아웃도어 소셜 플랫폼
+                나만의 정원을 가꾸는 아웃도어 소셜 플랫폼
               </p>
             </div>
             <div className="animate-fade-in-up delay-700 flex flex-wrap items-center justify-center gap-4">
@@ -200,9 +200,9 @@ export default function HillyheallyHomepage() {
               },
               {
                 step: "06",
-                icon: <Tent className="h-5 w-5 text-pink-400" />,
-                title: "퍼즐 완성 & 캠프 꾸미기",
-                desc: "퍼즐을 완성해 씨앗을 획득하고, 나만의 캠프에 텐트·장비·자연물을 배치해 캠핑 씬을 꾸며보세요.",
+                icon: <Sprout className="h-5 w-5 text-pink-400" />,
+                title: "퍼즐 완성 & 정원 가꾸기",
+                desc: "퍼즐을 완성해 보상을 얻고, 씨앗으로 나만의 정원에 꽃·나무·동물을 심고 키워보세요.",
                 accent: "border-l-pink-500/60",
               },
             ].map((item, idx) => (
@@ -283,14 +283,14 @@ export default function HillyheallyHomepage() {
                 icon: <Puzzle className="h-6 w-6 text-orange-400" />,
                 iconBg: "bg-orange-400/10",
                 title: "퍼즐 & 씨앗",
-                desc: "모험을 완료해 퍼즐 조각을 모으고, 퍼즐을 완성하면 앱 내 화폐 '씨앗'을 획득합니다. 씨앗으로 캠프 오브젝트를 해금하세요.",
+                desc: "모험을 완료하면 걸은 거리만큼 앱 내 화폐 '씨앗'을 얻습니다. 퍼즐을 완성하면 특별한 식물·동물이 정원 도감에 열려요.",
                 hover: "hover:border-orange-500/30",
               },
               {
-                icon: <Tent className="h-6 w-6 text-violet-400" />,
+                icon: <Sprout className="h-6 w-6 text-violet-400" />,
                 iconBg: "bg-violet-400/10",
-                title: "나만의 캠프",
-                desc: "나만의 캠핑 씬을 꾸며보세요. 배경·지면·텐트·장비·자연·동물을 자유롭게 배치할 수 있습니다.",
+                title: "나만의 정원",
+                desc: "씨앗으로 꽃·나무·동물을 심고 돌보며 나만의 정원을 가꿔보세요. 친구 정원에 발자국도 남길 수 있어요.",
                 hover: "hover:border-violet-500/30",
               },
               {
@@ -338,7 +338,7 @@ export default function HillyheallyHomepage() {
           </div>
           <div className="animate-fade-in-up delay-300">
             <p className="text-gray-500 mb-8 max-w-xl mx-auto text-sm leading-relaxed">
-              코스를 발견하고, 퍼즐을 완성하고, 나만의 캠프를 꾸며보세요.
+              코스를 발견하고, 퍼즐을 완성하고, 나만의 정원을 가꿔보세요.
             </p>
           </div>
           <div className="animate-fade-in-up delay-500 flex flex-wrap items-center justify-center gap-4">
