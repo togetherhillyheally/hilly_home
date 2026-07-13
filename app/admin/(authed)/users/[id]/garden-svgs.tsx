@@ -941,35 +941,29 @@ function Frog(w: number, g = 1, front = false) {
     <g
       transform={`translate(50 87) scale(${s.toFixed(3)}) translate(-50 -87)`}
     >
-      {/* 뒷다리 */}
-      <path
-        d="M40 78 q-9 1 -8 9 q0 2 3 2"
-        stroke={c}
-        strokeWidth={5}
-        fill="none"
-        strokeLinecap="round"
-      />
-      <ellipse cx={35} cy={87} rx={3} ry={1.5} fill={dk} />
-      {/* 몸통 + 배 */}
+      {/* 뒷다리 — 접힌 허벅지 + 발 */}
+      <ellipse cx={38} cy={81} rx={6.5} ry={5.5} fill={dk} />
+      <ellipse cx={33.5} cy={86.8} rx={3.4} ry={1.6} fill={dk} />
+      {/* 몸통 + 배 (배는 아래 중앙 — 얼굴과 겹치지 않게) */}
       <ellipse cx={49} cy={80} rx={14} ry={8.5} fill={c} />
-      <ellipse cx={53} cy={83} rx={8} ry={4} fill={belly} />
-      {/* 앞다리 + 발 */}
+      <ellipse cx={48} cy={84} rx={8.5} ry={3.4} fill={belly} />
+      {/* 앞다리 + 발 — 가슴 아래로 짧게 */}
       <path
-        d="M58 82 q3 2 4 5"
+        d="M56.5 83.5 q1 2 1.2 3.5"
         stroke={c}
-        strokeWidth={4}
+        strokeWidth={3.6}
         fill="none"
         strokeLinecap="round"
       />
-      <ellipse cx={62} cy={87} rx={3.2} ry={1.6} fill={dk} />
+      <ellipse cx={58.5} cy={87.2} rx={3} ry={1.5} fill={dk} />
       {/* 눈 */}
       <circle cx={56} cy={70} r={4.8} fill={c} />
       <circle cx={56.5} cy={70} r={2.4} fill="#fff" />
       <circle cx={57.3} cy={70.4} r={1.2} fill="#2a2018" />
       {/* 콧구멍 + 입 */}
-      <circle cx={62} cy={76} r={0.7} fill={dk} />
+      <circle cx={61.5} cy={74.5} r={0.7} fill={dk} />
       <path
-        d="M50 78 q7 3.5 12 -0.5"
+        d="M55 77.5 q4 2 7.5 0"
         stroke={dk}
         strokeWidth={1.4}
         fill="none"
@@ -1311,15 +1305,15 @@ function Squirrel(w: number, g = 1, front = false) {
       <ellipse cx={52} cy={72} rx={8} ry={11} fill={c} />
       {/* 배 */}
       <ellipse cx={53} cy={75} rx={4.5} ry={7} fill={belly} />
-      {/* 앞다리 */}
-      <ellipse cx={58} cy={72} rx={2.5} ry={4} fill={c} />
-      {/* 도토리 — 성체만 */}
+      {/* 도토리 — 가슴 앞에 안김 (몸 밖으로 나가면 주둥이처럼 보임), 성체만 */}
       {acorn > 0.05 && (
         <g opacity={acorn}>
-          <ellipse cx={60} cy={71} rx={2.6} ry={3.4} fill="#B08050" />
-          <ellipse cx={60} cy={69} rx={2.8} ry={1.5} fill={dk} />
+          <ellipse cx={56.5} cy={74} rx={2.6} ry={3.2} fill="#B08050" />
+          <ellipse cx={56.5} cy={72.2} rx={2.8} ry={1.4} fill={dk} />
         </g>
       )}
+      {/* 앞다리 — 도토리를 감싸도록 도토리 위에 */}
+      <ellipse cx={55} cy={75.5} rx={2.2} ry={3.4} fill={c} transform="rotate(18 55 75.5)" />
       {/* 머리 — 아기가 상대적으로 큼 */}
       <circle cx={54} cy={58} r={hr} fill={c} />
       {/* 볼 크림 */}
@@ -1337,8 +1331,8 @@ function Squirrel(w: number, g = 1, front = false) {
 // 나비 — 변태(metamorphosis): 애벌레 → 번데기 → 나비 → 화려한 나비
 function Butterfly(w: number, g = 1) {
   const bodyC = wiltC("#3A2F4A", w);
-  // stage 0~1 (g < 0.34): 애벌레
-  if (g < 0.34) {
+  // 1단계 (g<0.3): 애벌레 — 도감 4단계 g=1/3(번데기)이 걸리지 않게 경계를 낮게
+  if (g < 0.3) {
     const cat = wiltC("#7CC94E", w);
     const catDk = mix(wiltC("#7CC94E", w), "#4A8A28", 0.5);
     return (
@@ -1373,8 +1367,8 @@ function Butterfly(w: number, g = 1) {
       </g>
     );
   }
-  // stage 2 근처 (g < 0.67): 번데기 — 줄기에 매달림
-  if (g < 0.67) {
+  // 2단계 (g<0.6): 번데기 — 줄기에 매달림 (g=2/3은 나비로)
+  if (g < 0.6) {
     const chry = wiltC("#B8C46A", w);
     const chryDk = mix(wiltC("#B8C46A", w), "#7A8A3A", 0.5);
     const leaf = wiltC("#5FB86A", w);
