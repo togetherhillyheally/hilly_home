@@ -708,7 +708,7 @@ function unicornSide(w: number, g: number, c: string, dk: string) {
       <ellipse cx={hx} cy={hy} rx={hr * 1.05} ry={hr * 0.8} fill={c} transform={`rotate(14 ${hx} ${hy})`} />
       <ellipse cx={hx + hr * 0.9} cy={hy + hr * 0.55} rx={hr * 0.55} ry={hr * 0.42} fill={c} />
       <circle cx={hx + hr * 1.25} cy={hy + hr * 0.6} r={0.8} fill={dk} />
-      <path d={`M${(hx - 2).toFixed(1)} ${(hy - hr * 0.7).toFixed(1)} l-1.5 -4 l3.2 1.2 Z`} fill={c} />
+      <path d={`M${(hx - 3.5).toFixed(1)} ${(hy - hr * 0.2).toFixed(1)} L${(hx - 4.5).toFixed(1)} ${(hy - hr * 1.5).toFixed(1)} L${(hx - 0.2).toFixed(1)} ${(hy - hr * 0.6).toFixed(1)} Z`} fill={c} />
       <circle cx={hx + hr * 0.25} cy={hy} r={1} fill="#3a2a20" />
       <path d={`M${(hx - 0.5).toFixed(1)} ${(hy - hr * 0.55).toFixed(1)} L${(hx + 2.6).toFixed(1)} ${(hy - hr * 0.55).toFixed(1)} L${(hx + 1.8).toFixed(1)} ${hornTipY.toFixed(1)} Z`} fill={gold} />
       <path d={`M${(hx + 0.2).toFixed(1)} ${(hy - hr * 0.55 - 2).toFixed(1)} L${(hx + 1.6).toFixed(1)} ${(hy - hr * 0.55 - 2.4).toFixed(1)} M${(hx + 0.4).toFixed(1)} ${(hy - hr * 0.55 - 5).toFixed(1)} L${(hx + 1.5).toFixed(1)} ${(hy - hr * 0.55 - 5.4).toFixed(1)}`}
@@ -722,6 +722,9 @@ function unicornFront(w: number, g: number, c: string, dk: string) {
   const legH = 9 + 6 * g;
   const top = 86 - legH;
   const bCy = top - 6;
+  // 다리를 몸통 중심까지 끌어올려(몸통 뒤로) 다리가 떨어져 보이던 문제 해결 — deerFront와 동일
+  const legTop = bCy;
+  const legLen = 86 - legTop;
   const horn = seg(g, 0.35, 1);
   const gold = wiltC("#F2C94C", w);
   const goldDk = wiltC("#C9971A", w);
@@ -729,8 +732,8 @@ function unicornFront(w: number, g: number, c: string, dk: string) {
   const hornTipY = hCy - 5 - (6 + 8 * horn);
   return (
     <g>
-      <rect x={45} y={top} width={3} height={legH} rx={1.5} fill={dk} />
-      <rect x={52} y={top} width={3} height={legH} rx={1.5} fill={dk} />
+      <rect x={45} y={legTop} width={3} height={legLen} rx={1.5} fill={dk} />
+      <rect x={52} y={legTop} width={3} height={legLen} rx={1.5} fill={dk} />
       <ellipse cx={50} cy={bCy} rx={6.2} ry={6.3} fill={c} />
       <rect x={48} y={bCy - 11} width={4} height={7} rx={2} fill={c} />
       {RAINBOW.slice(0, 5).map((rc, i) => (
