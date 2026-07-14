@@ -501,38 +501,88 @@ function Rabbit(w: number, g = 1, front = false) {
     </g>
   );
 }
+// 오리 — 성장 모핑: 솜털 병아리(한 덩어리·연한 색) → 어린 오리(꼬리·날개) → 성체
 function Duck(w: number, g = 1, front = false) {
-  const y = wiltC("#FBD24E", w);
-  const s = 0.62 + 0.38 * g;
+  const y = mix(wiltC("#FBD24E", w), "#FFE28A", (1 - g) * 0.7); // 아기일수록 병아리색
+  const wing = mix(y, "#E0B83A", 0.5);
+  const fluff = 1 - seg(g, 0.2, 0.45); // 머리 위 솜털 (아기만)
   if (front) {
-    const wing = mix(wiltC("#FBD24E", w), "#E0B83A", 0.4);
+    const hr = 7.3 - 0.8 * g;
+    const bRx = 8 + 3 * g;
+    const bRy = 6 + 2 * g;
+    const bCy = 88 - bRy;
+    const hCy = bCy - bRy - hr * (0.05 + 0.26 * g); // 아기는 머리가 몸에 파묻힘
     return (
-      <g transform={`translate(50 88) scale(${s.toFixed(3)}) translate(-50 -88)`}>
-        <ellipse cx={50} cy={80} rx={11} ry={8} fill={y} />
-        <path d="M40 78 q-3 3 0 6" stroke={wing} strokeWidth={2.5} fill="none" strokeLinecap="round" />
-        <path d="M60 78 q3 3 0 6" stroke={wing} strokeWidth={2.5} fill="none" strokeLinecap="round" />
-        <circle cx={50} cy={70} r={6.5} fill={y} />
-        <ellipse cx={50} cy={73.5} rx={3.2} ry={2} fill="#E8893A" />
-        <circle cx={47.4} cy={69} r={1} fill="#3a2a20" />
-        <circle cx={52.6} cy={69} r={1} fill="#3a2a20" />
+      <g>
+        <ellipse cx={50} cy={bCy} rx={bRx} ry={bRy} fill={y} />
+        {g > 0.5 && (
+          <>
+            <path d={`M${(51 - bRx).toFixed(1)} ${(bCy - 2).toFixed(1)} q-3 3 0 6`} stroke={wing} strokeWidth={2.5} fill="none" strokeLinecap="round" />
+            <path d={`M${(49 + bRx).toFixed(1)} ${(bCy - 2).toFixed(1)} q3 3 0 6`} stroke={wing} strokeWidth={2.5} fill="none" strokeLinecap="round" />
+          </>
+        )}
+        <circle cx={50} cy={hCy} r={hr} fill={y} />
+        <ellipse cx={50} cy={hCy + 3.5} rx={2.4 + 0.8 * g} ry={1.5 + 0.5 * g} fill="#E8893A" />
+        <circle cx={47.4} cy={hCy - 1} r={1} fill="#3a2a20" />
+        <circle cx={52.6} cy={hCy - 1} r={1} fill="#3a2a20" />
+        {fluff > 0 && (
+          <path
+            d={`M48.8 ${(hCy - hr + 0.5).toFixed(1)} q 0.4 -2 1.6 -2.6 M51 ${(hCy - hr + 0.6).toFixed(1)} q 0.9 -1.6 2 -1.7`}
+            stroke={wing} strokeWidth={1} fill="none" strokeLinecap="round" opacity={fluff}
+          />
+        )}
         <path d="M47 87.5 l0 1.5 M53 87.5 l0 1.5" stroke="#E8893A" strokeWidth={2} strokeLinecap="round" />
       </g>
     );
   }
+  const bRx = 8 + 5 * g;
+  const bRy = 5.5 + 2.5 * g;
+  const bCx = 48;
+  const bCy = 88 - bRy;
+  const hr = 7.8 - 1.3 * g;
+  const hx = 52 + 8 * g;
+  const hy = bCy - (5 + 4 * g);
+  const bl = 4.5 + 3.5 * g; // 부리 길이
+  const tail = seg(g, 0.35, 1);
   return (
-    <g transform={`translate(50 88) scale(${s.toFixed(3)}) translate(-50 -88)`}>
-      <ellipse cx={48} cy={80} rx={13} ry={8} fill={y} />
-      <circle cx={60} cy={71} r={6.5} fill={y} />
-      {/* 부리 — 짧은 밑변을 머리 중심 높이 안쪽에 (턱 아래로 처지지 않게) */}
-      <path d="M64.5 69.8 l8 2 l-8 2 Z" fill="#E8893A" />
-      <circle cx={61} cy={69} r={1.1} fill="#3a2a20" />
-      <path
-        d="M40 81 q-6 -1 -10 2"
-        stroke={y}
-        strokeWidth={4}
-        fill="none"
-        strokeLinecap="round"
-      />
+    <g>
+      {/* 꼬리 — 어린 오리부터 */}
+      {tail > 0 && (
+        <path
+          d={`M${(bCx - bRx * 0.6).toFixed(1)} ${(bCy + 1).toFixed(1)} q ${(-6 * tail).toFixed(1)} -1 ${(-10 * tail).toFixed(1)} 2`}
+          stroke={y}
+          strokeWidth={2.5 + 1.5 * tail}
+          fill="none"
+          strokeLinecap="round"
+        />
+      )}
+      <ellipse cx={bCx} cy={bCy} rx={bRx} ry={bRy} fill={y} />
+      {/* 날개 디테일 — 성체 가까울 때 */}
+      {g > 0.55 && (
+        <ellipse
+          cx={bCx - 1}
+          cy={bCy - 1}
+          rx={bRx * 0.45}
+          ry={bRy * 0.42}
+          fill={wing}
+          transform={`rotate(-18 ${bCx - 1} ${(bCy - 1).toFixed(1)})`}
+        />
+      )}
+      <circle cx={hx} cy={hy} r={hr} fill={y} />
+      {/* 부리 — 짧은 밑변을 머리 중심 높이 안쪽에 */}
+      <path d={`M${(hx + hr * 0.69).toFixed(1)} ${(hy - 1.2).toFixed(1)} l${bl.toFixed(1)} 2 l-${bl.toFixed(1)} 2 Z`} fill="#E8893A" />
+      <circle cx={hx + hr * 0.15} cy={hy - hr * 0.3} r={1.1} fill="#3a2a20" />
+      {/* 솜털 — 아기만 */}
+      {fluff > 0 && (
+        <path
+          d={`M${(hx - 1.5).toFixed(1)} ${(hy - hr + 0.5).toFixed(1)} q 0.5 -2 2 -2.5 M${(hx + 0.8).toFixed(1)} ${(hy - hr + 0.6).toFixed(1)} q 1 -1.5 2.2 -1.5`}
+          stroke={wing}
+          strokeWidth={1}
+          fill="none"
+          strokeLinecap="round"
+          opacity={fluff}
+        />
+      )}
     </g>
   );
 }
