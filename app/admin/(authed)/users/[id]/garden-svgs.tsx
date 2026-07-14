@@ -523,8 +523,8 @@ function Duck(w: number, g = 1, front = false) {
     <g transform={`translate(50 88) scale(${s.toFixed(3)}) translate(-50 -88)`}>
       <ellipse cx={48} cy={80} rx={13} ry={8} fill={y} />
       <circle cx={60} cy={71} r={6.5} fill={y} />
-      {/* 부리 — 밑변을 머리 안쪽에 두어 떨어져 보이지 않게 */}
-      <path d="M64 70.5 l9 2.3 l-9 3 Z" fill="#E8893A" />
+      {/* 부리 — 짧은 밑변을 머리 중심 높이 안쪽에 (턱 아래로 처지지 않게) */}
+      <path d="M64.5 69.8 l8 2 l-8 2 Z" fill="#E8893A" />
       <circle cx={61} cy={69} r={1.1} fill="#3a2a20" />
       <path
         d="M40 81 q-6 -1 -10 2"
