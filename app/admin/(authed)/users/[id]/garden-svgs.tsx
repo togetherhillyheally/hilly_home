@@ -1232,7 +1232,7 @@ function Squirrel(w: number, g = 1, front = false) {
         <path
           d={`M58 82 Q ${(58 + 12 * tailS).toFixed(1)} ${(84 - 4 * tailS).toFixed(1)} ${(58 + 10 * tailS).toFixed(1)} ${(80 - 18 * tailS).toFixed(1)} Q ${(56 + 8 * tailS).toFixed(1)} ${(76 - 24 * tailS).toFixed(1)} ${(52 + 4 * tailS).toFixed(1)} ${(78 - 22 * tailS).toFixed(1)}`}
           stroke={c}
-          strokeWidth={5 + 4 * tailS}
+          strokeWidth={3.5 + 2.5 * tailS}
           fill="none"
           strokeLinecap="round"
         />
@@ -1316,14 +1316,25 @@ function Squirrel(w: number, g = 1, front = false) {
       <ellipse cx={55} cy={75.5} rx={2.2} ry={3.4} fill={c} transform="rotate(18 55 75.5)" />
       {/* 머리 — 아기가 상대적으로 큼 */}
       <circle cx={54} cy={58} r={hr} fill={c} />
-      {/* 볼 크림 */}
-      <ellipse cx={57} cy={60.5} rx={2.5} ry={2} fill={belly} />
-      {/* 귀 */}
-      <path d="M49 51 L47 44 L52 50 Z" fill={c} />
-      <path d="M58 51 L60 44 L61 51 Z" fill={c} />
-      {/* 눈 + 코 */}
-      <circle cx={53} cy={57} r={1.2} fill="#2a2018" />
-      <circle cx={60} cy={60} r={0.9} fill={dk} />
+      {/* 귀 — 머리 반지름 비례로 부착 (머리가 작아져도 안 떨어짐) */}
+      <path
+        d={`M${(54 - hr * 0.75).toFixed(1)} ${(58 - hr * 0.5).toFixed(1)} L${(54 - hr * 0.95).toFixed(1)} ${(58 - hr * 0.5 - 6).toFixed(1)} L${(54 - hr * 0.15).toFixed(1)} ${(58 - hr * 0.9).toFixed(1)} Z`}
+        fill={c}
+      />
+      <path
+        d={`M${(54 + hr * 0.45).toFixed(1)} ${(58 - hr * 0.65).toFixed(1)} L${(54 + hr * 0.75).toFixed(1)} ${(58 - hr * 0.65 - 6).toFixed(1)} L${(54 + hr * 0.95).toFixed(1)} ${(58 - hr * 0.25).toFixed(1)} Z`}
+        fill={c}
+      />
+      {/* 주둥이 + 코 + 눈 (옆모습 프로필) */}
+      <ellipse
+        cx={54 + hr * 0.7}
+        cy={58 + hr * 0.35}
+        rx={hr * 0.42}
+        ry={hr * 0.32}
+        fill={belly}
+      />
+      <circle cx={54 + hr * 1.0} cy={58 + hr * 0.3} r={0.9} fill={dk} />
+      <circle cx={54 + hr * 0.15} cy={58 - hr * 0.1} r={1.2} fill="#2a2018" />
     </g>
   );
 }
