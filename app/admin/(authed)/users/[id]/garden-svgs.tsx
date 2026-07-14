@@ -593,8 +593,18 @@ function deerFront(w: number, g: number, c: string, dk: string, spot: string) {
   const antler = seg(g, 0.5, 1);
   return (
     <g>
-      <rect x={45} y={top} width={3} height={legH} rx={1.5} fill={dk} />
-      <rect x={52} y={top} width={3} height={legH} rx={1.5} fill={dk} />
+      {/* 다리 — 아기는 가늘게 (성장 비례 굵기) */}
+      {[46.5, 53.5].map((lcx) => (
+        <rect
+          key={lcx}
+          x={lcx - (2 + g) / 2}
+          y={top}
+          width={2 + g}
+          height={legH}
+          rx={1 + 0.5 * g}
+          fill={dk}
+        />
+      ))}
       <ellipse cx={50} cy={bCy} rx={6.2} ry={6.3} fill={c} />
       <circle cx={47} cy={bCy} r={1.3} fill={spot} />
       <circle cx={53} cy={bCy + 2.5} r={1.3} fill={spot} />
@@ -644,10 +654,18 @@ function DeerLike(w: number, g: number, isWhite: boolean, front = false) {
   const tailC = mix(spot, c, seg(g, 0.4, 1));
   return (
     <g>
-      <rect x={43} y={top} width={3.2} height={legH} rx={1.5} fill={dk} />
-      <rect x={48.5} y={top} width={3.2} height={legH} rx={1.5} fill={dk} />
-      <rect x={54} y={top} width={3.2} height={legH} rx={1.5} fill={dk} />
-      <rect x={59.5} y={top} width={3.2} height={legH} rx={1.5} fill={dk} />
+      {/* 다리 — 아기는 가늘게 (성장 비례 굵기) */}
+      {[44.6, 50.1, 55.6, 61.1].map((lcx) => (
+        <rect
+          key={lcx}
+          x={lcx - (2.2 + 1.2 * g) / 2}
+          y={top}
+          width={2.2 + 1.2 * g}
+          height={legH}
+          rx={1.1 + 0.4 * g}
+          fill={dk}
+        />
+      ))}
       <circle cx={51 - bRx} cy={bCy - 1} r={2.2 + 0.6 * g} fill={tailC} />
       <ellipse cx={51} cy={bCy} rx={bRx} ry={bRy} fill={c} />
       <circle cx={41} cy={bCy - 1} r={1.4} fill={spot} />
