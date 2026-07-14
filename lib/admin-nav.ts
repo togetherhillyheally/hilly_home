@@ -10,7 +10,6 @@ import {
   Map,
   MessageSquare,
   Mountain,
-  Music,
   Puzzle,
   Smartphone,
   Sprout,
@@ -92,7 +91,6 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     items: [
       { href: "/admin/legal", label: "약관 · 방침", icon: FileText },
       { href: "/admin/app-versions", label: "앱 버전", icon: Smartphone },
-      { href: "/admin/bgm", label: "BGM 트랙", icon: Music },
       { href: "/admin/backgrounds", label: "프로필 배경", icon: ImageIcon },
       { href: "/admin/surveys", label: "설문 응답", icon: ClipboardList },
     ],
