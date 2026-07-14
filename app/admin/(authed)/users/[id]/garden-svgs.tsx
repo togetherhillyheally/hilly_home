@@ -523,7 +523,8 @@ function Duck(w: number, g = 1, front = false) {
     <g transform={`translate(50 88) scale(${s.toFixed(3)}) translate(-50 -88)`}>
       <ellipse cx={48} cy={80} rx={13} ry={8} fill={y} />
       <circle cx={60} cy={71} r={6.5} fill={y} />
-      <path d="M66 71 l8 2 l-8 3 Z" fill="#E8893A" />
+      {/* 부리 — 밑변을 머리 안쪽에 두어 떨어져 보이지 않게 */}
+      <path d="M64 70.5 l9 2.3 l-9 3 Z" fill="#E8893A" />
       <circle cx={61} cy={69} r={1.1} fill="#3a2a20" />
       <path
         d="M40 81 q-6 -1 -10 2"
@@ -1287,11 +1288,11 @@ function Squirrel(w: number, g = 1, front = false) {
         transform={`translate(46 84) scale(${tailS.toFixed(3)}) translate(-46 -84)`}
       >
         <path
-          d="M46 84 Q 29 84 29 67 Q 29 52 44 53 Q 37 59 38 69 Q 39 79 48 79 Z"
+          d="M46 83 Q 31 83 31 67 Q 31 52 44 53 Q 38 59 39 69 Q 40 78 48 78 Z"
           fill={c}
         />
         <path
-          d="M44 80 Q 34 78 34 67 Q 34 58 41 56"
+          d="M44 79 Q 36 77 36 67 Q 36 58 42 56"
           stroke={dk}
           strokeWidth={1.6}
           fill="none"
@@ -1299,6 +1300,8 @@ function Squirrel(w: number, g = 1, front = false) {
           strokeLinecap="round"
         />
       </g>
+      {/* 뒷발 — 엉덩이 아래 지면 */}
+      <ellipse cx={49} cy={86.6} rx={4.2} ry={1.7} fill={dk} />
       {/* 뒷다리 앉은 자세 (꼬리 부착부 덮음) */}
       <ellipse cx={46} cy={82} rx={6} ry={5} fill={c} />
       {/* 몸통 (세로) */}
@@ -1314,6 +1317,8 @@ function Squirrel(w: number, g = 1, front = false) {
       )}
       {/* 앞다리 — 도토리를 감싸도록 도토리 위에 */}
       <ellipse cx={55} cy={75.5} rx={2.2} ry={3.4} fill={c} transform="rotate(18 55 75.5)" />
+      {/* 앞발 — 지면 */}
+      <ellipse cx={55.5} cy={85.8} rx={3} ry={1.5} fill={dk} />
       {/* 머리 — 아기가 상대적으로 큼 */}
       <circle cx={54} cy={58} r={hr} fill={c} />
       {/* 귀 — 머리 반지름 비례로 부착 (머리가 작아져도 안 떨어짐) */}
