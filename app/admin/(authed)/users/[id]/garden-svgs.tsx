@@ -654,11 +654,11 @@ function DeerLike(w: number, g: number, isWhite: boolean, front = false) {
   const tailC = mix(spot, c, seg(g, 0.4, 1));
   return (
     <g>
-      {/* 다리 — 아기는 가늘게 (성장 비례 굵기) */}
-      {[44.6, 50.1, 55.6, 61.1].map((lcx) => (
+      {/* 다리 — 아기는 가늘게, x 는 몸통 폭 비례 (아기 때 몸 밖으로 안 나가게) */}
+      {[-0.58, -0.24, 0.16, 0.46].map((f) => (
         <rect
-          key={lcx}
-          x={lcx - (2.2 + 1.2 * g) / 2}
+          key={f}
+          x={51 + bRx * f - (2.2 + 1.2 * g) / 2}
           y={top}
           width={2.2 + 1.2 * g}
           height={legH}
