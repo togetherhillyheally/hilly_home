@@ -90,10 +90,10 @@ export default async function TrailDetailPage({
     creatorNickname = cs[0]?.nickname ?? null;
   }
 
-  // 체크포인트 목록 (개수 표시 + 인스타 캐러셀 생성)
+  // 체크포인트 목록 (개수 표시 + 인스타 캐러셀 생성 — 전부)
   const { rows: checkpoints } = await adminList<CarouselCheckpoint>(
-    `trail_checkpoints?select=id,sort_order,title,lng,lat,note&trail_id=eq.${id}&order=sort_order.asc`,
-    { from: 0, to: 199 }
+    `trail_checkpoints?select=id,sort_order,title,lng,lat,note,marker_icon&trail_id=eq.${id}&order=sort_order.asc`,
+    { from: 0, to: 499 }
   );
   const checkpointCount = checkpoints.length;
 

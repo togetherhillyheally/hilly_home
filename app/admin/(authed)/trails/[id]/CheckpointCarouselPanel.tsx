@@ -29,6 +29,11 @@ import {
   wrapText,
 } from "@/lib/share-canvas";
 import { buildZip, type ZipEntry } from "@/lib/zip-store";
+import {
+  CHECKPOINT_MARKER_ICONS,
+  DEFAULT_MARKER_ICON,
+  type MarkerIcon,
+} from "@/lib/checkpoint-marker-icons";
 
 export type CarouselCheckpoint = {
   id: string;
@@ -37,6 +42,7 @@ export type CarouselCheckpoint = {
   lng: number;
   lat: number;
   note: string | null;
+  marker_icon: string | null;
 };
 
 type Props = {
@@ -52,30 +58,64 @@ type Slide = { filename: string; blob: Blob; previewUrl: string; label: string }
 
 const SIZE = 1080; // 캔버스 논리 크기 (1:1)
 const MAP_LOGICAL = 800; // 정적 지도 요청 논리 px (@2x → 1600 실제)
-const MARKER_FILL = "#fb923c";
+const MARKER_BG = "#F4F4F5"; // 앱 체크포인트 마커와 동일한 밝은 원
 
-function drawMarker(
+function markerIconFor(name: string | null): MarkerIcon {
+  return CHECKPOINT_MARKER_ICONS[name ?? ""] ?? DEFAULT_MARKER_ICON;
+}
+
+/** 앱과 같은 모양의 마커 — 밝은 원 + 등록 아이콘(색), 강조 시 아이콘 색으로 채움 + 흰 아이콘 */
+function drawIconMarker(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
   r: number,
-  label: string,
-  opts?: { fill?: string; fontScale?: number }
+  mi: MarkerIcon,
+  opts?: { emphasized?: boolean; badge?: string }
 ) {
+  const emphasized = opts?.emphasized ?? false;
   ctx.beginPath();
   ctx.arc(x, y, r, 0, Math.PI * 2);
-  ctx.fillStyle = opts?.fill ?? MARKER_FILL;
+  ctx.fillStyle = emphasized ? mi.color : MARKER_BG;
   ctx.fill();
-  ctx.lineWidth = Math.max(2.5, r * 0.18);
+  ctx.lineWidth = Math.max(2.5, r * 0.14);
   ctx.strokeStyle = "#ffffff";
   ctx.stroke();
-  ctx.fillStyle = "#ffffff";
-  ctx.font = `800 ${Math.round(r * (opts?.fontScale ?? 1.05))}px ${SHARE_FONT}`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(label, x, y + r * 0.05);
-  ctx.textAlign = "start";
-  ctx.textBaseline = "alphabetic";
+
+  // 아이콘 (lucide 24×24 stroke path)
+  const iconBox = r * 1.2;
+  const scale = iconBox / 24;
+  ctx.save();
+  ctx.translate(x - iconBox / 2, y - iconBox / 2);
+  ctx.scale(scale, scale);
+  ctx.strokeStyle = emphasized ? "#ffffff" : mi.color;
+  ctx.lineWidth = 2;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.fillStyle = "transparent";
+  for (const d of mi.paths) ctx.stroke(new Path2D(d));
+  ctx.restore();
+
+  // 순번 배지 (표지용)
+  if (opts?.badge) {
+    const br = Math.max(9, r * 0.52);
+    const bx = x + r * 0.74;
+    const by = y - r * 0.74;
+    ctx.beginPath();
+    ctx.arc(bx, by, br, 0, Math.PI * 2);
+    ctx.fillStyle = "#1B222C";
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#ffffff";
+    ctx.stroke();
+    ctx.fillStyle = "#ffffff";
+    ctx.font = `800 ${Math.round(br * 1.05)}px ${SHARE_FONT}`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(opts.badge, bx, by + br * 0.06);
+    ctx.textAlign = "start";
+    ctx.textBaseline = "alphabetic";
+  }
 }
 
 export default function CheckpointCarouselButton(props: Props) {
@@ -167,7 +207,8 @@ function CarouselModal({
             markers: checkpoints.map((c, i) => ({
               lng: c.lng,
               lat: c.lat,
-              label: String(i + 1),
+              icon: markerIconFor(c.marker_icon),
+              badge: String(i + 1),
               emphasized: false,
             })),
             kicker: `코스 지도 · 체크포인트 ${checkpoints.length}곳`,
@@ -209,17 +250,13 @@ function CarouselModal({
             markers: checkpoints.map((c, j) => ({
               lng: c.lng,
               lat: c.lat,
-              label: String(j + 1),
+              icon: markerIconFor(c.marker_icon),
               emphasized: j === i,
             })),
             kicker: `CHECKPOINT ${String(i + 1).padStart(2, "0")} / ${String(checkpoints.length).padStart(2, "0")}`,
             title: cp.title,
-            subtitle: [
-              trailName,
-              distanceKm != null ? `${Number(distanceKm).toFixed(1)}km` : null,
-            ]
-              .filter(Boolean)
-              .join("   "),
+            // 지도이름·거리는 표지에 이미 있어 체크포인트 장에선 생략
+            subtitle: "",
             note: cp.note?.trim() || null,
           });
           if (!blob) throw new Error(`슬라이드 생성 실패: ${cp.title}`);
@@ -249,7 +286,13 @@ function CarouselModal({
     mapImg: HTMLImageElement | null;
     logo: HTMLImageElement | null;
     camera: StaticCamera;
-    markers: { lng: number; lat: number; label: string; emphasized: boolean }[];
+    markers: {
+      lng: number;
+      lat: number;
+      icon: MarkerIcon;
+      badge?: string;
+      emphasized: boolean;
+    }[];
     kicker: string;
     title: string;
     subtitle: string;
@@ -347,12 +390,13 @@ function CarouselModal({
       const p = projectToCanvas(m.lng, m.lat, opts.camera, MAP_LOGICAL, MAP_LOGICAL);
       const x = cardX + p.x * scale;
       const y = imgY + p.y * scale;
-      const rr = m.emphasized ? 26 : opts.markers.length > 1 && emphasized.length > 0 ? 15 : 17;
+      const rr = m.emphasized ? 27 : emphasized.length > 0 ? 15 : 18;
       // 지도 영역 밖(여백 포함)이면 스킵
       if (x < cardX - rr || x > cardX + cardW + rr || y < imgY - rr || y > imgY + mapH + rr)
         continue;
-      drawMarker(ctx, x, y, rr, m.label, {
-        fill: m.emphasized ? ACCENT : MARKER_FILL,
+      drawIconMarker(ctx, x, y, rr, m.icon, {
+        emphasized: m.emphasized,
+        badge: m.badge,
       });
     }
 
