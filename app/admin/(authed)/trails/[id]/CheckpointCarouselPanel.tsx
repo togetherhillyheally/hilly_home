@@ -6,7 +6,7 @@
  * 1080×1080 PNG 로 생성해 개별/zip 다운로드. 지도는 카메라 명시형 Mapbox Static —
  * 같은 카메라로 lat/lng 를 캔버스에 투영해 브랜드 마커를 직접 그린다.
  */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Download, Images, Loader2, X } from "lucide-react";
 import {
   buildTrailStaticUrlWithCamera,
@@ -63,6 +63,38 @@ const MARKER_BG = "#F4F4F5"; // 앱 체크포인트 마커와 동일한 밝은 �
 
 function markerIconFor(name: string | null): MarkerIcon {
   return CHECKPOINT_MARKER_ICONS[name ?? ""] ?? DEFAULT_MARKER_ICON;
+}
+
+/** 앱 코스가이드와 동일 — 등록순 대신 경로 최근접점 인덱스 기준 "코스 진행방향" 정렬 */
+function orderByRouteProgress(
+  cps: CarouselCheckpoint[],
+  coordinates: TrailSharePreview["coordinates"]
+): CarouselCheckpoint[] {
+  if (!Array.isArray(coordinates) || coordinates.length === 0 || cps.length < 2)
+    return cps;
+  const first = coordinates[0] as unknown;
+  const isMulti = Array.isArray(first) && Array.isArray((first as unknown[])[0]);
+  const path = (
+    isMulti ? (coordinates as number[][][]).flat() : (coordinates as number[][])
+  ).map((c) => [c[0], c[1]] as [number, number]);
+  if (path.length === 0) return cps;
+  return [...cps]
+    .map((cp) => {
+      let best = 0;
+      let bestD = Infinity;
+      for (let i = 0; i < path.length; i++) {
+        const dx = path[i][0] - cp.lng;
+        const dy = path[i][1] - cp.lat;
+        const d = dx * dx + dy * dy;
+        if (d < bestD) {
+          bestD = d;
+          best = i;
+        }
+      }
+      return { cp, i: best };
+    })
+    .sort((a, b) => a.i - b.i)
+    .map((x) => x.cp);
 }
 
 /** 줄바꿈(\n)을 존중하는 wrap — 문단별로 wrap 후 maxLines 로 자름 */
@@ -174,9 +206,14 @@ function CarouselModal({
   distanceKm,
   totalAscentM,
   coordinates,
-  checkpoints,
+  checkpoints: checkpointsProp,
   onClose,
 }: Props & { onClose: () => void }) {
+  // 앱 코스가이드처럼 등록순이 아닌 코스 진행방향 순서
+  const checkpoints = useMemo(
+    () => orderByRouteProgress(checkpointsProp, coordinates),
+    [checkpointsProp, coordinates]
+  );
   const [slides, setSlides] = useState<Slide[]>([]);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
