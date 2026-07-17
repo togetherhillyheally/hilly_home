@@ -16,6 +16,8 @@ import ShareImageButton from "./ShareImageButton";
 import CheckpointCarouselButton, {
   type CarouselCheckpoint,
 } from "./CheckpointCarouselPanel";
+import CheckpointGuide, { type GuideCheckpoint } from "./CheckpointGuide";
+import { orderByRouteProgress } from "@/lib/checkpoint-order";
 
 export const dynamic = "force-dynamic";
 
@@ -98,8 +100,8 @@ export default async function TrailDetailPage({
     { from: 0, to: 499 }
   );
 
-  // 체크포인트 대표 사진 (첫 장) — 캐러셀 슬라이드 비주얼
-  const photoMap = new Map<string, string>();
+  // 체크포인트 사진 — 캐러셀(첫 장) + 코스 가이드(전부)
+  const photosMap = new Map<string, string[]>();
   if (checkpointRows.length > 0) {
     const { rows: photos } = await adminList<{
       checkpoint_id: string;
@@ -112,18 +114,31 @@ export default async function TrailDetailPage({
     );
     const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
     for (const ph of photos) {
-      if (!photoMap.has(ph.checkpoint_id) && base) {
-        photoMap.set(
-          ph.checkpoint_id,
-          `${base}/storage/v1/object/public/${ph.storage_bucket}/${ph.storage_path}`
-        );
-      }
+      if (!base) break;
+      const list = photosMap.get(ph.checkpoint_id) ?? [];
+      list.push(
+        `${base}/storage/v1/object/public/${ph.storage_bucket}/${ph.storage_path}`
+      );
+      photosMap.set(ph.checkpoint_id, list);
     }
   }
   const checkpoints: CarouselCheckpoint[] = checkpointRows.map((c) => ({
     ...c,
-    photo_url: photoMap.get(c.id) ?? null,
+    photo_url: photosMap.get(c.id)?.[0] ?? null,
   }));
+  // 코스 가이드 — 앱과 동일한 진행방향 순서
+  const guideCheckpoints: GuideCheckpoint[] = orderByRouteProgress(
+    checkpointRows.map((c) => ({
+      id: c.id,
+      title: c.title,
+      note: c.note,
+      marker_icon: c.marker_icon,
+      lng: c.lng,
+      lat: c.lat,
+      photos: photosMap.get(c.id) ?? [],
+    })),
+    trail.coordinates
+  );
   const checkpointCount = checkpoints.length;
 
   const activityLabels =
@@ -315,6 +330,9 @@ export default async function TrailDetailPage({
               </div>
             )}
           </div>
+
+          {/* 코스 가이드 — 앱 미리보기 (진행방향 순서) */}
+          <CheckpointGuide checkpoints={guideCheckpoints} />
         </div>
 
         {/* Right: 메타 편집 + GPX 교체 + 위험 구역 */}
