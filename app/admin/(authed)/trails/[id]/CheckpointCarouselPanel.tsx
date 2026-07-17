@@ -374,7 +374,7 @@ function CarouselModal({
 
     ctx.font = `${Math.round(fontBase * 0.88)}px ${SHARE_FONT}`;
     const noteLines = opts.note
-      ? wrapParagraphs(ctx, opts.note, cardW - bodyPad * 2, 4)
+      ? wrapParagraphs(ctx, opts.note, cardW - bodyPad * 2, 3)
       : [];
 
     const bodyParts = [
