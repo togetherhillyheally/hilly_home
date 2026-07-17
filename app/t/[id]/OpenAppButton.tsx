@@ -1,8 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Smartphone, AlertTriangle, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  attemptOpenApp,
+  detectInApp,
+  detectPlatform,
+  shouldAutoAttempt,
+  type InAppBrowser,
+  type Platform,
+} from "@/lib/open-app";
 
 interface OpenAppButtonProps {
   trailId: string;
@@ -10,30 +18,13 @@ interface OpenAppButtonProps {
   playStoreUrl: string;
 }
 
-// prod 앱 scheme — app.config.ts 와 동일
-const APP_SCHEME = "hillyheally";
-
-// 인앱 브라우저(앱 자동 열기/스킴이 막히는 환경) 감지
-function detectInApp(ua: string): "kakao" | "instagram" | null {
-  if (/KAKAOTALK/i.test(ua)) return "kakao";
-  // 인스타그램/페이스북 인앱 웹뷰
-  if (/Instagram|FBAN|FBAV|FB_IAB/i.test(ua)) return "instagram";
-  return null;
-}
-
-function detectPlatform(ua: string): "ios" | "android" | "other" {
-  if (/iPhone|iPad|iPod/i.test(ua)) return "ios";
-  if (/Android/i.test(ua)) return "android";
-  return "other";
-}
-
 export default function OpenAppButton({
   trailId,
   appStoreUrl,
   playStoreUrl,
 }: OpenAppButtonProps) {
-  const [inApp, setInApp] = useState<"kakao" | "instagram" | null>(null);
-  const [platform, setPlatform] = useState<"ios" | "android" | "other">("other");
+  const [inApp, setInApp] = useState<InAppBrowser>(null);
+  const [platform, setPlatform] = useState<Platform>("other");
   const [copied, setCopied] = useState(false);
   const [currentUrl, setCurrentUrl] = useState("");
 
@@ -44,10 +35,22 @@ export default function OpenAppButton({
     setCurrentUrl(window.location.href);
   }, []);
 
+  const appPath = `t/${trailId}`;
   const handleOpenApp = () => {
-    // 커스텀 스킴 시도 — 앱 설치돼있으면 자동 전환
-    window.location.href = `${APP_SCHEME}://t/${trailId}`;
+    attemptOpenApp(appPath, platform, playStoreUrl);
   };
+
+  // 랜딩 진입 시 자동 앱 열기 1회 시도 — 설치돼 있으면 웹을 스치듯 지나 바로 앱으로.
+  // (카톡 인앱 포함. 인스타/페북 인앱·데스크톱은 제외)
+  const autoAttemptedRef = useRef(false);
+  useEffect(() => {
+    if (autoAttemptedRef.current) return;
+    if (!shouldAutoAttempt(platform, inApp)) return;
+    if (document.visibilityState !== "visible") return;
+    autoAttemptedRef.current = true;
+    const t = setTimeout(() => attemptOpenApp(appPath, platform, playStoreUrl), 300);
+    return () => clearTimeout(t);
+  }, [platform, inApp, appPath, playStoreUrl]);
 
   const handleCopy = async () => {
     try {
@@ -59,12 +62,8 @@ export default function OpenAppButton({
     }
   };
 
-  // 카톡/인스타 인앱 브라우저: 외부 브라우저 열기 안내
-  if (inApp) {
-    const guide =
-      inApp === "kakao"
-        ? "우측 상단 ⋯ → 다른 브라우저로 열기를 눌러주세요."
-        : "우측 상단 ⋯ → 외부 브라우저에서 열기를 눌러주세요.";
+  // 인스타/페북 인앱 브라우저: 스킴 차단 → 외부 브라우저 열기 안내
+  if (inApp === "instagram") {
     return (
       <div className="space-y-4">
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
@@ -74,7 +73,9 @@ export default function OpenAppButton({
               <p className="font-semibold">
                 여기서는 앱이 자동으로 열리지 않아요
               </p>
-              <p className="text-amber-800">{guide}</p>
+              <p className="text-amber-800">
+                우측 상단 ⋯ → 외부 브라우저에서 열기를 눌러주세요.
+              </p>
             </div>
           </div>
         </div>
@@ -106,6 +107,11 @@ export default function OpenAppButton({
         <Smartphone className="mr-2 h-5 w-5" />
         Hilly Heally 앱에서 보기
       </Button>
+      {inApp === "kakao" ? (
+        <p className="text-center text-xs text-muted-foreground">
+          앱이 열리지 않으면 우측 상단 ⋯ → 다른 브라우저로 열기를 눌러주세요.
+        </p>
+      ) : null}
       {storeUrl ? (
         <a
           href={storeUrl}
