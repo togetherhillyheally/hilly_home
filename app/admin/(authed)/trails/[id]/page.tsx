@@ -13,6 +13,9 @@ import EditForm from "./EditForm";
 import StartEndEditor from "./StartEndEditor";
 import ReplaceGpxForm from "./ReplaceGpxForm";
 import ShareImageButton from "./ShareImageButton";
+import CheckpointCarouselButton, {
+  type CarouselCheckpoint,
+} from "./CheckpointCarouselPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -87,11 +90,12 @@ export default async function TrailDetailPage({
     creatorNickname = cs[0]?.nickname ?? null;
   }
 
-  // 체크포인트 개수
-  const { total: checkpointCount } = await adminList<{ id: string }>(
-    `trail_checkpoints?select=id&trail_id=eq.${id}`,
-    { count: true, from: 0, to: 0 }
+  // 체크포인트 목록 (개수 표시 + 인스타 캐러셀 생성)
+  const { rows: checkpoints } = await adminList<CarouselCheckpoint>(
+    `trail_checkpoints?select=id,sort_order,title,lng,lat,note&trail_id=eq.${id}&order=sort_order.asc`,
+    { from: 0, to: 199 }
   );
+  const checkpointCount = checkpoints.length;
 
   const activityLabels =
     trail.activity_types
@@ -124,18 +128,30 @@ export default async function TrailDetailPage({
               </span>
             )}
           </div>
-          <ShareImageButton
-            trailId={trail.id}
-            trailName={trail.name}
-            seriesName={trail.series_name}
-            courseSummary={trail.course_summary}
-            distanceKm={trail.distance_km}
-            totalAscentM={trail.total_ascent_m}
-            mapType={
-              trail.map_type === "stamp" ? "stamp" : "adventure"
-            }
-            coordinates={trail.coordinates}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            {checkpoints.length > 0 && (
+              <CheckpointCarouselButton
+                trailName={trail.name}
+                seriesName={trail.series_name}
+                distanceKm={trail.distance_km}
+                totalAscentM={trail.total_ascent_m}
+                coordinates={trail.coordinates}
+                checkpoints={checkpoints}
+              />
+            )}
+            <ShareImageButton
+              trailId={trail.id}
+              trailName={trail.name}
+              seriesName={trail.series_name}
+              courseSummary={trail.course_summary}
+              distanceKm={trail.distance_km}
+              totalAscentM={trail.total_ascent_m}
+              mapType={
+                trail.map_type === "stamp" ? "stamp" : "adventure"
+              }
+              coordinates={trail.coordinates}
+            />
+          </div>
         </div>
         {trail.series_name && (
           <p className="text-sm text-gray-400 mt-1.5">

@@ -10,6 +10,13 @@ import {
   X,
 } from "lucide-react";
 import { buildTrailMapboxStaticUrl, type TrailSharePreview } from "@/lib/trail-preview";
+import {
+  SHARE_ACCENT as ACCENT,
+  SHARE_ACCENT_MUTED as ACCENT_MUTED,
+  loadImage,
+  roundRect,
+  wrapText,
+} from "@/lib/share-canvas";
 
 type Format = "story" | "post";
 
@@ -34,75 +41,7 @@ const FORMAT_SPECS: Record<
   post: { width: 1080, height: 1080, label: "게시물 1:1" },
 };
 
-const ACCENT = "#DC2F55";
-const ACCENT_MUTED = "#F9A8B6";
 const PREVIEW_MAX_HEIGHT = 480;
-
-function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => resolve(img);
-    img.onerror = (e) => reject(e);
-    img.src = src;
-  });
-}
-
-/** 텍스트 줄바꿈 (캔버스 width 안에서 자동 wrap), maxLines 까지 표시 */
-function wrapText(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  maxWidth: number,
-  maxLines: number
-): string[] {
-  if (!text) return [];
-  const chars = Array.from(text);
-  const lines: string[] = [];
-  let cur = "";
-  for (const ch of chars) {
-    const test = cur + ch;
-    if (ctx.measureText(test).width > maxWidth && cur) {
-      lines.push(cur);
-      cur = ch;
-      if (lines.length >= maxLines) break;
-    } else {
-      cur = test;
-    }
-  }
-  if (cur && lines.length < maxLines) lines.push(cur);
-  if (lines.length === maxLines) {
-    // ellipsis 처리
-    const last = lines[maxLines - 1];
-    if (ctx.measureText(last).width > maxWidth - 20) {
-      let truncated = last;
-      while (
-        truncated.length > 1 &&
-        ctx.measureText(truncated + "…").width > maxWidth
-      ) {
-        truncated = truncated.slice(0, -1);
-      }
-      lines[maxLines - 1] = truncated + "…";
-    }
-  }
-  return lines;
-}
-
-function roundRect(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  r: number
-) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
-}
 
 export default function ShareImagePanel({
   open,

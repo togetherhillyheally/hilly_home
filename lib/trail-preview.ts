@@ -26,7 +26,7 @@ export function trailCoverUrl(p: TrailSharePreview): string | null {
 }
 
 // 멀티 경로면 가장 긴 세그먼트 선택, 단일이면 그대로. [lng,lat][] 반환.
-function extractLine(coords: TrailSharePreview["coordinates"]): [number, number][] {
+export function extractLine(coords: TrailSharePreview["coordinates"]): [number, number][] {
   if (!Array.isArray(coords) || coords.length === 0) return [];
   const first = coords[0] as unknown;
   const isMulti = Array.isArray(first) && Array.isArray((first as unknown[])[0]);
@@ -120,6 +120,103 @@ export function buildTrailMapboxStaticUrl(
   const padding = opts?.padding ?? 36;
   const style = opts?.style ?? "outdoors-v12";
   return `https://api.mapbox.com/styles/v1/mapbox/${style}/static/${overlay}/auto/${width}x${height}@2x?padding=${padding}&access_token=${MAPBOX_TOKEN}`;
+}
+
+/* ── 카메라 명시형 정적 지도 + 캔버스 투영 (마커 오버레이용) ──
+ * `auto` 포지셔닝은 이미지 위 lat/lng 위치를 알 수 없어, 카메라(center+zoom)를
+ * 직접 계산해 요청하고 같은 카메라로 픽셀 투영한다. Mapbox styles/v1 은 512px 타일 기준. */
+
+export type StaticCamera = { centerLng: number; centerLat: number; zoom: number };
+
+const TILE = 512;
+const MAX_MERC_LAT = 85.051129;
+
+// Web Mercator 정규화 좌표 (0..1)
+function mercX(lng: number): number {
+  return (lng + 180) / 360;
+}
+function mercY(lat: number): number {
+  const clamped = Math.max(-MAX_MERC_LAT, Math.min(MAX_MERC_LAT, lat));
+  const rad = (clamped * Math.PI) / 180;
+  return (1 - Math.log(Math.tan(Math.PI / 4 + rad / 2)) / Math.PI) / 2;
+}
+
+/** 점들이 width×height(논리 px, padding 포함) 안에 들어오는 카메라 계산 */
+export function fitCamera(
+  points: [number, number][],
+  width: number,
+  height: number,
+  paddingPx = 48,
+  maxZoom = 16
+): StaticCamera | null {
+  if (points.length === 0) return null;
+  let minX = Infinity,
+    maxX = -Infinity,
+    minY = Infinity,
+    maxY = -Infinity;
+  for (const [lng, lat] of points) {
+    const x = mercX(lng);
+    const y = mercY(lat);
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  }
+  const dx = Math.max(maxX - minX, 1e-9);
+  const dy = Math.max(maxY - minY, 1e-9);
+  const availW = Math.max(width - paddingPx * 2, 32);
+  const availH = Math.max(height - paddingPx * 2, 32);
+  // worldSize = TILE * 2^z 에서 dx*worldSize <= availW 가 되는 최대 z
+  const zx = Math.log2(availW / (dx * TILE));
+  const zy = Math.log2(availH / (dy * TILE));
+  const zoom = Math.min(Math.min(zx, zy), maxZoom);
+  // 머케이터 중점 (위도는 mercY 역변환으로 시각적 중앙 정렬)
+  const cy = (minY + maxY) / 2;
+  const centerLat =
+    (Math.atan(Math.sinh(Math.PI * (1 - 2 * cy))) * 180) / Math.PI;
+  return {
+    centerLng: ((minX + maxX) / 2) * 360 - 180,
+    centerLat,
+    zoom: Math.max(0, zoom),
+  };
+}
+
+/** lat/lng → width×height(논리 px) 이미지 안 픽셀 좌표 */
+export function projectToCanvas(
+  lng: number,
+  lat: number,
+  camera: StaticCamera,
+  width: number,
+  height: number
+): { x: number; y: number } {
+  const worldSize = TILE * Math.pow(2, camera.zoom);
+  return {
+    x: (mercX(lng) - mercX(camera.centerLng)) * worldSize + width / 2,
+    y: (mercY(lat) - mercY(camera.centerLat)) * worldSize + height / 2,
+  };
+}
+
+/** 카메라 명시형 Mapbox Static URL (경로 폴리라인 포함, @2x) */
+export function buildTrailStaticUrlWithCamera(
+  coordinates: TrailSharePreview["coordinates"],
+  opts: {
+    width: number;
+    height: number;
+    camera: StaticCamera;
+    style?: string;
+    pathStyle?: string;
+  }
+): string | null {
+  if (!MAPBOX_TOKEN) return null;
+  const line = sampleLine(extractLine(coordinates));
+  const pathStyle = opts.pathStyle ?? "path-5+dc2f55-0.95";
+  const overlay =
+    line.length >= 2
+      ? `${pathStyle}(${encodeURIComponent(encodePolyline(line))})/`
+      : "";
+  const style = opts.style ?? "outdoors-v12";
+  const { centerLng, centerLat, zoom } = opts.camera;
+  return `https://api.mapbox.com/styles/v1/mapbox/${style}/static/${overlay}${centerLng.toFixed(6)},${centerLat.toFixed(6)},${zoom.toFixed(2)}/${opts.width}x${opts.height}@2x?access_token=${MAPBOX_TOKEN}`;
 }
 
 export async function fetchTrailSharePreview(
