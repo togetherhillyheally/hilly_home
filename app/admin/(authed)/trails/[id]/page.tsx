@@ -91,10 +91,39 @@ export default async function TrailDetailPage({
   }
 
   // 체크포인트 목록 (개수 표시 + 인스타 캐러셀 생성 — 전부)
-  const { rows: checkpoints } = await adminList<CarouselCheckpoint>(
+  const { rows: checkpointRows } = await adminList<
+    Omit<CarouselCheckpoint, "photo_url">
+  >(
     `trail_checkpoints?select=id,sort_order,title,lng,lat,note,marker_icon&trail_id=eq.${id}&order=sort_order.asc`,
     { from: 0, to: 499 }
   );
+
+  // 체크포인트 대표 사진 (첫 장) — 캐러셀 슬라이드 비주얼
+  const photoMap = new Map<string, string>();
+  if (checkpointRows.length > 0) {
+    const { rows: photos } = await adminList<{
+      checkpoint_id: string;
+      storage_bucket: string;
+      storage_path: string;
+      sort_order: number;
+    }>(
+      `trail_checkpoint_photos?select=checkpoint_id,storage_bucket,storage_path,sort_order&checkpoint_id=in.(${checkpointRows.map((c) => c.id).join(",")})&order=sort_order.asc`,
+      { from: 0, to: 999 }
+    );
+    const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    for (const ph of photos) {
+      if (!photoMap.has(ph.checkpoint_id) && base) {
+        photoMap.set(
+          ph.checkpoint_id,
+          `${base}/storage/v1/object/public/${ph.storage_bucket}/${ph.storage_path}`
+        );
+      }
+    }
+  }
+  const checkpoints: CarouselCheckpoint[] = checkpointRows.map((c) => ({
+    ...c,
+    photo_url: photoMap.get(c.id) ?? null,
+  }));
   const checkpointCount = checkpoints.length;
 
   const activityLabels =

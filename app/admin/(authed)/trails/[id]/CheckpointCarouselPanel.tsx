@@ -43,6 +43,7 @@ export type CarouselCheckpoint = {
   lat: number;
   note: string | null;
   marker_icon: string | null;
+  photo_url: string | null;
 };
 
 type Props = {
@@ -62,6 +63,38 @@ const MARKER_BG = "#F4F4F5"; // 앱 체크포인트 마커와 동일한 밝은 �
 
 function markerIconFor(name: string | null): MarkerIcon {
   return CHECKPOINT_MARKER_ICONS[name ?? ""] ?? DEFAULT_MARKER_ICON;
+}
+
+/** 줄바꿈(\n)을 존중하는 wrap — 문단별로 wrap 후 maxLines 로 자름 */
+function wrapParagraphs(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number,
+  maxLines: number
+): string[] {
+  const paras = text
+    .split(/\r?\n/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const lines: string[] = [];
+  for (const para of paras) {
+    const remain = maxLines - lines.length;
+    if (remain <= 0) break;
+    lines.push(...wrapText(ctx, para, maxWidth, remain));
+  }
+  // 문단이 더 남았는데 줄이 찼으면 말줄임 표시
+  if (lines.length >= maxLines) {
+    const joined = paras.join(" ");
+    const shown = lines.join(" ");
+    if (joined.length > shown.replace(/…$/, "").length && !lines[maxLines - 1].endsWith("…")) {
+      let last = lines[maxLines - 1];
+      while (last.length > 1 && ctx.measureText(last + "…").width > maxWidth) {
+        last = last.slice(0, -1);
+      }
+      lines[maxLines - 1] = last + "…";
+    }
+  }
+  return lines;
 }
 
 /** 앱과 같은 모양의 마커 — 밝은 원 + 등록 아이콘(색), 강조 시 아이콘 색으로 채움 + 흰 아이콘 */
@@ -226,7 +259,7 @@ function CarouselModal({
           push(blob, "01_cover.png", "표지");
         }
 
-        // 2) 체크포인트 슬라이드
+        // 2) 체크포인트 슬라이드 — 등록 사진 우선, 없으면 확대 지도
         for (let i = 0; i < checkpoints.length; i++) {
           if (cancelled) return;
           const cp = checkpoints[i];
@@ -236,15 +269,23 @@ function CarouselModal({
             centerLat: cp.lat,
             zoom,
           };
-          const url = buildTrailStaticUrlWithCamera(coordinates, {
-            width: MAP_LOGICAL,
-            height: MAP_LOGICAL,
-            camera: cam,
-          });
-          const mapImg = url ? await loadImage(url).catch(() => null) : null;
+          const photoImg = cp.photo_url
+            ? await loadImage(cp.photo_url).catch(() => null)
+            : null;
           if (cancelled) return;
+          let mapImg: HTMLImageElement | null = null;
+          if (!photoImg) {
+            const url = buildTrailStaticUrlWithCamera(coordinates, {
+              width: MAP_LOGICAL,
+              height: MAP_LOGICAL,
+              camera: cam,
+            });
+            mapImg = url ? await loadImage(url).catch(() => null) : null;
+            if (cancelled) return;
+          }
           const blob = await renderSlide({
             mapImg,
+            photoImg,
             logo,
             camera: cam,
             markers: checkpoints.map((c, j) => ({
@@ -284,6 +325,8 @@ function CarouselModal({
   /** 슬라이드 1장 캔버스 렌더 → PNG Blob */
   async function renderSlide(opts: {
     mapImg: HTMLImageElement | null;
+    /** 체크포인트 등록 사진 — 있으면 지도 대신 이걸 메인 비주얼로 */
+    photoImg?: HTMLImageElement | null;
     logo: HTMLImageElement | null;
     camera: StaticCamera;
     markers: {
@@ -321,15 +364,15 @@ function CarouselModal({
 
     const cardW = Math.round(W * 0.82);
     const cardX = (W - cardW) / 2;
-    const mapH = cardW;
     const bodyPad = Math.round(cardW * 0.06);
     const fontBase = Math.round(cardW * 0.045);
     const lineH = Math.round(fontBase * 1.4);
     const nameSize = Math.round(fontBase * 1.45);
+    const hasPhoto = !!opts.photoImg;
 
     ctx.font = `${Math.round(fontBase * 0.88)}px ${SHARE_FONT}`;
     const noteLines = opts.note
-      ? wrapText(ctx, opts.note, cardW - bodyPad * 2, 3)
+      ? wrapParagraphs(ctx, opts.note, cardW - bodyPad * 2, hasPhoto ? 2 : 3)
       : [];
 
     const bodyParts = [
@@ -344,7 +387,12 @@ function CarouselModal({
       noteLines.length * lineH,
     ];
     const bodyH = bodyParts.reduce((a, b) => a + b, 0) + bodyPad * 2;
-    const cardH = mapH + bodyH;
+    // 카드가 캔버스를 넘지 않게 미디어(사진/지도) 높이를 줄여 맞춤 — 텍스트 잘림 방지
+    const mapH = Math.max(
+      Math.round(cardW * 0.5),
+      Math.min(cardW, H - 56 - 8 - bodyH)
+    );
+    const cardH = 8 + mapH + bodyH;
     const cardY = Math.round((H - cardH) / 2);
 
     // 카드 그림자 + 보더
@@ -368,9 +416,11 @@ function CarouselModal({
     ctx.fillStyle = ACCENT;
     ctx.fillRect(cardX, cardY, cardW, 8);
 
-    // 지도
+    // 메인 비주얼 — 사진 우선, 없으면 지도
     const imgY = cardY + 8;
-    if (opts.mapImg) {
+    if (opts.photoImg) {
+      drawImageCover(ctx, opts.photoImg, cardX, imgY, cardW, mapH);
+    } else if (opts.mapImg) {
       drawImageCover(ctx, opts.mapImg, cardX, imgY, cardW, mapH);
     } else {
       ctx.fillStyle = "#0D1117";
@@ -382,22 +432,25 @@ function CarouselModal({
       ctx.textAlign = "start";
     }
 
-    // 마커 (같은 카메라로 투영; 정사각 이미지를 정사각으로 그리므로 스케일만 적용)
-    const scale = cardW / MAP_LOGICAL;
-    const emphasized = opts.markers.filter((m) => m.emphasized);
-    const normal = opts.markers.filter((m) => !m.emphasized);
-    for (const m of [...normal, ...emphasized]) {
-      const p = projectToCanvas(m.lng, m.lat, opts.camera, MAP_LOGICAL, MAP_LOGICAL);
-      const x = cardX + p.x * scale;
-      const y = imgY + p.y * scale;
-      const rr = m.emphasized ? 27 : emphasized.length > 0 ? 15 : 18;
-      // 지도 영역 밖(여백 포함)이면 스킵
-      if (x < cardX - rr || x > cardX + cardW + rr || y < imgY - rr || y > imgY + mapH + rr)
-        continue;
-      drawIconMarker(ctx, x, y, rr, m.icon, {
-        emphasized: m.emphasized,
-        badge: m.badge,
-      });
+    // 마커 — 지도일 때만 (같은 카메라로 투영. cover-fit 세로 크롭 보정)
+    if (!opts.photoImg && opts.mapImg) {
+      const scale = cardW / MAP_LOGICAL;
+      const cropTop = (MAP_LOGICAL - MAP_LOGICAL * (mapH / cardW)) / 2;
+      const emphasized = opts.markers.filter((m) => m.emphasized);
+      const normal = opts.markers.filter((m) => !m.emphasized);
+      for (const m of [...normal, ...emphasized]) {
+        const p = projectToCanvas(m.lng, m.lat, opts.camera, MAP_LOGICAL, MAP_LOGICAL);
+        const x = cardX + p.x * scale;
+        const y = imgY + (p.y - cropTop) * scale;
+        const rr = m.emphasized ? 27 : emphasized.length > 0 ? 15 : 18;
+        // 지도 영역 밖(여백 포함)이면 스킵
+        if (x < cardX - rr || x > cardX + cardW + rr || y < imgY - rr || y > imgY + mapH + rr)
+          continue;
+        drawIconMarker(ctx, x, y, rr, m.icon, {
+          emphasized: m.emphasized,
+          badge: m.badge,
+        });
+      }
     }
 
     // 지도 하단 페이드
