@@ -296,6 +296,7 @@ function CarouselModal({
             })),
             kicker: `CHECKPOINT ${String(i + 1).padStart(2, "0")} / ${String(checkpoints.length).padStart(2, "0")}`,
             title: cp.title,
+            compactTitle: true,
             // 지도이름·거리는 표지에 이미 있어 체크포인트 장에선 생략
             subtitle: "",
             note: cp.note?.trim() || null,
@@ -338,6 +339,8 @@ function CarouselModal({
     }[];
     kicker: string;
     title: string;
+    /** true 면 제목을 작게 (체크포인트 장 — 설명 줄을 더 확보) */
+    compactTitle?: boolean;
     subtitle: string;
     note: string | null;
   }): Promise<Blob | null> {
@@ -367,33 +370,34 @@ function CarouselModal({
     const bodyPad = Math.round(cardW * 0.06);
     const fontBase = Math.round(cardW * 0.045);
     const lineH = Math.round(fontBase * 1.4);
-    const nameSize = Math.round(fontBase * 1.45);
-    const hasPhoto = !!opts.photoImg;
+    const nameSize = Math.round(fontBase * (opts.compactTitle ? 1.12 : 1.45));
 
     ctx.font = `${Math.round(fontBase * 0.88)}px ${SHARE_FONT}`;
     const noteLines = opts.note
-      ? wrapParagraphs(ctx, opts.note, cardW - bodyPad * 2, hasPhoto ? 2 : 3)
+      ? wrapParagraphs(ctx, opts.note, cardW - bodyPad * 2, 4)
       : [];
 
     const bodyParts = [
       Math.round(fontBase * 1.2), // kicker
       6,
       Math.round(nameSize * 1.15), // title
-      18,
+      16,
       6, // divider
-      18,
+      16,
       opts.subtitle ? Math.round(fontBase * 1.15) : 0,
       opts.subtitle ? 4 : 0,
       noteLines.length * lineH,
     ];
     const bodyH = bodyParts.reduce((a, b) => a + b, 0) + bodyPad * 2;
-    // 카드가 캔버스를 넘지 않게 미디어(사진/지도) 높이를 줄여 맞춤 — 텍스트 잘림 방지
+    // 카드가 캔버스를 넘지 않게 미디어(사진/지도) 높이를 줄여 맞춤 — 텍스트/하단 로고 잘림 방지
+    const TOP_MARGIN = 26;
+    const LOGO_AREA = Math.round(H * 0.055) + 44; // 로고 높이 + 위아래 여백
     const mapH = Math.max(
-      Math.round(cardW * 0.5),
-      Math.min(cardW, H - 56 - 8 - bodyH)
+      Math.round(cardW * 0.45),
+      Math.min(cardW, H - TOP_MARGIN - LOGO_AREA - 8 - bodyH)
     );
     const cardH = 8 + mapH + bodyH;
-    const cardY = Math.round((H - cardH) / 2);
+    const cardY = Math.max(TOP_MARGIN, Math.round((H - LOGO_AREA - cardH) / 2));
 
     // 카드 그림자 + 보더
     ctx.save();
