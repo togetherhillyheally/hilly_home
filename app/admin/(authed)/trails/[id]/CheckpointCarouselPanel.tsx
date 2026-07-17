@@ -231,7 +231,7 @@ function CarouselModal({
   // 생성 (모달 열릴 때 1회)
   useEffect(() => {
     let cancelled = false;
-    const total = checkpoints.length + 1;
+    const total = checkpoints.length + 2; // 표지 + 체크포인트 N + 아웃트로(로고)
     setProgress({ done: 0, total });
     setError(null);
 
@@ -323,7 +323,8 @@ function CarouselModal({
           const blob = await renderSlide({
             mapImg,
             photoImg,
-            logo,
+            // 로고는 표지·아웃트로에만 — 슬라이드는 사진/설명 공간 확보
+            logo: null,
             camera: cam,
             markers: checkpoints.map((c, j) => ({
               lng: c.lng,
@@ -345,6 +346,18 @@ function CarouselModal({
             `${i + 1}. ${cp.title}`
           );
         }
+
+        // 3) 아웃트로 — 로고 단독 (브랜딩 마무리 장)
+        {
+          const blob = await renderOutro(logo);
+          if (blob) {
+            push(
+              blob,
+              `${String(checkpoints.length + 2).padStart(2, "0")}_outro.png`,
+              "아웃트로 (로고)"
+            );
+          }
+        }
       } catch (e) {
         if (!cancelled)
           setError(e instanceof Error ? e.message : "이미지 생성 실패");
@@ -359,6 +372,45 @@ function CarouselModal({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /** 아웃트로 — 다크 배경 + 로고 단독 (캐러셀 마무리 브랜딩 장) */
+  async function renderOutro(
+    logo: HTMLImageElement | null
+  ): Promise<Blob | null> {
+    const canvas = document.createElement("canvas");
+    canvas.width = SIZE;
+    canvas.height = SIZE;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    const W = SIZE;
+    const H = SIZE;
+
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, "#10151D");
+    bg.addColorStop(0.55, "#0A0D12");
+    bg.addColorStop(1, "#000000");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+    // 중앙 브랜드 글로우
+    const glow = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, H * 0.5);
+    glow.addColorStop(0, "rgba(220,47,85,0.20)");
+    glow.addColorStop(1, "rgba(220,47,85,0)");
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, W, H);
+
+    if (logo) {
+      const logoH = Math.round(H * 0.13);
+      const logoW = Math.round((logo.naturalWidth / logo.naturalHeight) * logoH);
+      ctx.drawImage(logo, (W - logoW) / 2, Math.round(H / 2 - logoH / 2) - 30, logoW, logoH);
+    }
+    ctx.font = `600 ${Math.round(W * 0.026)}px ${SHARE_FONT}`;
+    ctx.fillStyle = "rgba(255,255,255,0.55)";
+    ctx.textAlign = "center";
+    ctx.fillText("hillyheally.com", W / 2, Math.round(H / 2) + Math.round(H * 0.13));
+    ctx.textAlign = "start";
+
+    return canvasToPngBlob(canvas);
+  }
 
   /** 슬라이드 1장 캔버스 렌더 → PNG Blob */
   async function renderSlide(opts: {
@@ -428,7 +480,8 @@ function CarouselModal({
     const bodyH = bodyParts.reduce((a, b) => a + b, 0) + bodyPad * 2;
     // 카드가 캔버스를 넘지 않게 미디어(사진/지도) 높이를 줄여 맞춤 — 텍스트/하단 로고 잘림 방지
     const TOP_MARGIN = 26;
-    const LOGO_AREA = Math.round(H * 0.055) + 44; // 로고 높이 + 위아래 여백
+    // 로고는 표지에만 — 없으면 그 공간만큼 사진/본문에 양보
+    const LOGO_AREA = opts.logo ? Math.round(H * 0.055) + 44 : 30;
     const mapH = Math.max(
       Math.round(cardW * 0.45),
       Math.min(cardW, H - TOP_MARGIN - LOGO_AREA - 8 - bodyH)
