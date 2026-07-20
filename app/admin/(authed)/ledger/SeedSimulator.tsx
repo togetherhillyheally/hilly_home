@@ -2,49 +2,48 @@
 
 /**
  * 모험 씨앗 획득 시뮬레이터 — 거리 → 정원 씨앗 미리보기.
- * ⚠️ 원천은 서버 earn_seeds RPC. 곡선 변경 시 서버 RPC + 앱 utils/seedReward.ts 와
- *    이 파일(gardenSeedsForKm)을 반드시 함께 수정할 것 (세 곳 동일 유지).
+ * 규칙은 DB(garden_seed_reward_rules)에서 내려와 props 로 주입 — 서버 calc_garden_seeds 와 동일 곡선.
  */
 import { useState } from "react";
 import { ChevronDown, Footprints, Users } from "lucide-react";
-
-/** 구간별 한계 요율 곡선 — 서버 earn_seeds / 앱 seedReward.ts 와 동일.
- *  최소 3 보장은 0.5km 이상만 (초단거리 세션 스팸 방지). */
-function gardenSeedsForKm(km: number): number {
-  if (!(km > 0)) return 0;
-  const s =
-    Math.min(km, 3) * 4 +
-    Math.max(0, Math.min(km, 7) - 3) * 3 +
-    Math.max(0, Math.min(km, 15) - 7) * 2 +
-    Math.max(0, km - 15) * 1;
-  const seeds = Math.floor(s);
-  return km >= 0.5 ? Math.max(3, seeds) : seeds;
-}
+import {
+  DEFAULT_SEED_RULES,
+  gardenSeedsForKm,
+  type SeedRules,
+} from "./seedRules";
 
 /** 함께 걷기 보너스 — 기본 씨앗의 30%, 최소 3 (2명 이상 함께 적립 시) */
 function companionBonus(baseSeeds: number): number {
   return Math.max(3, Math.round(baseSeeds * 0.3));
 }
 
-const BRACKETS = [
-  { from: 0, to: 3, rate: 4 },
-  { from: 3, to: 7, rate: 3 },
-  { from: 7, to: 15, rate: 2 },
-  { from: 15, to: Infinity, rate: 1 },
-];
-
 const MAX_KM = 100;
 
-export default function SeedSimulator() {
+export default function SeedSimulator({
+  rules = DEFAULT_SEED_RULES,
+}: {
+  rules?: SeedRules;
+}) {
   const [open, setOpen] = useState(false);
   const [km, setKm] = useState(5);
   const [companion, setCompanion] = useState(false);
 
-  const base = gardenSeedsForKm(km);
+  const base = gardenSeedsForKm(km, rules);
   const bonus = companion && km > 0 ? companionBonus(base) : 0;
   const total = km > 0 ? base + bonus : 0;
+
+  const brackets = rules.tiers.map((t, i) => ({
+    from: i === 0 ? 0 : rules.tiers[i - 1].uptoKm ?? 0,
+    to: t.uptoKm ?? Infinity,
+    rate: t.seedsPerKm,
+  }));
   const bracket =
-    BRACKETS.find((b) => km <= b.to) ?? BRACKETS[BRACKETS.length - 1];
+    brackets.find((b) => km <= b.to) ?? brackets[brackets.length - 1];
+
+  const presets = [3, 5, 10, 15, 50, 100].map((d) => ({
+    d,
+    s: gardenSeedsForKm(d, rules),
+  }));
 
   return (
     <section className="mb-6 rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden">
@@ -113,12 +112,17 @@ export default function SeedSimulator() {
               >
                 구간별 적립량 — 현재 구간 하이라이트
               </div>
-              <div className="grid grid-cols-4 gap-1.5 !mt-1.5">
-                {BRACKETS.map((b) => {
+              <div
+                className="grid gap-1.5 !mt-1.5"
+                style={{
+                  gridTemplateColumns: `repeat(${Math.min(brackets.length, 5)}, minmax(0, 1fr))`,
+                }}
+              >
+                {brackets.map((b, i) => {
                   const active = b === bracket && km > 0;
                   return (
                     <div
-                      key={b.rate}
+                      key={i}
                       className={`rounded-lg border px-2 py-1.5 text-center transition-colors ${
                         active
                           ? "border-emerald-500/50 bg-emerald-500/10"
@@ -194,10 +198,10 @@ export default function SeedSimulator() {
               </div>
 
               <p className="text-[10px] leading-relaxed text-gray-600">
-                세션당 1회 적립(멱등) · 0.5km 이상만 최소 3 보장 (미만은
-                공식값 그대로 0~1) · 지오펜스(보상 영역) 밖 이동은 미적립 ·
-                실제 지급은 서버 earn_seeds 가 재계산 — 이 화면은
-                미리보기입니다.
+                세션당 1회 적립(멱등) · {rules.minDistanceKm}km 이상만 최소{" "}
+                {rules.minGuarantee} 보장 (미만은 공식값 그대로) ·
+                지오펜스(보상 영역) 밖 이동은 미적립 · 실제 지급은 서버
+                earn_seeds 가 재계산 — 이 화면은 미리보기입니다.
               </p>
             </div>
 
@@ -207,14 +211,7 @@ export default function SeedSimulator() {
                 빠른 선택
               </div>
               <div className="grid grid-cols-2 gap-1.5">
-                {[
-                  { d: 3, s: 12 },
-                  { d: 5, s: 18 },
-                  { d: 10, s: 30 },
-                  { d: 15, s: 40 },
-                  { d: 50, s: 75 },
-                  { d: 100, s: 125 },
-                ].map(({ d, s }) => (
+                {presets.map(({ d, s }) => (
                   <button
                     key={d}
                     type="button"

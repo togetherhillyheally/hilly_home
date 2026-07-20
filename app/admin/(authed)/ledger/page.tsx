@@ -3,6 +3,8 @@ import { Search } from "lucide-react";
 import { adminList, escapeIlike } from "@/lib/admin-rest";
 import Pagination from "../Pagination";
 import SeedSimulator from "./SeedSimulator";
+import SeedRulesEditor from "./SeedRulesEditor";
+import { DEFAULT_SEED_RULES, type SeedRules } from "./seedRules";
 
 export const dynamic = "force-dynamic";
 
@@ -160,6 +162,30 @@ export default async function LedgerPage({
   const userMap = new Map(users.map((u) => [u.id, u.nickname]));
   const trailMap = new Map(trails.map((t) => [t.id, t.name]));
 
+  // 거리별 씨앗 지급 규칙 — DB 원천, 실패 시 기본 곡선 폴백
+  const [{ rows: ruleRows }, { rows: settingRows }] = await Promise.all([
+    adminList<{ tier: number; upto_km: number | null; seeds_per_km: number }>(
+      "garden_seed_reward_rules?select=tier,upto_km,seeds_per_km&order=tier.asc"
+    ),
+    adminList<{ min_guarantee: number; min_distance_km: number }>(
+      "garden_seed_reward_settings?select=min_guarantee,min_distance_km&id=eq.true"
+    ),
+  ]);
+  const seedRules: SeedRules =
+    ruleRows.length > 0
+      ? {
+          tiers: ruleRows.map((r) => ({
+            uptoKm: r.upto_km == null ? null : Number(r.upto_km),
+            seedsPerKm: Number(r.seeds_per_km),
+          })),
+          minGuarantee: settingRows[0]?.min_guarantee ?? 3,
+          minDistanceKm:
+            settingRows[0]?.min_distance_km == null
+              ? 0.5
+              : Number(settingRows[0].min_distance_km),
+        }
+      : DEFAULT_SEED_RULES;
+
   const tabs: CurrencyFilter[] = ["all", "seed"];
 
   return (
@@ -173,7 +199,8 @@ export default async function LedgerPage({
         </p>
       </header>
 
-      <SeedSimulator />
+      <SeedRulesEditor rules={seedRules} />
+      <SeedSimulator rules={seedRules} />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <form
