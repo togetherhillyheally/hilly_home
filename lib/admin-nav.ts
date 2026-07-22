@@ -1,4 +1,5 @@
 import {
+  Banknote,
   Bell,
   BookOpen,
   ClipboardList,
@@ -76,6 +77,12 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { href: "/admin/puzzles", label: "퍼즐 정의", icon: Puzzle },
       { href: "/admin/progress", label: "사용자 진행", icon: Trophy },
       { href: "/admin/ledger", label: "씨앗 원장", icon: Coins },
+    ],
+  },
+  {
+    title: "결제",
+    items: [
+      { href: "/admin/settlements", label: "참가비 정산", icon: Banknote },
     ],
   },
   {
