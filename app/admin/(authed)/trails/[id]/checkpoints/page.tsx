@@ -35,7 +35,7 @@ export default async function CheckpointsPage({
   if (!trail) notFound();
 
   const { rows: cps } = await adminList<CheckpointRow>(
-    `trail_checkpoints?select=id,trail_id,sort_order,title,lng,lat,note,marker_icon&trail_id=eq.${id}&order=sort_order.asc`
+    `trail_checkpoints?select=id,trail_id,sort_order,title,lng,lat,note,marker_icon,radius_m,quiz_question,quiz_choices,quiz_answer_index&trail_id=eq.${id}&order=sort_order.asc`
   );
 
   // 선택된 체크포인트 사진은 클라이언트에서 lazy fetch — 초기에는 빈 배열

@@ -25,6 +25,11 @@ import CheckpointMap, {
   type Checkpoint,
   type LatLng,
 } from "@/components/admin/CheckpointMap";
+import QuizEditor, {
+  isQuizComplete,
+  type QuizDraft,
+  type QuizEditorValue,
+} from "@/components/admin/QuizEditor";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
@@ -40,6 +45,21 @@ export type CheckpointRow = {
   lat: number;
   note: string | null;
   marker_icon: string | null;
+  radius_m: number | null;
+  quiz_question: string | null;
+  quiz_choices: string[] | null;
+  quiz_answer_index: number | null;
+};
+
+type CheckpointPatch = {
+  title?: string;
+  note?: string | null;
+  lat?: number;
+  lng?: number;
+  radius_m?: number | null;
+  quiz_question?: string | null;
+  quiz_choices?: string[] | null;
+  quiz_answer_index?: number | null;
 };
 
 export type PhotoRow = {
@@ -299,10 +319,7 @@ export default function CheckpointsEditor({
   };
 
   // === 기존 체크포인트 편집 ===
-  const updateCp = (
-    cpId: string,
-    patch: Partial<Pick<CheckpointRow, "title" | "note" | "lng" | "lat">>
-  ) => {
+  const updateCp = (cpId: string, patch: CheckpointPatch) => {
     startSave(async () => {
       try {
         const res = await fetch(`/api/admin/checkpoints/${cpId}`, {
@@ -733,6 +750,7 @@ export default function CheckpointsEditor({
             onDelete={() => deleteCp(selected.id)}
             onAddPhoto={addPhotoToSelected}
             onDeletePhoto={deletePhoto}
+            onError={showError}
           />
         )}
       </div>
@@ -745,11 +763,24 @@ type DetailProps = {
   cp: CheckpointRow;
   photos: PhotoRow[];
   saving: boolean;
-  onSaveMeta: (patch: { title?: string; note?: string | null; lat?: number; lng?: number }) => void;
+  onSaveMeta: (patch: CheckpointPatch) => void;
   onDelete: () => void;
   onAddPhoto: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onDeletePhoto: (photoId: string) => void;
+  onError: (msg: string) => void;
 };
+
+function initialCpQuizValue(cp: CheckpointRow): QuizEditorValue {
+  const q: QuizDraft | null =
+    cp.quiz_question && cp.quiz_choices && cp.quiz_answer_index != null
+      ? {
+          question: cp.quiz_question,
+          choices: [...cp.quiz_choices],
+          answerIndex: cp.quiz_answer_index,
+        }
+      : null;
+  return { quiz: q, radiusM: cp.radius_m };
+}
 
 function CheckpointDetail({
   cp,
@@ -759,11 +790,15 @@ function CheckpointDetail({
   onDelete,
   onAddPhoto,
   onDeletePhoto,
+  onError,
 }: DetailProps) {
   const [title, setTitle] = useState(cp.title);
   const [note, setNote] = useState(cp.note ?? "");
   const [lat, setLat] = useState(String(cp.lat));
   const [lng, setLng] = useState(String(cp.lng));
+  const [quizValue, setQuizValue] = useState<QuizEditorValue>(() =>
+    initialCpQuizValue(cp)
+  );
   const photoFileRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -771,22 +806,60 @@ function CheckpointDetail({
     setNote(cp.note ?? "");
     setLat(String(cp.lat));
     setLng(String(cp.lng));
-  }, [cp.id, cp.title, cp.note, cp.lat, cp.lng]);
+    setQuizValue(initialCpQuizValue(cp));
+  }, [cp]);
 
+  const baselineQuiz = useMemo(() => initialCpQuizValue(cp), [cp]);
+  const quizDirty =
+    JSON.stringify(quizValue) !== JSON.stringify(baselineQuiz);
   const dirty =
     title !== cp.title ||
     note !== (cp.note ?? "") ||
     Number(lat) !== cp.lat ||
-    Number(lng) !== cp.lng;
+    Number(lng) !== cp.lng ||
+    quizDirty;
 
   const save = () => {
-    const patch: Parameters<typeof onSaveMeta>[0] = {};
+    const patch: CheckpointPatch = {};
     if (title !== cp.title) patch.title = title;
     if (note !== (cp.note ?? "")) patch.note = note || null;
     const latN = Number(lat);
     const lngN = Number(lng);
     if (Number.isFinite(latN) && latN !== cp.lat) patch.lat = latN;
     if (Number.isFinite(lngN) && lngN !== cp.lng) patch.lng = lngN;
+
+    // radius
+    if ((quizValue.radiusM ?? null) !== (cp.radius_m ?? null)) {
+      patch.radius_m = quizValue.radiusM ?? null;
+    }
+    // quiz — all-or-none
+    const wasOn =
+      cp.quiz_question != null &&
+      cp.quiz_choices != null &&
+      cp.quiz_answer_index != null;
+    const isOn = quizValue.quiz != null;
+    if (!isOn && wasOn) {
+      patch.quiz_question = null;
+      patch.quiz_choices = null;
+      patch.quiz_answer_index = null;
+    } else if (isOn && quizValue.quiz) {
+      if (!isQuizComplete(quizValue.quiz)) {
+        onError("퀴즈 질문과 모든 선택지를 채워주세요.");
+        return;
+      }
+      const changed =
+        !wasOn ||
+        quizValue.quiz.question.trim() !== cp.quiz_question ||
+        quizValue.quiz.answerIndex !== cp.quiz_answer_index ||
+        JSON.stringify(quizValue.quiz.choices.map((c) => c.trim())) !==
+          JSON.stringify(cp.quiz_choices);
+      if (changed) {
+        patch.quiz_question = quizValue.quiz.question.trim();
+        patch.quiz_choices = quizValue.quiz.choices.map((c) => c.trim());
+        patch.quiz_answer_index = quizValue.quiz.answerIndex;
+      }
+    }
+    if (Object.keys(patch).length === 0) return;
     onSaveMeta(patch);
   };
 
@@ -842,6 +915,14 @@ function CheckpointDetail({
             className="w-full h-9 px-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-xs font-mono focus:outline-none focus:border-orange-500/50"
           />
         </div>
+      </div>
+
+      <div className="pt-2 border-t border-white/10">
+        <QuizEditor
+          value={quizValue}
+          onChange={setQuizValue}
+          disabled={saving}
+        />
       </div>
 
       <button

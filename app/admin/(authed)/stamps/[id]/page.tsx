@@ -41,7 +41,7 @@ export default async function StampMapDetailPage({
   if (!trail) notFound();
 
   const { rows: points } = await adminList<StampPointRow>(
-    `stamp_points?select=id,trail_id,title,hint,lng,lat,sort_order&trail_id=eq.${id}&order=sort_order.asc`
+    `stamp_points?select=id,trail_id,title,hint,lng,lat,sort_order,radius_m,quiz_question,quiz_choices,quiz_answer_index&trail_id=eq.${id}&order=sort_order.asc`
   );
 
   return (

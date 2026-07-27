@@ -1,11 +1,20 @@
 import { NextResponse } from "next/server";
 import { readAdminSession } from "@/lib/admin-session";
 import { adminFetch } from "@/lib/admin-rest";
+import { normalizeQuizAllOrNone, normalizeRadius } from "@/lib/quiz-validate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const ALLOWED_FIELDS = new Set(["title", "hint", "lng", "lat", "sort_order"]);
+const ALLOWED_FIELDS = new Set([
+  "title",
+  "hint",
+  "lng",
+  "lat",
+  "sort_order",
+  "radius_m",
+  // 퀴즈 3필드는 별도 all-or-none 검증으로 처리
+]);
 
 export async function PATCH(
   req: Request,
@@ -48,8 +57,17 @@ export async function PATCH(
     } else if (k === "sort_order") {
       if (typeof v !== "number" || !Number.isInteger(v)) continue;
       update.sort_order = v;
+    } else if (k === "radius_m") {
+      const r = normalizeRadius(v);
+      if (!r.ok) return NextResponse.json({ error: r.error }, { status: 400 });
+      update.radius_m = r.value;
     }
   }
+
+  // 퀴즈 3필드는 all-or-none 검증
+  const quiz = normalizeQuizAllOrNone(body);
+  if (!quiz.ok) return NextResponse.json({ error: quiz.error }, { status: 400 });
+  if (quiz.patch) Object.assign(update, quiz.patch);
 
   if (Object.keys(update).length === 0) {
     return NextResponse.json(

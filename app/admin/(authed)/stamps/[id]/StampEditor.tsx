@@ -18,6 +18,12 @@ import {
 } from "lucide-react";
 import StampMap, { type LatLng } from "@/components/admin/StampMap";
 import { parseStampTitle } from "@/lib/stamp-pool";
+import QuizEditor, {
+  emptyQuiz,
+  isQuizComplete,
+  type QuizDraft,
+  type QuizEditorValue,
+} from "@/components/admin/QuizEditor";
 
 export type StampPointRow = {
   id: string;
@@ -27,6 +33,21 @@ export type StampPointRow = {
   lng: number;
   lat: number;
   sort_order: number;
+  radius_m: number | null;
+  quiz_question: string | null;
+  quiz_choices: string[] | null;
+  quiz_answer_index: number | null;
+};
+
+type PointPatch = {
+  title?: string;
+  hint?: string | null;
+  lat?: number;
+  lng?: number;
+  radius_m?: number | null;
+  quiz_question?: string | null;
+  quiz_choices?: string[] | null;
+  quiz_answer_index?: number | null;
 };
 
 type Props = {
@@ -131,10 +152,7 @@ export default function StampEditor({
     });
   };
 
-  const updatePoint = (
-    id: string,
-    patch: Partial<Pick<StampPointRow, "title" | "hint" | "lng" | "lat">>
-  ) => {
+  const updatePoint = (id: string, patch: PointPatch) => {
     startSave(async () => {
       try {
         const res = await fetch(`/api/admin/stamp-points/${id}`, {
@@ -366,6 +384,7 @@ export default function StampEditor({
             saving={saving}
             onSave={(patch) => updatePoint(selected.id, patch)}
             onDelete={() => deletePoint(selected.id)}
+            onError={showError}
           />
         )}
       </div>
@@ -377,26 +396,89 @@ export default function StampEditor({
 type DetailProps = {
   point: StampPointRow;
   saving: boolean;
-  onSave: (patch: { title?: string; hint?: string | null; lat?: number; lng?: number }) => void;
+  onSave: (patch: PointPatch) => void;
   onDelete: () => void;
+  onError: (msg: string) => void;
 };
 
-function PointDetail({ point, saving, onSave, onDelete }: DetailProps) {
+function initialQuizValue(point: StampPointRow): QuizEditorValue {
+  const q: QuizDraft | null =
+    point.quiz_question && point.quiz_choices && point.quiz_answer_index != null
+      ? {
+          question: point.quiz_question,
+          choices: [...point.quiz_choices],
+          answerIndex: point.quiz_answer_index,
+        }
+      : null;
+  return { quiz: q, radiusM: point.radius_m };
+}
+
+function quizPatchIfChanged(
+  point: StampPointRow,
+  next: QuizEditorValue
+): { patch: PointPatch; error: string | null } {
+  const patch: PointPatch = {};
+  let error: string | null = null;
+
+  // radius
+  if ((next.radiusM ?? null) !== (point.radius_m ?? null)) {
+    patch.radius_m = next.radiusM ?? null;
+  }
+
+  // quiz — all-or-none
+  const wasOn =
+    point.quiz_question != null &&
+    point.quiz_choices != null &&
+    point.quiz_answer_index != null;
+  const isOn = next.quiz != null;
+
+  if (!isOn && wasOn) {
+    patch.quiz_question = null;
+    patch.quiz_choices = null;
+    patch.quiz_answer_index = null;
+  } else if (isOn && next.quiz) {
+    if (!isQuizComplete(next.quiz)) {
+      error = "퀴즈 질문과 모든 선택지를 채워주세요.";
+    } else {
+      const changed =
+        !wasOn ||
+        next.quiz.question.trim() !== point.quiz_question ||
+        next.quiz.answerIndex !== point.quiz_answer_index ||
+        JSON.stringify(next.quiz.choices.map((c) => c.trim())) !==
+          JSON.stringify(point.quiz_choices);
+      if (changed) {
+        patch.quiz_question = next.quiz.question.trim();
+        patch.quiz_choices = next.quiz.choices.map((c) => c.trim());
+        patch.quiz_answer_index = next.quiz.answerIndex;
+      }
+    }
+  }
+  return { patch, error };
+}
+
+function PointDetail({ point, saving, onSave, onDelete, onError }: DetailProps) {
   const { entry, name: initialName } = parseStampTitle(point.title);
   const [name, setName] = useState(initialName);
   const [hint, setHint] = useState(point.hint ?? "");
   const [lat, setLat] = useState(String(point.lat));
   const [lng, setLng] = useState(String(point.lng));
+  const [quizValue, setQuizValue] = useState<QuizEditorValue>(() =>
+    initialQuizValue(point)
+  );
 
   const initialTitleName = initialName;
+  const baselineQuiz = useMemo(() => initialQuizValue(point), [point]);
+  const quizDirty =
+    JSON.stringify(quizValue) !== JSON.stringify(baselineQuiz);
   const dirty =
     name !== initialTitleName ||
     hint !== (point.hint ?? "") ||
     Number(lat) !== point.lat ||
-    Number(lng) !== point.lng;
+    Number(lng) !== point.lng ||
+    quizDirty;
 
   const save = () => {
-    const patch: Parameters<typeof onSave>[0] = {};
+    const patch: PointPatch = {};
     if (name !== initialTitleName) {
       // title 은 "icon|name" 포맷 유지 (entry 가 있으면 그대로 사용)
       patch.title = entry ? `${entry.icon}|${name.trim() || entry.name}` : name.trim();
@@ -406,6 +488,14 @@ function PointDetail({ point, saving, onSave, onDelete }: DetailProps) {
     const lngN = Number(lng);
     if (Number.isFinite(latN) && latN !== point.lat) patch.lat = latN;
     if (Number.isFinite(lngN) && lngN !== point.lng) patch.lng = lngN;
+
+    const { patch: qPatch, error: qErr } = quizPatchIfChanged(point, quizValue);
+    if (qErr) {
+      onError(qErr);
+      return;
+    }
+    Object.assign(patch, qPatch);
+    if (Object.keys(patch).length === 0) return;
     onSave(patch);
   };
 
@@ -486,6 +576,14 @@ function PointDetail({ point, saving, onSave, onDelete }: DetailProps) {
             className="w-full h-9 px-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-xs font-mono focus:outline-none focus:border-orange-500/50"
           />
         </div>
+      </div>
+
+      <div className="pt-2 border-t border-white/10">
+        <QuizEditor
+          value={quizValue}
+          onChange={setQuizValue}
+          disabled={saving}
+        />
       </div>
 
       <button
