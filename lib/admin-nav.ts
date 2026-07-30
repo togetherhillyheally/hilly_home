@@ -6,6 +6,7 @@ import {
   Coins,
   FileText,
   Flag,
+  HelpCircle,
   Home,
   Image as ImageIcon,
   Map,
@@ -68,6 +69,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     items: [
       { href: "/admin/trails", label: "코스 지도", icon: Map },
       { href: "/admin/stamps", label: "스탬프 지도", icon: Stamp },
+      { href: "/admin/quiz-pool", label: "자동 퀴즈", icon: HelpCircle },
       { href: "/admin/sessions", label: "모험", icon: Mountain },
     ],
   },
