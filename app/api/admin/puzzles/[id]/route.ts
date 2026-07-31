@@ -181,24 +181,5 @@ export async function PATCH(
     );
   }
 
-  // 격자(조각 수) 변경 시 — 연결된 브랜드 종의 재심기 비용 자동 재계산
-  if (update.total_pieces !== undefined) {
-    const linkRes = await adminFetch(
-      `garden_puzzle_rewards?puzzle_id=eq.${id}&select=species_id`
-    );
-    if (linkRes.ok) {
-      const links = (await linkRes.json()) as Array<{ species_id: string }>;
-      if (links.length > 0) {
-        await adminFetch("rpc/admin_bo_recalc_plant_cost", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            p_species_ids: links.map((l) => l.species_id),
-          }),
-        }).catch(() => {});
-      }
-    }
-  }
-
   return NextResponse.json({ success: true });
 }

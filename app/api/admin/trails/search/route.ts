@@ -18,7 +18,7 @@ export async function GET(req: Request) {
   }
   const url = new URL(req.url);
   const q = (url.searchParams.get("q") ?? "").trim();
-  const limit = Math.min(50, Math.max(1, Number(url.searchParams.get("limit")) || 12));
+  const limit = Math.min(1000, Math.max(1, Number(url.searchParams.get("limit")) || 12));
 
   const params = new URLSearchParams({
     select: "id,name,series_name",

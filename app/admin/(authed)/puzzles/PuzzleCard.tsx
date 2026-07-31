@@ -3,16 +3,7 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Pencil, Sprout } from "lucide-react";
-import { PLANT_SVG } from "../users/[id]/garden-svgs";
-
-export type RewardSpecies = {
-  id: string;
-  name: string;
-  category: string;
-  svg_key: string;
-  tint: string | null;
-};
+import { Loader2, Pencil } from "lucide-react";
 
 // puzzle_type 은 셀 이미지 노출 방식 (브랜드 연결 여부와 무관)
 const PUZZLE_TYPE_LABELS: Record<string, string> = {
@@ -41,11 +32,9 @@ export type PuzzleRow = {
 
 export default function PuzzleCard({
   puzzle,
-  rewards,
   trailName,
 }: {
   puzzle: PuzzleRow;
-  rewards: RewardSpecies[];
   trailName: string | null;
 }) {
   const router = useRouter();
@@ -180,38 +169,6 @@ export default function PuzzleCard({
             <div className="pt-2 mt-2 border-t border-white/5">
               <span className="text-gray-500">보상</span>{" "}
               <span className="text-gray-200">{puzzle.reward_description}</span>
-            </div>
-          ) : null}
-          {/* 완성 보상 정원 종 */}
-          {rewards.length > 0 ? (
-            <div className="pt-2 mt-2 border-t border-white/5">
-              <div className="flex items-center gap-1 text-gray-500 mb-1.5">
-                <Sprout className="h-3 w-3 text-emerald-300" />
-                정원 보상
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {rewards.map((sp) => {
-                  const render = PLANT_SVG[sp.svg_key] ?? PLANT_SVG.Sprout;
-                  // 동물은 하단 절반만 쓰므로 좁은 viewBox 로 확대 (hilly_rn 과 동일)
-                  const vb =
-                    sp.category === "animal" ? "26 42 48 50" : "16 12 68 78";
-                  return (
-                    <div
-                      key={sp.id}
-                      title={sp.name}
-                      className="w-9 h-9 rounded-md bg-gradient-to-b from-sky-900/20 to-emerald-900/15 border border-white/10 flex items-end justify-center overflow-hidden"
-                    >
-                      <svg
-                        viewBox={vb}
-                        preserveAspectRatio="xMidYMax meet"
-                        className="w-full h-full"
-                      >
-                        {render(0, 1, false, sp.tint)}
-                      </svg>
-                    </div>
-                  );
-                })}
-              </div>
             </div>
           ) : null}
         </div>

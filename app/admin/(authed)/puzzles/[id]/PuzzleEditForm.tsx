@@ -2,10 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Loader2, Save, Upload } from "lucide-react";
+import { Loader2, Save, Upload } from "lucide-react";
 import TrailPicker, { type TrailMini } from "@/components/admin/TrailPicker";
 import AutocompleteInput from "@/components/admin/AutocompleteInput";
-import { PLANT_SVG } from "../../users/[id]/garden-svgs";
 
 export type PuzzleFull = {
   id: string;
@@ -26,44 +25,6 @@ export type PuzzleFull = {
   collab_description: string | null;
   created_at: string;
 };
-
-export type SpeciesMini = {
-  id: string;
-  key: string;
-  name: string;
-  category: string;
-  zone: "ground" | "bank" | "sky";
-  svg_key: string;
-  is_brand: boolean;
-  is_hidden: boolean;
-  is_published: boolean;
-  tint: string | null;
-};
-
-const CATEGORY_LABELS: Record<string, string> = {
-  flower: "꽃",
-  bush: "덤불",
-  mushroom: "버섯",
-  tree: "나무",
-  animal: "동물",
-  cloud: "하늘",
-};
-
-/** 카테고리 → 상위 그룹 (사용자 노출) */
-function speciesGroup(cat: string): "plant" | "animal" | "sky" | "other" {
-  if (cat === "animal") return "animal";
-  if (cat === "cloud") return "sky";
-  if (["flower", "bush", "mushroom", "tree"].includes(cat)) return "plant";
-  return "other";
-}
-
-const GROUP_LABELS = {
-  all: "전체",
-  plant: "식물",
-  animal: "동물",
-  sky: "하늘",
-} as const;
-type GroupKey = keyof typeof GROUP_LABELS;
 
 type PuzzleType = "mystery" | "hint" | "brand";
 
@@ -108,18 +69,7 @@ function closestDifficultyIdx(total: number): number {
   return bestIdx;
 }
 
-export default function PuzzleEditForm({
-  puzzle,
-  allSpecies,
-  initialGrantSpeciesId,
-  linkedByOthers,
-}: {
-  puzzle: PuzzleFull;
-  allSpecies: SpeciesMini[];
-  initialGrantSpeciesId: string | null;
-  /** 다른 퍼즐이 이미 보상으로 쓰는 종 → 그 퍼즐명 (선택 불가 표시) */
-  linkedByOthers: Record<string, string>;
-}) {
+export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
 
@@ -137,9 +87,6 @@ export default function PuzzleEditForm({
   const [collabDescription, setCollabDescription] = useState(
     puzzle.collab_description ?? ""
   );
-
-  const [grantId, setGrantId] = useState<string | null>(initialGrantSpeciesId);
-  const [grantGroup, setGrantGroup] = useState<GroupKey>("all");
 
   const initialTotal = puzzle.grid_rows * puzzle.grid_cols;
   const [gridIndex, setGridIndex] = useState(closestDifficultyIdx(initialTotal));
@@ -181,8 +128,6 @@ export default function PuzzleEditForm({
     }
   };
 
-  const grantDirty = grantId !== initialGrantSpeciesId;
-
   const dirty = useMemo(() => {
     if (name.trim() !== puzzle.name) return true;
     if ((description.trim() || null) !== (puzzle.description ?? null))
@@ -204,7 +149,6 @@ export default function PuzzleEditForm({
     const grid = computeGrid(imageAspect, DIFFICULTY_OPTIONS[gridIndex].target);
     if (grid.rows !== puzzle.grid_rows || grid.cols !== puzzle.grid_cols)
       return true;
-    if (grantDirty) return true;
     return false;
   }, [
     name,
@@ -218,7 +162,6 @@ export default function PuzzleEditForm({
     gridIndex,
     imageAspect,
     puzzle,
-    grantDirty,
   ]);
 
   const uploadImage = async (file: File) => {
@@ -286,24 +229,6 @@ export default function PuzzleEditForm({
         };
         setError(data.error ?? `저장 실패 (${res.status})`);
         return;
-      }
-      // 완성 보상 종 연결도 함께 저장
-      if (grantDirty) {
-        const grantRes = await fetch(
-          `/api/admin/puzzles/${puzzle.id}/grant-species`,
-          {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ species_ids: grantId ? [grantId] : [] }),
-          }
-        );
-        if (!grantRes.ok) {
-          const gd = (await grantRes.json().catch(() => ({}))) as {
-            error?: string;
-          };
-          setError(gd.error ?? `보상 종 저장 실패 (${grantRes.status})`);
-          return;
-        }
       }
       setMsg("저장 완료");
       startTransition(() => router.refresh());
@@ -566,56 +491,6 @@ export default function PuzzleEditForm({
           </>
         ) : null}
 
-        {/* 완성 보상 정원 종 — 퍼즐당 1종, 종당 1퍼즐 */}
-        <div>
-          <div className="flex items-end justify-between gap-2 mb-1.5">
-            <div>
-              <div className="text-xs text-gray-400">
-                완성 보상 정원 종 (1종)
-              </div>
-              <div className="text-[11px] text-gray-500 mt-0.5">
-                이 퍼즐 완성 시 유저 정원에 자동 지급. 이미 다른 퍼즐에 연결된
-                종은 선택할 수 없어요.
-              </div>
-            </div>
-            <div className="text-[11px] text-emerald-300 font-mono">
-              {grantId ? "1종 선택" : "미선택"}
-            </div>
-          </div>
-
-          {/* 그룹 필터 */}
-          <div className="mb-2 flex flex-wrap gap-1">
-            {(Object.keys(GROUP_LABELS) as GroupKey[]).map((g) => {
-              const active = grantGroup === g;
-              return (
-                <button
-                  key={g}
-                  type="button"
-                  onClick={() => setGrantGroup(g)}
-                  className={`px-2.5 h-7 inline-flex items-center rounded-md text-[11px] font-medium transition-colors ${
-                    active
-                      ? "bg-emerald-500/20 text-emerald-200 border border-emerald-500/40"
-                      : "bg-white/[0.04] text-gray-400 border border-white/10 hover:text-white"
-                  }`}
-                >
-                  {GROUP_LABELS[g]}
-                </button>
-              );
-            })}
-          </div>
-
-          <SpeciesGrid
-            species={allSpecies}
-            group={grantGroup}
-            selectedId={grantId}
-            linkedByOthers={linkedByOthers}
-            onSelect={(sid) => {
-              // 단일 선택 — 같은 종 다시 클릭하면 해제
-              setGrantId((prev) => (prev === sid ? null : sid));
-            }}
-          />
-        </div>
-
         {error ? (
           <div className="text-xs text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">
             {error}
@@ -643,98 +518,6 @@ export default function PuzzleEditForm({
           </button>
         </div>
       </div>
-    </div>
-  );
-}
-
-/** 완성 보상 후보 종 그리드 — 단일 선택, 타 퍼즐 선점 종은 비활성 */
-function SpeciesGrid({
-  species,
-  group,
-  selectedId,
-  linkedByOthers,
-  onSelect,
-}: {
-  species: SpeciesMini[];
-  group: GroupKey;
-  selectedId: string | null;
-  linkedByOthers: Record<string, string>;
-  onSelect: (id: string) => void;
-}) {
-  const filtered = species.filter((s) => {
-    if (group === "all") return true;
-    return speciesGroup(s.category) === group;
-  });
-
-  if (filtered.length === 0) {
-    return (
-      <div className="rounded-lg border border-white/10 bg-white/[0.02] p-8 text-center text-xs text-gray-500">
-        조건에 맞는 종이 없어요.
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-      {filtered.map((sp) => {
-        const checked = selectedId === sp.id;
-        const takenBy = linkedByOthers[sp.id];
-        const disabled = Boolean(takenBy);
-        const render = PLANT_SVG[sp.svg_key] ?? PLANT_SVG.Sprout;
-        // 동물은 하단 절반만 쓰므로 좁은 viewBox 로 확대 (hilly_rn 과 동일)
-        const vb = sp.category === "animal" ? "26 42 48 50" : "16 12 68 78";
-        return (
-          <button
-            key={sp.id}
-            type="button"
-            disabled={disabled}
-            onClick={() => onSelect(sp.id)}
-            title={disabled ? `"${takenBy}" 퍼즐의 보상으로 이미 연결됨` : undefined}
-            className={`relative aspect-square rounded-lg overflow-hidden border transition-colors ${
-              disabled
-                ? "border-white/5 bg-white/[0.01] opacity-40 cursor-not-allowed"
-                : checked
-                  ? "border-emerald-500/60 bg-emerald-500/10"
-                  : "border-white/10 bg-gradient-to-b from-sky-900/15 to-emerald-900/10 hover:border-emerald-500/30"
-            }`}
-          >
-            <svg
-              viewBox={vb}
-              preserveAspectRatio="xMidYMax meet"
-              className="w-full h-full"
-            >
-              {render(0, 1, false, sp.tint)}
-            </svg>
-            {checked ? (
-              <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center shadow">
-                <Check className="h-3 w-3 text-black" strokeWidth={3} />
-              </div>
-            ) : null}
-            {sp.is_brand ? (
-              <div
-                className="absolute top-1 left-1 px-1 py-0.5 rounded bg-amber-500/80 text-[9px] font-medium text-white"
-                title="퍼즐 완성으로만 얻는 한정 종"
-              >
-                ✨ 한정
-              </div>
-            ) : null}
-            {!sp.is_published ? (
-              <div
-                className="absolute top-1 right-7 px-1 py-0.5 rounded bg-red-500/80 text-[9px] font-medium text-white"
-                title="미공개 — 앱에 노출되지 않는 종. 공개 후 연결하세요."
-              >
-                미공개
-              </div>
-            ) : null}
-            <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-1.5 py-1 flex items-center justify-between gap-1">
-              <span className="text-[10px] text-white truncate">{sp.name}</span>
-              <span className="text-[9px] text-gray-300 flex-shrink-0">
-                {takenBy ? `→ ${takenBy}` : CATEGORY_LABELS[sp.category] ?? sp.category}
-              </span>
-            </div>
-          </button>
-        );
-      })}
     </div>
   );
 }

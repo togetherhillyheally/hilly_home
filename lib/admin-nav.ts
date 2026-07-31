@@ -1,7 +1,6 @@
 import {
   Banknote,
   Bell,
-  BookOpen,
   ClipboardList,
   Coins,
   FileText,
@@ -10,11 +9,9 @@ import {
   Home,
   Image as ImageIcon,
   Map,
-  MessageSquare,
   Mountain,
   Puzzle,
   Smartphone,
-  Sprout,
   Stamp,
   Trophy,
   UserMinus,
@@ -85,14 +82,6 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     title: "결제",
     items: [
       { href: "/admin/settlements", label: "참가비 정산", icon: Banknote },
-    ],
-  },
-  {
-    title: "정원",
-    items: [
-      { href: "/admin/objects", label: "정원 도감", icon: BookOpen },
-      { href: "/admin/user-gardens", label: "모험자 정원", icon: Sprout },
-      { href: "/admin/guestbook", label: "발자국", icon: MessageSquare },
     ],
   },
   {

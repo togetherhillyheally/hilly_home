@@ -28,7 +28,7 @@ let INFLIGHT: Promise<TrailMini[]> | null = null;
 async function loadTrails(): Promise<TrailMini[]> {
   if (CACHE) return CACHE;
   if (INFLIGHT) return INFLIGHT;
-  INFLIGHT = fetch("/api/admin/trails/search?limit=200", { cache: "no-store" })
+  INFLIGHT = fetch("/api/admin/trails/search?limit=1000", { cache: "no-store" })
     .then((r) => r.json())
     .then((d) => {
       const arr = Array.isArray(d?.rows) ? (d.rows as TrailMini[]) : [];

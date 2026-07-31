@@ -155,17 +155,19 @@ export async function GET(
 
   const puzzle = await loadPuzzle(id);
   let economics: ReturnType<typeof computeEconomics> | null = null;
+  let coordinates: unknown = null;
   if (puzzle?.trail_id) {
     const total =
       puzzle.total_pieces || puzzle.grid_rows * puzzle.grid_cols;
     const tRes = await adminFetch(
-      `trails?id=eq.${puzzle.trail_id}&select=distance_km,seed_multiplier`
+      `trails?id=eq.${puzzle.trail_id}&select=distance_km,seed_multiplier,coordinates`
     );
     if (tRes.ok) {
       const trow = (
         (await tRes.json()) as Array<{
           distance_km: number | null;
           seed_multiplier: number | null;
+          coordinates: unknown;
         }>
       )[0];
       economics = computeEconomics(
@@ -173,6 +175,7 @@ export async function GET(
         Number(trow?.distance_km ?? 0),
         Number(trow?.seed_multiplier ?? 1)
       );
+      coordinates = trow?.coordinates ?? null;
     }
   }
 
@@ -180,6 +183,7 @@ export async function GET(
     treasures,
     count: treasures.length,
     economics,
+    coordinates,
   });
 }
 

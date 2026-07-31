@@ -1,9 +1,6 @@
 import Link from "next/link";
 import { adminList } from "@/lib/admin-rest";
-import PuzzleCard, {
-  type PuzzleRow,
-  type RewardSpecies,
-} from "./PuzzleCard";
+import PuzzleCard, { type PuzzleRow } from "./PuzzleCard";
 
 export const dynamic = "force-dynamic";
 
@@ -43,36 +40,18 @@ export default async function PuzzlesPage({
     { from: 0, to: 199, count: true }
   );
 
-  // 퍼즐별 완성 보상 종 매핑 (garden_puzzle_rewards ⨝ garden_species)
-  const rewardsMap = new Map<string, RewardSpecies[]>();
   // 트레일 연결 퍼즐의 트레일명 매핑
   const trailNameMap = new Map<string, string>();
   if (rows.length > 0) {
-    const inList = rows.map((r) => r.id).join(",");
     const trailIds = Array.from(
       new Set(rows.map((r) => r.trail_id).filter(Boolean) as string[])
     );
-    const [{ rows: rewardRows }, { rows: trailRows }] = await Promise.all([
-      adminList<{
-        puzzle_id: string;
-        garden_species: RewardSpecies | null;
-      }>(
-        `garden_puzzle_rewards?puzzle_id=in.(${inList})&select=puzzle_id,garden_species(id,name,category,svg_key,tint)`,
-        { from: 0, to: 999 }
-      ),
-      trailIds.length > 0
-        ? adminList<{ id: string; name: string }>(
-            `trails?select=id,name&id=in.(${trailIds.join(",")})`
-          )
-        : Promise.resolve({ rows: [] as { id: string; name: string }[], total: 0 }),
-    ]);
-    for (const r of rewardRows) {
-      if (!r.garden_species) continue;
-      const cur = rewardsMap.get(r.puzzle_id) ?? [];
-      cur.push(r.garden_species);
-      rewardsMap.set(r.puzzle_id, cur);
+    if (trailIds.length > 0) {
+      const { rows: trailRows } = await adminList<{ id: string; name: string }>(
+        `trails?select=id,name&id=in.(${trailIds.join(",")})`
+      );
+      trailRows.forEach((t) => trailNameMap.set(t.id, t.name));
     }
-    trailRows.forEach((t) => trailNameMap.set(t.id, t.name));
   }
 
   const tabs: ActiveFilter[] = ["all", "active", "inactive"];
@@ -117,7 +96,6 @@ export default async function PuzzlesPage({
             <PuzzleCard
               key={p.id}
               puzzle={p}
-              rewards={rewardsMap.get(p.id) ?? []}
               trailName={p.trail_id ? trailNameMap.get(p.trail_id) ?? null : null}
             />
           ))}

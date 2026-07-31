@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Gem, Loader2, Sprout, Trash2 } from "lucide-react";
+import TreasureMap, { type TreasurePoint } from "@/components/admin/TreasureMap";
 
 type Props = {
   puzzleId: string;
@@ -9,6 +10,9 @@ type Props = {
   seriesName: string | null;
   totalPieces: number;
 };
+
+type Coord = [number, number] | [number, number, number];
+type Coordinates = Coord[] | Coord[][];
 
 type Economics = {
   totalPieces: number;
@@ -26,6 +30,8 @@ type Summary = {
   seedCells?: number;
   trailLengthKm?: number;
   economics?: Economics | null;
+  treasures?: TreasurePoint[];
+  coordinates?: Coordinates | null;
 };
 
 export default function TreasurePanel({
@@ -36,6 +42,8 @@ export default function TreasurePanel({
 }: Props) {
   const [count, setCount] = useState<number | null>(null);
   const [eco, setEco] = useState<Economics | null>(null);
+  const [treasures, setTreasures] = useState<TreasurePoint[]>([]);
+  const [coordinates, setCoordinates] = useState<Coordinates | null>(null);
   const [multInput, setMultInput] = useState<string>("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +57,8 @@ export default function TreasurePanel({
       const d = (await r.json()) as Summary;
       setCount(d.count ?? 0);
       setEco(d.economics ?? null);
+      setTreasures(d.treasures ?? []);
+      setCoordinates(d.coordinates ?? null);
       if (d.economics) setMultInput(String(d.economics.currentMultiplier));
     } catch {
       setCount(0);
@@ -271,6 +281,32 @@ export default function TreasurePanel({
         획득한 모험자의 조각은 유지됩니다.
         <br />· 조각 수(격자)나 코스를 바꾼 뒤에는 다시 배치해 주세요.
       </p>
+
+      {/* 배치 미리보기 지도 — 경로 + 보물 위치(번호) */}
+      {coordinates && (
+        <div className="mt-4">
+          <div className="flex items-center gap-1.5 mb-2">
+            <Gem className="h-3.5 w-3.5 text-amber-300" />
+            <span className="text-xs font-semibold text-white">
+              배치 미리보기
+            </span>
+            <span className="text-[11px] text-gray-500">
+              (앱과 동일한 보물상자 아이콘)
+            </span>
+          </div>
+          <TreasureMap
+            coordinates={coordinates}
+            treasures={treasures}
+            height={420}
+          />
+          {treasures.length === 0 && (
+            <p className="text-[11px] text-gray-500 mt-2">
+              아직 배치된 보물이 없어요. 위 「보물 자동 배치」를 누르면 경로 위에
+              표시됩니다.
+            </p>
+          )}
+        </div>
+      )}
 
       {msg && <p className="text-xs text-emerald-300 mt-2">{msg}</p>}
       {error && <p className="text-xs text-red-400 mt-2">{error}</p>}
