@@ -6,6 +6,9 @@ import PuzzleEditForm, {
   type PuzzleFull,
   type SpeciesMini,
 } from "./PuzzleEditForm";
+import TreasurePanel from "./TreasurePanel";
+import BrandSeedPanel from "./BrandSeedPanel";
+import PuzzleTabs from "./PuzzleTabs";
 
 export const dynamic = "force-dynamic";
 
@@ -76,11 +79,26 @@ export default async function PuzzleDetailPage({
         <p className="text-xs text-gray-500 mt-1 font-mono">{puzzle.id}</p>
       </header>
 
-      <PuzzleEditForm
-        puzzle={puzzle}
-        allSpecies={allSpecies}
-        initialGrantSpeciesId={initialGrantSpeciesId}
-        linkedByOthers={linkedByOthers}
+      <PuzzleTabs
+        settings={
+          <PuzzleEditForm
+            puzzle={puzzle}
+            allSpecies={allSpecies}
+            initialGrantSpeciesId={initialGrantSpeciesId}
+            linkedByOthers={linkedByOthers}
+          />
+        }
+        cert={
+          <>
+            <BrandSeedPanel puzzleId={puzzle.id} />
+            <TreasurePanel
+              puzzleId={puzzle.id}
+              trailId={puzzle.trail_id}
+              seriesName={puzzle.series_name}
+              totalPieces={puzzle.total_pieces}
+            />
+          </>
+        }
       />
     </main>
   );
