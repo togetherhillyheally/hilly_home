@@ -26,24 +26,12 @@ export type PuzzleFull = {
   created_at: string;
 };
 
-type PuzzleType = "mystery" | "hint" | "brand";
-
 const DIFFICULTY_OPTIONS = [
   { label: "쉬움", target: 25 },
   { label: "보통-", target: 36 },
   { label: "보통", target: 49 },
   { label: "어려움-", target: 64 },
   { label: "어려움", target: 81 },
-];
-
-const PUZZLE_TYPE_OPTIONS: {
-  value: PuzzleType;
-  label: string;
-  desc: string;
-}[] = [
-  { value: "mystery", label: "미스터리", desc: "거의 안 보임" },
-  { value: "hint", label: "힌트", desc: "흐린 가이드" },
-  { value: "brand", label: "원본 노출", desc: "브랜드 콜라보용" },
 ];
 
 /** 이미지 비율(W/H) + 목표 셀 수 → rows × cols */
@@ -76,9 +64,6 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
   const [name, setName] = useState(puzzle.name);
   const [description, setDescription] = useState(puzzle.description ?? "");
   const [reward, setReward] = useState(puzzle.reward_description ?? "");
-  const [puzzleType, setPuzzleType] = useState<PuzzleType>(
-    (puzzle.puzzle_type as PuzzleType) ?? "mystery"
-  );
   const [trail, setTrail] = useState<TrailMini | null>(null);
   const [seriesName, setSeriesName] = useState<string>(
     puzzle.series_name ?? ""
@@ -134,8 +119,6 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
       return true;
     if ((reward.trim() || null) !== (puzzle.reward_description ?? null))
       return true;
-    if (puzzleType !== ((puzzle.puzzle_type as PuzzleType) ?? "mystery"))
-      return true;
     const curTrailId = trail?.id ?? null;
     if (curTrailId !== (puzzle.trail_id ?? null)) return true;
     const curSeries = seriesName.trim() || null;
@@ -154,7 +137,6 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
     name,
     description,
     reward,
-    puzzleType,
     trail,
     seriesName,
     collabTitle,
@@ -216,7 +198,6 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
         series_name: trail ? null : seriesName.trim() || null,
         collab_title: collabTitle.trim() || null,
         collab_description: collabDescription.trim() || null,
-        puzzle_type: puzzleType,
       };
       const res = await fetch(`/api/admin/puzzles/${puzzle.id}`, {
         method: "PATCH",
@@ -394,33 +375,6 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
                   <div>{opt.label}</div>
                   <div className="font-mono text-[10px] mt-0.5 opacity-70">
                     {g.rows}×{g.cols}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 모드 */}
-        <div>
-          <div className="text-xs text-gray-400 mb-1.5">모드</div>
-          <div className="grid grid-cols-3 gap-2">
-            {PUZZLE_TYPE_OPTIONS.map((opt) => {
-              const selected = puzzleType === opt.value;
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => setPuzzleType(opt.value)}
-                  className={`px-3 py-2.5 rounded-lg text-xs font-medium border transition-colors ${
-                    selected
-                      ? "bg-emerald-500/20 text-emerald-200 border-emerald-500/40"
-                      : "bg-white/[0.04] text-gray-400 border-white/10 hover:text-white"
-                  }`}
-                >
-                  <div className="text-sm">{opt.label}</div>
-                  <div className="text-[10px] mt-0.5 opacity-70">
-                    {opt.desc}
                   </div>
                 </button>
               );

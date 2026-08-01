@@ -5,13 +5,6 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Pencil } from "lucide-react";
 
-// puzzle_type 은 셀 이미지 노출 방식 (브랜드 연결 여부와 무관)
-const PUZZLE_TYPE_LABELS: Record<string, string> = {
-  mystery: "미스터리 (거의 안 보임)",
-  hint: "힌트 (흐린 가이드)",
-  brand: "원본 노출",
-};
-
 export type PuzzleRow = {
   id: string;
   name: string;
@@ -140,15 +133,6 @@ export default function PuzzleCard({
           <div className="flex items-center gap-2">
             <span className="text-gray-500">기본 티어</span>
             <span className="text-gray-200">{puzzle.base_tier}</span>
-            {puzzle.puzzle_type ? (
-              <>
-                <span className="text-gray-600">·</span>
-                <span className="text-gray-500">노출</span>
-                <span className="text-gray-200">
-                  {PUZZLE_TYPE_LABELS[puzzle.puzzle_type] ?? puzzle.puzzle_type}
-                </span>
-              </>
-            ) : null}
           </div>
           {/* 브랜드 연결 — 트레일 또는 시리즈에 연결된 퍼즐만 */}
           {puzzle.series_name || puzzle.trail_id ? (
