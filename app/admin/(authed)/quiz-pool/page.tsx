@@ -6,6 +6,7 @@ export const dynamic = "force-dynamic";
 const CATEGORY_LABEL: Record<string, string> = {
   trivia: "상식",
   dadjoke: "아재개그",
+  outdoor: "아웃도어",
 };
 
 export default async function QuizPoolPage() {

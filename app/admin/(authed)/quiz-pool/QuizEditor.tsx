@@ -16,6 +16,7 @@ export type QuizRow = {
 const CATEGORY_LABEL: Record<string, string> = {
   trivia: "상식",
   dadjoke: "아재개그",
+  outdoor: "아웃도어",
 };
 
 function emptyDraft(): Omit<QuizRow, "id" | "is_active"> {
@@ -98,7 +99,7 @@ function QuizFields({
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex gap-2">
-        {(["trivia", "dadjoke"] as const).map((c) => (
+        {(["trivia", "dadjoke", "outdoor"] as const).map((c) => (
           <button
             key={c}
             onClick={() => setDraft((d) => ({ ...d, category: c }))}
