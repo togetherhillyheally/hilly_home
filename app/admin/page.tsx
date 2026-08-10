@@ -1,12 +1,13 @@
 import { redirect } from "next/navigation";
 import { readAdminSession } from "@/lib/admin-session";
+import { firstAccessibleHref } from "@/lib/admin-nav";
 import AdminLoginForm from "./AdminLoginForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminLoginPage() {
   const session = await readAdminSession();
-  if (session) redirect("/admin/dashboard");
+  if (session) redirect(firstAccessibleHref(session.menuKeys) ?? "/admin/dashboard");
 
   return (
     <main className="container mx-auto px-4 py-20">

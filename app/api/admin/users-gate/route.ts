@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { readAdminSession } from "@/lib/admin-session";
+import { hasMenuAccess, readAdminSession } from "@/lib/admin-session";
 import {
   USERS_GATE_COOKIE,
   USERS_GATE_PASSWORD,
@@ -13,6 +13,9 @@ export async function POST(req: Request) {
   const session = await readAdminSession();
   if (!session) {
     return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  }
+  if (!hasMenuAccess(session, "users")) {
+    return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
   }
 
   let password: string;

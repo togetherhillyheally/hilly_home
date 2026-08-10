@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { readAdminSession } from "@/lib/admin-session";
+import { hasMenuAccess, readAdminSession } from "@/lib/admin-session";
 import { adminFetch } from "@/lib/admin-rest";
 import {
   TRAIL_CHECKPOINT_PHOTOS_BUCKET,
@@ -31,6 +31,9 @@ export async function GET(
   if (!session) {
     return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
   }
+  if (!hasMenuAccess(session, "stamps")) {
+    return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
+  }
   const { cpId } = await ctx.params;
 
   const res = await adminFetch(
@@ -49,6 +52,9 @@ export async function POST(
   const session = await readAdminSession();
   if (!session) {
     return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  }
+  if (!hasMenuAccess(session, "stamps")) {
+    return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
   }
   const { cpId } = await ctx.params;
 

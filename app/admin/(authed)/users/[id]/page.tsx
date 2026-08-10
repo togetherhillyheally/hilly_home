@@ -10,9 +10,13 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { adminList } from "@/lib/admin-rest";
+import { readAdminSession } from "@/lib/admin-session";
+import { canManagePermissions } from "@/lib/admin-permissions";
+import { menuLabelMap } from "@/lib/admin-nav";
 import RoleBadge from "../../RoleBadge";
 import GrantSeedsButton from "./GrantSeedsButton";
-import GardenPanel from "./GardenPanel";
+// import GardenPanel from "./GardenPanel"; // 정원 섹션 임시 비활성화 (추후 재사용 가능)
+import PermissionPanel from "./PermissionPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -27,10 +31,7 @@ type Profile = {
   birthday: string | null;
   created_at: string;
   phone_verified_at: string | null;
-  is_super_admin: boolean | null;
-  is_puzzle_admin: boolean | null;
-  is_host_verified: boolean | null;
-  is_tester: boolean | null;
+  admin_tier: "master" | "admin" | "manager" | "client" | null;
 };
 
 type SeedBalance = { trail_id: string | null; pieces: number };
@@ -161,11 +162,35 @@ export default async function UserDetailPage({
 }) {
   const { id } = await params;
 
-  const { rows: profiles } = await adminList<Profile>(
-    `profiles?id=eq.${id}&select=*&limit=1`
-  );
+  const [viewerSession, { rows: profiles }] = await Promise.all([
+    readAdminSession(),
+    adminList<Profile>(`profiles?id=eq.${id}&select=*&limit=1`),
+  ]);
   const profile = profiles[0];
   if (!profile) notFound();
+
+  const canEditPermissions = Boolean(
+    viewerSession && canManagePermissions(viewerSession.tier)
+  );
+  let menuOverrides: { menu_key: string; allowed: boolean }[] = [];
+  let scopeRows: { menu_key: string; resource_id: string }[] = [];
+  let puzzleOptions: { id: string; name: string }[] = [];
+  if (canEditPermissions) {
+    const [ov, sc, pz] = await Promise.all([
+      adminList<{ menu_key: string; allowed: boolean }>(
+        `admin_menu_access?profile_id=eq.${id}&select=menu_key,allowed`
+      ),
+      adminList<{ menu_key: string; resource_id: string }>(
+        `admin_menu_scope?profile_id=eq.${id}&select=menu_key,resource_id`
+      ),
+      adminList<{ id: string; name: string }>(
+        `puzzles?select=id,name&order=created_at.desc`
+      ),
+    ]);
+    menuOverrides = ov.rows;
+    scopeRows = sc.rows;
+    puzzleOptions = pz.rows;
+  }
 
   // 한 번에 평행 fetch
   const [
@@ -265,18 +290,10 @@ export default async function UserDetailPage({
                 )}
               </h1>
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {profile.is_super_admin ? (
-                  <RoleBadge label="슈퍼" color="red" />
-                ) : null}
-                {profile.is_puzzle_admin ? (
-                  <RoleBadge label="퍼즐" color="violet" />
-                ) : null}
-                {profile.is_host_verified ? (
-                  <RoleBadge label="호스트" color="emerald" />
-                ) : null}
-                {profile.is_tester ? (
-                  <RoleBadge label="테스터" color="gray" />
-                ) : null}
+                <RoleBadge
+                  label={profile.admin_tier ?? "user"}
+                  color={profile.admin_tier === "master" ? "red" : profile.admin_tier ? "violet" : "gray"}
+                />
               </div>
               <dl className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-2 text-xs">
                 <Field label="휴대폰" value={profile.phone_number} />
@@ -294,6 +311,22 @@ export default async function UserDetailPage({
           </div>
         </div>
       </div>
+
+      {canEditPermissions && viewerSession ? (
+        <div className="mb-6">
+          <PermissionPanel
+            userId={profile.id}
+            isSelf={profile.id === viewerSession.userId}
+            initialTier={profile.admin_tier}
+            initialOverrides={menuOverrides}
+            initialScope={scopeRows
+              .filter((r) => r.menu_key === "puzzle-progress")
+              .map((r) => r.resource_id)}
+            menuLabels={menuLabelMap()}
+            puzzleOptions={puzzleOptions}
+          />
+        </div>
+      ) : null}
 
       {/* 핵심 지표 */}
       <div className="flex items-center justify-between mb-3">
@@ -411,10 +444,11 @@ export default async function UserDetailPage({
         </Section>
       </div>
 
-      {/* 정원 (garden_plants 기반) */}
+      {/* 정원 (garden_plants 기반) — 추후 재사용 가능성 있어 주석 처리
       <div className="mt-6">
         <GardenPanel userId={profile.id} />
       </div>
+      */}
 
       {/* 씨앗 변동 이력 */}
       <div className="mt-6">

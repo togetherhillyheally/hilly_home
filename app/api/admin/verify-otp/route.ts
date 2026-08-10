@@ -80,9 +80,9 @@ export async function POST(req: Request) {
     }).catch(() => {});
   }
 
-  // 3) is_super_admin 재확인 (인증된 user_id 기준)
+  // 3) admin_tier 재확인 (인증된 user_id 기준)
   const profRes = await fetch(
-    `${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}&select=is_super_admin&limit=1`,
+    `${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}&select=admin_tier&limit=1`,
     {
       headers: {
         apikey: SERVICE_ROLE_KEY,
@@ -92,9 +92,9 @@ export async function POST(req: Request) {
     }
   );
   const profs = profRes.ok
-    ? ((await profRes.json()) as Array<{ is_super_admin: boolean | null }>)
+    ? ((await profRes.json()) as Array<{ admin_tier: string | null }>)
     : [];
-  if (!profs[0]?.is_super_admin) {
+  if (!profs[0]?.admin_tier) {
     return NextResponse.json(
       { error: "관리자 권한이 없는 계정이에요." },
       { status: 403 }

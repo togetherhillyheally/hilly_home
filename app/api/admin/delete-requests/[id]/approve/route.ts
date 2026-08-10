@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { readAdminSession } from "@/lib/admin-session";
+import { hasMenuAccess, readAdminSession } from "@/lib/admin-session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,6 +21,9 @@ export async function POST(
       { error: "인증이 필요합니다." },
       { status: 401 }
     );
+  }
+  if (!hasMenuAccess(session, "delete-requests")) {
+    return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
   }
 
   const { id } = await ctx.params;

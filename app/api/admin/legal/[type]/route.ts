@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { readAdminSession } from "@/lib/admin-session";
+import { hasMenuAccess, readAdminSession } from "@/lib/admin-session";
 import { adminFetch } from "@/lib/admin-rest";
 
 export const runtime = "nodejs";
@@ -13,6 +13,9 @@ export async function GET(_req: Request, ctx: { params: Promise<Params> }) {
   const session = await readAdminSession();
   if (!session) {
     return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  }
+  if (!hasMenuAccess(session, "legal")) {
+    return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
   }
   const { type } = await ctx.params;
   if (!ALLOWED.has(type)) {
@@ -35,6 +38,9 @@ export async function PUT(req: Request, ctx: { params: Promise<Params> }) {
   const session = await readAdminSession();
   if (!session) {
     return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  }
+  if (!hasMenuAccess(session, "legal")) {
+    return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
   }
   const { type } = await ctx.params;
   if (!ALLOWED.has(type)) {

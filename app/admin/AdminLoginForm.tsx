@@ -90,7 +90,7 @@ export default function AdminLoginForm() {
         setErrorMsg(data.error ?? "인증 실패");
         return;
       }
-      router.replace("/admin/delete-requests");
+      router.replace("/admin");
       router.refresh();
     } catch {
       setErrorMsg("네트워크 오류가 발생했어요.");

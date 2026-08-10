@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { readAdminSession } from "@/lib/admin-session";
+import { hasMenuAccess, readAdminSession } from "@/lib/admin-session";
 import { adminFetch } from "@/lib/admin-rest";
 import { ADMIN_UPLOADER_PROFILE_ID } from "@/lib/trail-upload-constants";
 
@@ -14,6 +14,9 @@ export async function POST(req: Request) {
   const session = await readAdminSession();
   if (!session) {
     return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  }
+  if (!hasMenuAccess(session, "stamps")) {
+    return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
   }
 
   let body: {

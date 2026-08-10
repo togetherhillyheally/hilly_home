@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { readAdminSession } from "@/lib/admin-session";
+import { hasMenuAccess, readAdminSession } from "@/lib/admin-session";
 import { adminFetch } from "@/lib/admin-rest";
 
 export const runtime = "nodejs";
@@ -7,14 +7,6 @@ export const dynamic = "force-dynamic";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const TARGET_FIELD: Record<string, string | null> = {
-  all: null,
-  super: "is_super_admin",
-  puzzle: "is_puzzle_admin",
-  host: "is_host_verified",
-  tester: "is_tester",
-};
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -37,6 +29,9 @@ export async function POST(req: Request) {
   const session = await readAdminSession();
   if (!session) {
     return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  }
+  if (!hasMenuAccess(session, "notifications")) {
+    return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
   }
 
   let body: {
@@ -84,10 +79,9 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-  } else if (target in TARGET_FIELD) {
-    const field = TARGET_FIELD[target];
+  } else if (target === "all" || target === "master") {
     const params = new URLSearchParams({ select: "id" });
-    if (field) params.set(field, "eq.true");
+    if (target === "master") params.set("admin_tier", "eq.master");
     const res = await adminFetch(`profiles?${params.toString()}`);
     if (!res.ok) {
       return NextResponse.json(

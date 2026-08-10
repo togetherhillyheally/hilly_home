@@ -11,24 +11,33 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { ADMIN_NAV, type NavBadgeKey } from "@/lib/admin-nav";
+import {
+  ADMIN_NAV,
+  filterNavByMenuKeys,
+  type AdminNavGroup,
+  type NavBadgeKey,
+} from "@/lib/admin-nav";
+import type { MenuKey } from "@/lib/admin-permissions";
 import { cn } from "@/lib/utils";
 
 type Session = { nickname: string | null; phoneNumber: string | null };
 type Badges = Partial<Record<NavBadgeKey, number>>;
 
 type Props = {
+  allowedMenuKeys: MenuKey[];
   session: Session;
   badges: Badges;
 };
 
 function NavBody({
+  nav,
   pathname,
   badges,
   session,
   onItemClick,
   onLogout,
 }: {
+  nav: AdminNavGroup[];
   pathname: string;
   badges: Badges;
   session: Session;
@@ -44,7 +53,7 @@ function NavBody({
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
-        {ADMIN_NAV.map((group, gi) => (
+        {nav.map((group, gi) => (
           <div key={gi}>
             {group.title ? (
               <div className="px-3 mb-2 text-[10px] font-semibold tracking-[0.12em] text-gray-500 uppercase">
@@ -109,10 +118,11 @@ function NavBody({
   );
 }
 
-export default function AdminSidebar({ session, badges }: Props) {
+export default function AdminSidebar({ allowedMenuKeys, session, badges }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const nav = filterNavByMenuKeys(ADMIN_NAV, new Set(allowedMenuKeys));
 
   const handleLogout = async () => {
     setOpen(false);
@@ -141,6 +151,7 @@ export default function AdminSidebar({ session, badges }: Props) {
           >
             <SheetTitle className="sr-only">관리자 메뉴</SheetTitle>
             <NavBody
+              nav={nav}
               pathname={pathname}
               badges={badges}
               session={session}
@@ -157,6 +168,7 @@ export default function AdminSidebar({ session, badges }: Props) {
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex fixed inset-y-0 left-0 z-30 w-64 flex-col bg-[#0c0c14] border-r border-white/5">
         <NavBody
+          nav={nav}
           pathname={pathname}
           badges={badges}
           session={session}

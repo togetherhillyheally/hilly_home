@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { requireMenuSession } from "@/lib/admin-session";
 import { USERS_GATE_COOKIE } from "./gate-config";
 import UsersPasswordGate from "./UsersPasswordGate";
 
@@ -9,6 +10,8 @@ export default async function UsersAreaLayout({
 }: {
   children: React.ReactNode;
 }) {
+  await requireMenuSession("users");
+
   const store = await cookies();
   const unlocked = store.get(USERS_GATE_COOKIE)?.value === "1";
   if (!unlocked) return <UsersPasswordGate />;

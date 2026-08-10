@@ -1,15 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { ChevronRight, Loader2, Sprout } from "lucide-react";
-
-export type RoleField =
-  | "is_super_admin"
-  | "is_puzzle_admin"
-  | "is_host_verified"
-  | "is_tester";
+import { ChevronRight, Sprout } from "lucide-react";
+import RoleBadge from "../RoleBadge";
+import type { AdminTier } from "@/lib/admin-permissions";
 
 export type UserRow = {
   id: string;
@@ -19,18 +13,16 @@ export type UserRow = {
   email: string | null;
   region: string | null;
   created_at: string;
-  is_super_admin: boolean | null;
-  is_puzzle_admin: boolean | null;
-  is_host_verified: boolean | null;
-  is_tester: boolean | null;
+  admin_tier: AdminTier | null;
 };
 
-const FIELDS: { key: RoleField; label: string }[] = [
-  { key: "is_super_admin", label: "슈퍼" },
-  { key: "is_puzzle_admin", label: "퍼즐" },
-  { key: "is_host_verified", label: "호스트" },
-  { key: "is_tester", label: "테스터" },
-];
+const TIER_COLOR: Record<AdminTier | "user", "red" | "violet" | "gray"> = {
+  master: "red",
+  admin: "violet",
+  manager: "violet",
+  client: "gray",
+  user: "gray",
+};
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString("ko-KR", {
@@ -42,44 +34,6 @@ function formatDate(iso: string): string {
   });
 }
 
-function RoleToggle({
-  value,
-  disabled,
-  pending,
-  onChange,
-}: {
-  value: boolean;
-  disabled?: boolean;
-  pending?: boolean;
-  onChange: (next: boolean) => void;
-}) {
-  return (
-    <label
-      className={`relative inline-flex items-center gap-1 cursor-pointer ${
-        disabled ? "opacity-40 cursor-not-allowed" : ""
-      }`}
-    >
-      <input
-        type="checkbox"
-        className="sr-only peer"
-        checked={value}
-        disabled={disabled || pending}
-        onChange={(e) => onChange(e.target.checked)}
-      />
-      <span className="w-8 h-[18px] rounded-full bg-white/10 peer-checked:bg-orange-500/80 transition-colors relative">
-        <span
-          className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white transition-transform ${
-            value ? "translate-x-[14px]" : ""
-          }`}
-        />
-      </span>
-      {pending ? (
-        <Loader2 className="h-3 w-3 animate-spin text-gray-500" />
-      ) : null}
-    </label>
-  );
-}
-
 export default function UsersTable({
   rows,
   currentUserId,
@@ -89,38 +43,6 @@ export default function UsersTable({
   currentUserId: string;
   seedByUser: Record<string, { generic: number; brand: number }>;
 }) {
-  const router = useRouter();
-  const [pendingKey, setPendingKey] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
-
-  const toggle = async (
-    user: UserRow,
-    field: RoleField,
-    next: boolean
-  ) => {
-    const key = `${user.id}:${field}`;
-    setPendingKey(key);
-    try {
-      const res = await fetch(`/api/admin/users/${user.id}/roles`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ field, value: next }),
-      });
-      if (!res.ok) {
-        const data = (await res.json().catch(() => ({}))) as {
-          error?: string;
-        };
-        alert(data.error ?? "변경 실패");
-        return;
-      }
-      startTransition(() => router.refresh());
-    } catch {
-      alert("네트워크 오류");
-    } finally {
-      setPendingKey(null);
-    }
-  };
-
   if (rows.length === 0) {
     return (
       <div className="rounded-xl border border-white/10 bg-white/[0.02] p-12 text-center text-sm text-gray-500">
@@ -132,7 +54,7 @@ export default function UsersTable({
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full text-sm min-w-[960px]">
+        <table className="w-full text-sm min-w-[880px]">
           <thead className="bg-white/[0.03] text-gray-400 text-xs">
             <tr>
               <th className="text-left px-4 py-3 font-medium">유저</th>
@@ -145,14 +67,9 @@ export default function UsersTable({
                   씨앗
                 </span>
               </th>
-              {FIELDS.map((f) => (
-                <th
-                  key={f.key}
-                  className="text-center px-2 py-3 font-medium whitespace-nowrap"
-                >
-                  {f.label}
-                </th>
-              ))}
+              <th className="text-center px-3 py-3 font-medium whitespace-nowrap">
+                권한
+              </th>
               <th className="text-right px-3 py-3 font-medium w-12"></th>
             </tr>
           </thead>
@@ -233,22 +150,12 @@ export default function UsersTable({
                       );
                     })()}
                   </td>
-                  {FIELDS.map((f) => {
-                    const value = Boolean(p[f.key]);
-                    const lockSuper =
-                      isSelf && f.key === "is_super_admin" && value;
-                    const key = `${p.id}:${f.key}`;
-                    return (
-                      <td key={f.key} className="px-2 py-3 text-center">
-                        <RoleToggle
-                          value={value}
-                          disabled={lockSuper}
-                          pending={pendingKey === key}
-                          onChange={(next) => toggle(p, f.key, next)}
-                        />
-                      </td>
-                    );
-                  })}
+                  <td className="px-3 py-3 text-center">
+                    <RoleBadge
+                      label={p.admin_tier ?? "user"}
+                      color={TIER_COLOR[p.admin_tier ?? "user"]}
+                    />
+                  </td>
                   <td className="px-3 py-3 text-right">
                     <Link
                       href={`/admin/users/${p.id}`}

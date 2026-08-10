@@ -1,65 +1,47 @@
-import Link from "next/link";
 import { Search } from "lucide-react";
 import { redirect } from "next/navigation";
 import { adminList, escapeIlike } from "@/lib/admin-rest";
 import { readAdminSession } from "@/lib/admin-session";
+import type { AdminTier } from "@/lib/admin-permissions";
 import Pagination from "../Pagination";
 import UsersTable, { type UserRow } from "./UsersTable";
+import TierFilterSelect from "./TierFilterSelect";
 
 export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 50;
 
-type RoleFilter = "all" | "super" | "puzzle" | "host" | "tester";
+type TierFilter = "all" | AdminTier | "user";
 
-const FILTER_FIELDS: Record<Exclude<RoleFilter, "all">, string> = {
-  super: "is_super_admin",
-  puzzle: "is_puzzle_admin",
-  host: "is_host_verified",
-  tester: "is_tester",
-};
+const TIER_TABS: TierFilter[] = ["all", "master", "admin", "manager", "client", "user"];
 
-const FILTER_LABELS: Record<RoleFilter, string> = {
+const TIER_LABELS: Record<TierFilter, string> = {
   all: "전체",
-  super: "슈퍼",
-  puzzle: "퍼즐",
-  host: "호스트",
-  tester: "테스터",
+  master: "master",
+  admin: "admin",
+  manager: "manager",
+  client: "client",
+  user: "user",
 };
-
-function buildHref(s: {
-  q?: string;
-  role?: RoleFilter;
-  page?: number;
-}): string {
-  const sp = new URLSearchParams();
-  if (s.q) sp.set("q", s.q);
-  if (s.role && s.role !== "all") sp.set("role", s.role);
-  if (s.page && s.page > 1) sp.set("page", String(s.page));
-  const qs = sp.toString();
-  return qs ? `/admin/users?${qs}` : "/admin/users";
-}
 
 export default async function UsersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; role?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; tier?: string; page?: string }>;
 }) {
   const session = await readAdminSession();
   if (!session) redirect("/admin");
 
   const sp = await searchParams;
   const q = (sp.q ?? "").trim();
-  const role = (
-    ["super", "puzzle", "host", "tester"].includes(sp.role ?? "")
-      ? sp.role
-      : "all"
-  ) as RoleFilter;
+  const tier: TierFilter = TIER_TABS.includes(sp.tier as TierFilter)
+    ? (sp.tier as TierFilter)
+    : "all";
   const page = Math.max(1, Number(sp.page) || 1);
 
   const params = new URLSearchParams({
     select:
-      "id,nickname,avatar_url,phone_number,email,region,created_at,is_super_admin,is_puzzle_admin,is_host_verified,is_tester",
+      "id,nickname,avatar_url,phone_number,email,region,created_at,admin_tier",
     order: "created_at.desc",
   });
   if (q) {
@@ -69,8 +51,10 @@ export default async function UsersPage({
       `(nickname.ilike.*${t}*,phone_number.ilike.*${t}*,email.ilike.*${t}*)`
     );
   }
-  if (role !== "all") {
-    params.set(FILTER_FIELDS[role], "eq.true");
+  if (tier === "user") {
+    params.set("admin_tier", "is.null");
+  } else if (tier !== "all") {
+    params.set("admin_tier", `eq.${tier}`);
   }
 
   const from = (page - 1) * PAGE_SIZE;
@@ -109,8 +93,6 @@ export default async function UsersPage({
   const seedByUser: Record<string, { generic: number; brand: number }> = {};
   seedMap.forEach((v, k) => (seedByUser[k] = v));
 
-  const tabs: RoleFilter[] = ["all", "super", "puzzle", "host", "tester"];
-
   return (
     <main className="p-6 lg:p-10">
       <header className="mb-6">
@@ -119,7 +101,7 @@ export default async function UsersPage({
         </h1>
         <p className="text-sm text-gray-400 mt-1">
           {q ? `"${q}" ` : ""}
-          {FILTER_LABELS[role]} · 총 {total.toLocaleString()}명
+          {TIER_LABELS[tier]} · 총 {total.toLocaleString()}명
         </p>
       </header>
 
@@ -129,7 +111,7 @@ export default async function UsersPage({
           method="get"
           className="flex gap-2 flex-1 max-w-md min-w-[240px]"
         >
-          <input type="hidden" name="role" value={role} />
+          <input type="hidden" name="tier" value={tier} />
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
             <input
@@ -148,24 +130,11 @@ export default async function UsersPage({
           </button>
         </form>
 
-        <div className="flex flex-wrap gap-1.5">
-          {tabs.map((t) => {
-            const active = role === t;
-            return (
-              <Link
-                key={t}
-                href={buildHref({ q: q || undefined, role: t })}
-                className={`px-3 h-8 inline-flex items-center rounded-lg text-xs font-medium transition-colors ${
-                  active
-                    ? "bg-orange-500/20 text-orange-200 border border-orange-500/40"
-                    : "bg-white/[0.04] text-gray-400 border border-white/10 hover:text-white"
-                }`}
-              >
-                {FILTER_LABELS[t]}
-              </Link>
-            );
-          })}
-        </div>
+        <TierFilterSelect
+          q={q}
+          selected={tier}
+          options={TIER_TABS.map((t) => ({ value: t, label: TIER_LABELS[t] }))}
+        />
       </div>
 
       <UsersTable
@@ -180,7 +149,7 @@ export default async function UsersPage({
         totalPages={totalPages}
         query={{
           q: q || undefined,
-          role: role !== "all" ? role : undefined,
+          tier: tier !== "all" ? tier : undefined,
         }}
       />
     </main>

@@ -39,6 +39,7 @@ export default async function AuthedAdminLayout({
   return (
     <div className="min-h-screen">
       <AdminSidebar
+        allowedMenuKeys={Array.from(session.menuKeys)}
         session={{
           nickname: session.nickname,
           phoneNumber: session.phoneNumber,

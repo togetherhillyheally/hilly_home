@@ -35,9 +35,9 @@ export async function POST(req: Request) {
     );
   }
 
-  // is_super_admin 확인
+  // admin_tier 확인 — null 이면 BO 접근 불가 (일반 유저)
   const profRes = await fetch(
-    `${SUPABASE_URL}/rest/v1/profiles?phone_number=eq.${digits}&select=id,is_super_admin&limit=1`,
+    `${SUPABASE_URL}/rest/v1/profiles?phone_number=eq.${digits}&select=id,admin_tier&limit=1`,
     {
       headers: {
         apikey: SERVICE_ROLE_KEY,
@@ -51,11 +51,11 @@ export async function POST(req: Request) {
   }
   const profs = (await profRes.json()) as Array<{
     id: string;
-    is_super_admin: boolean | null;
+    admin_tier: string | null;
   }>;
   const prof = profs[0];
 
-  if (!prof || !prof.is_super_admin) {
+  if (!prof || !prof.admin_tier) {
     // 일반 사용자/미가입 — 발송 안 하고 동일 응답
     return GENERIC_OK;
   }

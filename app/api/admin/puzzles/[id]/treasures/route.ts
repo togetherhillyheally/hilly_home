@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { readAdminSession } from "@/lib/admin-session";
+import { hasMenuAccess, readAdminSession } from "@/lib/admin-session";
 import { adminFetch } from "@/lib/admin-rest";
 
 export const runtime = "nodejs";
@@ -146,6 +146,9 @@ export async function GET(
   const session = await readAdminSession();
   if (!session)
     return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  if (!hasMenuAccess(session, "puzzles")) {
+    return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
+  }
   const { id } = await ctx.params;
 
   const res = await adminFetch(
@@ -195,6 +198,9 @@ export async function PUT(
   const session = await readAdminSession();
   if (!session)
     return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  if (!hasMenuAccess(session, "puzzles")) {
+    return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
+  }
   const { id } = await ctx.params;
 
   let body: { multiplier?: number };
@@ -242,6 +248,9 @@ export async function POST(
   const session = await readAdminSession();
   if (!session)
     return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  if (!hasMenuAccess(session, "puzzles")) {
+    return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
+  }
   const { id } = await ctx.params;
 
   const puzzle = await loadPuzzle(id);
@@ -370,6 +379,9 @@ export async function DELETE(
   const session = await readAdminSession();
   if (!session)
     return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  if (!hasMenuAccess(session, "puzzles")) {
+    return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
+  }
   const { id } = await ctx.params;
   const del = await adminFetch(`puzzle_treasures?puzzle_id=eq.${id}`, {
     method: "DELETE",

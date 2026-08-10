@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { readAdminSession } from "@/lib/admin-session";
+import { hasMenuAccess, readAdminSession } from "@/lib/admin-session";
 import { adminList, escapeIlike } from "@/lib/admin-rest";
 
 export const runtime = "nodejs";
@@ -15,6 +15,9 @@ export async function GET(req: Request) {
   const session = await readAdminSession();
   if (!session) {
     return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  }
+  if (!hasMenuAccess(session, "trails")) {
+    return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
   }
   const url = new URL(req.url);
   const q = (url.searchParams.get("q") ?? "").trim();

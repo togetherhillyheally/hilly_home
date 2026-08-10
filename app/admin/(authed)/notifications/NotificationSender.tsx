@@ -4,14 +4,11 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Send } from "lucide-react";
 
-type Target = "all" | "super" | "puzzle" | "host" | "tester" | "specific";
+type Target = "all" | "master" | "specific";
 
 const TARGET_OPTIONS: { value: Target; label: string; desc: string }[] = [
   { value: "all", label: "전체", desc: "가입한 모든 유저" },
-  { value: "tester", label: "테스터", desc: "is_tester = true" },
-  { value: "super", label: "슈퍼어드민", desc: "is_super_admin = true" },
-  { value: "puzzle", label: "퍼즐어드민", desc: "is_puzzle_admin = true" },
-  { value: "host", label: "인증 호스트", desc: "is_host_verified = true" },
+  { value: "master", label: "관리자", desc: "admin_tier = master" },
   { value: "specific", label: "특정 유저", desc: "user_id 직접 입력" },
 ];
 
