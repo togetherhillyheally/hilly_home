@@ -37,7 +37,7 @@ const STEPS: Step[] = [
     desc: "홈 화면에서 관심 있는 지도를 골라주세요. 시리즈별로 정리되어 있고, 위치·난이도·거리 정보를 미리 확인할 수 있어요.",
     icon: MapIcon,
     images: [
-      { src: "/images/guide/step1-list.jpg", caption: "지도 목록" },
+      { src: "/images/guide/step1-list.png", caption: "지도 목록" },
       { src: "/images/guide/step1-detail.jpg", caption: "지도 상세" },
     ],
     bullets: [
@@ -95,6 +95,7 @@ const STEPS: Step[] = [
     bullets: [
       "지도별 고유 퍼즐 이미지",
       "인증 진행률에 따라 조각 공개",
+      "조각을 뽑아 알맞은 자리에 맞춰 퍼즐 완성",
     ],
   },
   {
