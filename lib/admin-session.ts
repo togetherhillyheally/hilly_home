@@ -59,7 +59,7 @@ export async function requireMenuSession(menuKey: MenuKey): Promise<AdminSession
  * null = 제한 없음(전체 조회), 배열 = 해당 id들로만 제한(빈 배열 포함).
  */
 export function scopeFor(session: AdminSession, menuKey: MenuKey): string[] | null {
-  return resolveScope(menuKey, session.tier, session.scopes);
+  return resolveScope(menuKey, session.scopes);
 }
 
 export async function createAdminSession(opts: {

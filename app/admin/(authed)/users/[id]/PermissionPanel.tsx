@@ -247,10 +247,7 @@ export default function PermissionPanel({
             <div key={key}>
               <div className="text-xs text-gray-400 mb-1.5">
                 {menuLabels[key] ?? key} — 조회 가능한 퍼즐
-                <span className="text-gray-600">
-                  {" "}
-                  (비워두면 {tier === "client" ? "0건" : "전체 조회"})
-                </span>
+                <span className="text-gray-600"> (체크한 것만 보임 · 비워두면 0건)</span>
               </div>
               <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto">
                 {puzzleOptions.map((p) => {

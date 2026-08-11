@@ -52,16 +52,15 @@ export default async function PuzzleProgressPage({
     redirect(firstAccessibleHref(session.menuKeys) ?? "/admin");
   }
 
-  // null = 전체 조회, 배열 = 그 퍼즐 id들로만 제한(빈 배열 = 조회 가능한 퍼즐 없음)
-  const scope = scopeFor(session, "puzzle-progress");
-  if (scope !== null && scope.length === 0) {
+  // 체크한 퍼즐 id들로만 제한하는 화이트리스트 — 하나도 체크 안 했으면 조회 가능한 퍼즐 없음
+  const scope = scopeFor(session, "puzzle-progress") ?? [];
+  if (scope.length === 0) {
     return (
       <EmptyShell message="조회 권한이 부여된 퍼즐이 없어요. 관리자에게 문의해주세요." />
     );
   }
 
-  let puzzleQuery = "puzzles?select=id,name&order=created_at.desc";
-  if (scope !== null) puzzleQuery += `&id=in.(${scope.join(",")})`;
+  const puzzleQuery = `puzzles?select=id,name&order=created_at.desc&id=in.(${scope.join(",")})`;
   const { rows: puzzleOptions } = await adminList<PuzzleOption>(puzzleQuery);
   if (puzzleOptions.length === 0) {
     return <EmptyShell message="등록된 퍼즐이 없어요." />;

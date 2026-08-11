@@ -39,9 +39,9 @@ export async function POST(
   }
 
   const currency = String(body.currency ?? "");
-  if (currency !== "seed") {
+  if (currency !== "seed" && currency !== "bottle") {
     return NextResponse.json(
-      { error: "currency 는 'seed' 만 지원합니다. (campfire 지급 폐기)" },
+      { error: "currency 는 'seed' 또는 'bottle' 만 지원합니다. (campfire 지급 폐기)" },
       { status: 400 }
     );
   }
@@ -61,7 +61,7 @@ export async function POST(
   }
 
   let trailId: string | null = null;
-  if (body.trail_id) {
+  if (currency === "seed" && body.trail_id) {
     const t = String(body.trail_id);
     if (!UUID_RE.test(t)) {
       return NextResponse.json({ error: "잘못된 trail_id" }, { status: 400 });

@@ -2,6 +2,7 @@ import { Search } from "lucide-react";
 import { adminList, escapeIlike } from "@/lib/admin-rest";
 import Pagination from "../Pagination";
 import BottleOddsEditor from "./BottleOddsEditor";
+import ReasonFilterSelect from "./ReasonFilterSelect";
 import { DEFAULT_BOTTLE_ODDS, type BottleOdds } from "./bottleOdds";
 
 export const dynamic = "force-dynamic";
@@ -10,10 +11,26 @@ const PAGE_SIZE = 100;
 
 const REASON_LABELS: Record<string, string> = {
   puzzle_complete: "퍼즐 완성",
+  puzzle_complete_reversal: "퍼즐 완성 취소",
   treasure_box_draw: "보물상자 뽑기",
   admin_adjust: "관리자 조정",
   admin_grant: "관리자 지급",
   legacy_unknown: "이전 이력",
+};
+
+type ReasonCategory = "all" | "puzzle" | "draw" | "admin";
+
+const REASON_CATEGORIES: Record<Exclude<ReasonCategory, "all">, string[]> = {
+  puzzle: ["puzzle_complete", "puzzle_complete_reversal"],
+  draw: ["treasure_box_draw"],
+  admin: ["admin_adjust", "admin_grant"],
+};
+
+const CATEGORY_LABELS: Record<ReasonCategory, string> = {
+  all: "전체",
+  puzzle: "퍼즐",
+  draw: "뽑기",
+  admin: "관리자",
 };
 
 function reasonLabel(code: string | null): string | null {
@@ -50,10 +67,14 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 export default async function BottleLedgerPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; category?: string; page?: string }>;
 }) {
   const sp = await searchParams;
   const q = (sp.q ?? "").trim();
+  const category: ReasonCategory =
+    sp.category === "puzzle" || sp.category === "draw" || sp.category === "admin"
+      ? sp.category
+      : "all";
   const page = Math.max(1, Number(sp.page) || 1);
 
   // 검색: UUID면 user_id 직접, 아니면 닉네임/번호로 profiles 검색 후 in.()
@@ -80,6 +101,9 @@ export default async function BottleLedgerPage({
   });
   if (userIdsFilter) {
     params.set("user_id", `in.(${userIdsFilter.join(",")})`);
+  }
+  if (category !== "all") {
+    params.set("reason", `in.(${REASON_CATEGORIES[category].join(",")})`);
   }
 
   const from = (page - 1) * PAGE_SIZE;
@@ -118,7 +142,7 @@ export default async function BottleLedgerPage({
           물병 원장
         </h1>
         <p className="text-sm text-gray-400 mt-1">
-          물(bottle) · 총 {total.toLocaleString()}건
+          물(bottle) · {CATEGORY_LABELS[category]} · 총 {total.toLocaleString()}건
         </p>
       </header>
 
@@ -130,6 +154,7 @@ export default async function BottleLedgerPage({
           method="get"
           className="flex gap-2 flex-1 max-w-md min-w-[240px]"
         >
+          <input type="hidden" name="category" value={category} />
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
             <input
@@ -147,6 +172,15 @@ export default async function BottleLedgerPage({
             검색
           </button>
         </form>
+
+        <ReasonFilterSelect
+          q={q}
+          selected={category}
+          options={(Object.keys(CATEGORY_LABELS) as ReasonCategory[]).map((c) => ({
+            value: c,
+            label: CATEGORY_LABELS[c],
+          }))}
+        />
       </div>
 
       {searchInvalid ? (
@@ -236,7 +270,10 @@ export default async function BottleLedgerPage({
         basePath="/admin/bottle-ledger"
         page={page}
         totalPages={totalPages}
-        query={{ q: q || undefined }}
+        query={{
+          q: q || undefined,
+          category: category !== "all" ? category : undefined,
+        }}
       />
     </main>
   );

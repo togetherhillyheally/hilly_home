@@ -4,6 +4,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Coins,
+  GlassWater,
   MessageSquare,
   Mountain,
   Sprout,
@@ -15,6 +16,7 @@ import { canManagePermissions } from "@/lib/admin-permissions";
 import { menuLabelMap } from "@/lib/admin-nav";
 import RoleBadge from "../../RoleBadge";
 import GrantSeedsButton from "./GrantSeedsButton";
+import GrantBottlesButton from "./GrantBottlesButton";
 // import GardenPanel from "./GardenPanel"; // 정원 섹션 임시 비활성화 (추후 재사용 가능)
 import PermissionPanel from "./PermissionPanel";
 
@@ -124,13 +126,14 @@ function MetricCard({
   icon: LucideIcon;
   label: string;
   value: string | number;
-  accent: "orange" | "pink" | "violet" | "emerald";
+  accent: "orange" | "pink" | "violet" | "emerald" | "sky";
 }) {
   const cls: Record<string, string> = {
     orange: "bg-orange-400/10 text-orange-300",
     pink: "bg-pink-400/10 text-pink-300",
     violet: "bg-violet-400/10 text-violet-300",
     emerald: "bg-emerald-400/10 text-emerald-300",
+    sky: "bg-sky-400/10 text-sky-300",
   };
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
@@ -196,6 +199,7 @@ export default async function UserDetailPage({
   const [
     seedGen,
     seedTrail,
+    bottleGen,
     hosted,
     participations,
     guestbookAuthored,
@@ -207,6 +211,9 @@ export default async function UserDetailPage({
     ),
     adminList<SeedBalance>(
       `garden_trail_seed_balance?select=trail_id,pieces&user_id=eq.${id}`
+    ),
+    adminList<{ balance: number }>(
+      `bottle_balance?select=balance&user_id=eq.${id}&limit=1`
     ),
     adminList<SessionMini>(
       `hiking_sessions?select=id,title,mountain_name,status,meeting_at&host_id=eq.${id}&order=meeting_at.desc`,
@@ -235,6 +242,7 @@ export default async function UserDetailPage({
     .filter((r) => r.trail_id)
     .reduce((sum, r) => sum + r.pieces, 0);
   const seedBrandTrails = seedTrail.rows.filter((r) => r.trail_id).length;
+  const bottleBalance = bottleGen.rows[0]?.balance ?? 0;
 
   // 참가 모험의 session 정보 일괄 조회
   const sessionIds = participations.rows.map((p) => p.session_id);
@@ -333,13 +341,20 @@ export default async function UserDetailPage({
         <h2 className="text-xs text-gray-400 uppercase tracking-wider font-medium">
           잔액
         </h2>
-        <GrantSeedsButton
-          userId={profile.id}
-          nickname={profile.nickname}
-          currentSeedBalance={seedGeneric}
-        />
+        <div className="flex gap-2">
+          <GrantSeedsButton
+            userId={profile.id}
+            nickname={profile.nickname}
+            currentSeedBalance={seedGeneric}
+          />
+          <GrantBottlesButton
+            userId={profile.id}
+            nickname={profile.nickname}
+            currentBottleBalance={bottleBalance}
+          />
+        </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <MetricCard
           icon={Sprout}
           label="씨앗 (일반)"
@@ -351,6 +366,12 @@ export default async function UserDetailPage({
           label={`브랜드 씨앗${seedBrandTrails > 0 ? ` (${seedBrandTrails} 트레일)` : ""}`}
           value={seedBrandTotal.toLocaleString()}
           accent="violet"
+        />
+        <MetricCard
+          icon={GlassWater}
+          label="물병"
+          value={bottleBalance.toLocaleString()}
+          accent="sky"
         />
       </div>
 

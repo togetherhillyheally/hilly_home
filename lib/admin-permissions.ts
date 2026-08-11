@@ -77,19 +77,14 @@ export function canManagePermissions(tier: AdminTier): boolean {
 export type MenuScopeMap = Partial<Record<MenuKey, string[]>>;
 
 /**
- * 스코프 지원 메뉴에 대해 이 계정이 볼 수 있는 리소스 id 목록을 반환.
- * null 이면 "제한 없음(전체 조회)", 배열이면 해당 id들로만 제한(빈 배열 = 접근 가능한 리소스 없음).
- *
- * master/admin/manager 는 등급 기본값으로 이 메뉴를 갖고 있으므로 스코프 미지정 시 무제한.
- * client 는 등급 기본값이 없으므로(override로만 메뉴를 얻음) 스코프 미지정 시 안전하게 0건 처리.
+ * 스코프 지원 메뉴에 대해 이 계정이 볼 수 있는 리소스 id 목록을 반환 (화이트리스트).
+ * 스코프를 하나도 체크하지 않았으면 빈 배열 — 등급과 무관하게 아무것도 안 보임.
+ * 스코프 개념이 없는 메뉴는 null(제한 없음).
  */
 export function resolveScope(
   menuKey: MenuKey,
-  tier: AdminTier,
   scopes: MenuScopeMap
 ): string[] | null {
   if (!SCOPABLE_MENU_KEYS.includes(menuKey)) return null;
-  const rows = scopes[menuKey];
-  if (rows && rows.length > 0) return rows;
-  return tier === "client" ? [] : null;
+  return scopes[menuKey] ?? [];
 }
