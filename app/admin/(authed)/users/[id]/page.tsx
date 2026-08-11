@@ -232,7 +232,7 @@ export default async function UserDetailPage({
       { from: 0, to: 4, count: true }
     ),
     adminList<LedgerRow>(
-      `currency_ledger?select=id,currency,trail_id,delta,reason,balance_after,created_at&user_id=eq.${id}&order=created_at.desc`,
+      `currency_ledger?select=id,currency,trail_id,delta,reason,balance_after,created_at&user_id=eq.${id}&currency=neq.bottle&order=created_at.desc`,
       { from: 0, to: 19, count: true }
     ),
   ]);

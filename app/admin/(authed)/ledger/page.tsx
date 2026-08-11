@@ -124,7 +124,9 @@ export default async function LedgerPage({
       "id,user_id,currency,trail_id,delta,reason,ref_id,balance_after,created_at",
     order: "created_at.desc",
   });
+  // 물병(bottle)은 별도 "물병 원장"에서 관리 — 씨앗 원장에는 노출 안 함
   if (currency !== "all") params.set("currency", `eq.${currency}`);
+  else params.set("currency", "neq.bottle");
   if (userIdsFilter) {
     params.set("user_id", `in.(${userIdsFilter.join(",")})`);
   }
