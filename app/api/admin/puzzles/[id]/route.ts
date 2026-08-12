@@ -9,12 +9,6 @@ const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const VALID_PUZZLE_TYPES = new Set(["mystery", "hint", "brand"]);
 
-/** side = max(rows,cols) → base_tier 1..5 (hilly_rn puzzleRepo 와 동일) */
-function computeBaseTier(rows: number, cols: number): number {
-  const side = Math.max(rows, cols);
-  return Math.max(1, Math.min(5, side - 2));
-}
-
 type Body = {
   name?: string;
   description?: string | null;
@@ -23,6 +17,11 @@ type Body = {
   cover_image_url?: string | null;
   grid_rows?: number;
   grid_cols?: number;
+  /** 난이도 1~5 — 운영자 수동값 (격자에서 유도하지 않음, 2026-08-12) */
+  base_tier?: number;
+  /** 이벤트 기간 (ISO) — null = 상시 */
+  event_starts_at?: string | null;
+  event_ends_at?: string | null;
   trail_id?: string | null;
   series_name?: string | null;
   collab_title?: string | null;
@@ -86,7 +85,8 @@ export async function PATCH(
     update.cover_image_url = norm;
   }
 
-  // 격자 — rows, cols 둘 다 넘어와야 반영, total_pieces + base_tier 자동
+  // 격자 — rows, cols 둘 다 넘어와야 반영, total_pieces 동기.
+  // base_tier 는 더 이상 격자에서 유도하지 않는다 (수동 난이도, 2026-08-12)
   if (body.grid_rows !== undefined || body.grid_cols !== undefined) {
     const r = Number(body.grid_rows);
     const c = Number(body.grid_cols);
@@ -105,7 +105,28 @@ export async function PATCH(
     update.grid_rows = r;
     update.grid_cols = c;
     update.total_pieces = r * c;
-    update.base_tier = computeBaseTier(r, c);
+  }
+
+  // 난이도 — 운영자가 이미지를 보고 직접 지정 (완성 물병 수 결정)
+  if (body.base_tier !== undefined) {
+    const t = Number(body.base_tier);
+    if (!Number.isInteger(t) || t < 1 || t > 5) {
+      return NextResponse.json(
+        { error: "base_tier 는 1~5 정수여야 해요." },
+        { status: 400 }
+      );
+    }
+    update.base_tier = t;
+  }
+
+  // 이벤트 기간 — 인증(콜라보) 씨앗 부스트 유효 구간. null = 상시
+  if (body.event_starts_at !== undefined) {
+    update.event_starts_at =
+      body.event_starts_at === null ? null : String(body.event_starts_at);
+  }
+  if (body.event_ends_at !== undefined) {
+    update.event_ends_at =
+      body.event_ends_at === null ? null : String(body.event_ends_at);
   }
 
   // 트레일·시리즈 상호배타

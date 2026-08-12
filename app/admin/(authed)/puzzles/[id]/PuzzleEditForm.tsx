@@ -19,6 +19,8 @@ export type PuzzleFull = {
   reward_description: string | null;
   trail_id: string | null;
   base_tier: number;
+  event_starts_at: string | null;
+  event_ends_at: string | null;
   puzzle_type: string | null;
   series_name: string | null;
   collab_title: string | null;
@@ -26,35 +28,31 @@ export type PuzzleFull = {
   created_at: string;
 };
 
-const DIFFICULTY_OPTIONS = [
-  { label: "쉬움", target: 25 },
-  { label: "보통-", target: 36 },
-  { label: "보통", target: 49 },
-  { label: "어려움-", target: 64 },
-  { label: "어려움", target: 81 },
+/** 난이도(1~5) — 운영자가 이미지를 보고 직접 선택. 격자와 무관 (2026-08-12) */
+const DIFFICULTY_TIERS = [
+  { tier: 1, label: "쉬움" },
+  { tier: 2, label: "보통" },
+  { tier: 3, label: "어려움" },
+  { tier: 4, label: "아주 어려움" },
+  { tier: 5, label: "도전" },
 ];
+/** 난이도별 완성 물병 — 서버 puzzle_tier_bottles 와 동일 (표시용) */
+const TIER_BOTTLES: Record<number, number> = { 1: 1, 2: 2, 3: 4, 4: 6, 5: 9 };
 
-/** 이미지 비율(W/H) + 목표 셀 수 → rows × cols */
-function computeGrid(
-  aspect: number,
-  target: number
-): { rows: number; cols: number } {
-  const rows = Math.max(3, Math.round(Math.sqrt(target / aspect)));
-  const cols = Math.max(3, Math.round(Math.sqrt(target * aspect)));
-  return { rows, cols };
+/** 격자 규칙: 짧은 변 5 고정, 긴 변은 이미지 비율(W/H)대로 5~10 (hilly_rn 과 동일) */
+function computeGrid(aspect: number): { rows: number; cols: number } {
+  const clamp = (n: number) => Math.max(5, Math.min(10, Math.round(n)));
+  return aspect >= 1
+    ? { rows: 5, cols: clamp(5 * aspect) }
+    : { rows: clamp(5 / aspect), cols: 5 };
 }
 
-function closestDifficultyIdx(total: number): number {
-  let bestIdx = 0;
-  let bestDiff = Infinity;
-  DIFFICULTY_OPTIONS.forEach((o, i) => {
-    const d = Math.abs(o.target - total);
-    if (d < bestDiff) {
-      bestDiff = d;
-      bestIdx = i;
-    }
-  });
-  return bestIdx;
+/** ISO → date input 값(YYYY-MM-DD). 로컬 기준 */
+function isoToDateInput(iso: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
 export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
@@ -73,8 +71,14 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
     puzzle.collab_description ?? ""
   );
 
-  const initialTotal = puzzle.grid_rows * puzzle.grid_cols;
-  const [gridIndex, setGridIndex] = useState(closestDifficultyIdx(initialTotal));
+  const [difficulty, setDifficulty] = useState(
+    Math.max(1, Math.min(5, puzzle.base_tier ?? 1))
+  );
+  // 이벤트 기간 (date input 값) — 빈 문자열 = 상시
+  const [eventStart, setEventStart] = useState(
+    isoToDateInput(puzzle.event_starts_at)
+  );
+  const [eventEnd, setEventEnd] = useState(isoToDateInput(puzzle.event_ends_at));
   const [imageAspect, setImageAspect] = useState(
     puzzle.grid_cols / puzzle.grid_rows
   );
@@ -129,9 +133,13 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
       (collabDescription.trim() || null) !== (puzzle.collab_description ?? null)
     )
       return true;
-    const grid = computeGrid(imageAspect, DIFFICULTY_OPTIONS[gridIndex].target);
+    const grid = computeGrid(imageAspect);
     if (grid.rows !== puzzle.grid_rows || grid.cols !== puzzle.grid_cols)
       return true;
+    if (difficulty !== Math.max(1, Math.min(5, puzzle.base_tier ?? 1)))
+      return true;
+    if (eventStart !== isoToDateInput(puzzle.event_starts_at)) return true;
+    if (eventEnd !== isoToDateInput(puzzle.event_ends_at)) return true;
     return false;
   }, [
     name,
@@ -141,7 +149,9 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
     seriesName,
     collabTitle,
     collabDescription,
-    gridIndex,
+    difficulty,
+    eventStart,
+    eventEnd,
     imageAspect,
     puzzle,
   ]);
@@ -183,10 +193,14 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
     }
     setSaving(true);
     try {
-      const grid = computeGrid(
-        imageAspect,
-        DIFFICULTY_OPTIONS[gridIndex].target
-      );
+      const grid = computeGrid(imageAspect);
+      // 이벤트 기간 — 시작은 그날 0시, 종료는 그날 23:59:59 (그날까지 유효)
+      const startIso = eventStart
+        ? new Date(`${eventStart}T00:00:00`).toISOString()
+        : null;
+      const endIso = eventEnd
+        ? new Date(`${eventEnd}T23:59:59.999`).toISOString()
+        : null;
       // 트레일·시리즈 상호배타 — 클라이언트에서도 강제
       const payload = {
         name: name.trim(),
@@ -194,6 +208,9 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
         reward_description: reward.trim() || null,
         grid_rows: grid.rows,
         grid_cols: grid.cols,
+        base_tier: difficulty,
+        event_starts_at: startIso,
+        event_ends_at: endIso,
         trail_id: seriesName.trim() ? null : trail?.id ?? null,
         series_name: trail ? null : seriesName.trim() || null,
         collab_title: collabTitle.trim() || null,
@@ -220,10 +237,7 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
     }
   };
 
-  const computedGrid = computeGrid(
-    imageAspect,
-    DIFFICULTY_OPTIONS[gridIndex].target
-  );
+  const computedGrid = computeGrid(imageAspect);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6">
@@ -306,15 +320,9 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-500">기본 티어</span>
+            <span className="text-gray-500">난이도</span>
             <span className="text-white font-mono">
-              {Math.max(
-                1,
-                Math.min(
-                  5,
-                  Math.max(computedGrid.rows, computedGrid.cols) - 2
-                )
-              )}
+              {difficulty} (물 {TIER_BOTTLES[difficulty]})
             </span>
           </div>
         </div>
@@ -352,20 +360,21 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
           />
         </div>
 
-        {/* 난이도 (5단) */}
+        {/* 난이도 — 운영자가 이미지를 보고 직접 선택 (완성 물병 수 결정).
+            격자는 짧은 변 5 규칙으로 자동이라 난이도와 무관 (2026-08-12) */}
         <div>
           <div className="text-xs text-gray-400 mb-1.5">
-            난이도 · 이미지 비율에 맞춰 rows × cols 자동 계산
+            난이도 · 직접 선택 (완성 시 물병 수 결정) — 격자는 이미지 비율로 자동
+            (짧은 변 5)
           </div>
           <div className="grid grid-cols-5 gap-2">
-            {DIFFICULTY_OPTIONS.map((opt, i) => {
-              const g = computeGrid(imageAspect, opt.target);
-              const selected = gridIndex === i;
+            {DIFFICULTY_TIERS.map((opt) => {
+              const selected = difficulty === opt.tier;
               return (
                 <button
-                  key={i}
+                  key={opt.tier}
                   type="button"
-                  onClick={() => setGridIndex(i)}
+                  onClick={() => setDifficulty(opt.tier)}
                   className={`px-2 py-2 rounded-lg text-xs font-medium border transition-colors ${
                     selected
                       ? "bg-emerald-500/20 text-emerald-200 border-emerald-500/40"
@@ -374,11 +383,32 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
                 >
                   <div>{opt.label}</div>
                   <div className="font-mono text-[10px] mt-0.5 opacity-70">
-                    {g.rows}×{g.cols}
+                    물 {TIER_BOTTLES[opt.tier]}
                   </div>
                 </button>
               );
             })}
+          </div>
+        </div>
+
+        {/* 이벤트 기간 — 인증(콜라보) 씨앗 부스트 유효 구간. 비우면 상시 */}
+        <div>
+          <div className="text-xs text-gray-400 mb-1.5">
+            이벤트 기간 (비우면 상시) · 기간 밖이면 씨앗 부스트·자동 참여 정지
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              type="date"
+              value={eventStart}
+              onChange={(e) => setEventStart(e.target.value)}
+              className="w-full h-10 px-3 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:outline-none focus:border-emerald-500/50 [color-scheme:dark]"
+            />
+            <input
+              type="date"
+              value={eventEnd}
+              onChange={(e) => setEventEnd(e.target.value)}
+              className="w-full h-10 px-3 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:outline-none focus:border-emerald-500/50 [color-scheme:dark]"
+            />
           </div>
         </div>
 

@@ -68,7 +68,7 @@ export default function BrandSeedPanel({ puzzleId }: { puzzleId: string }) {
       const d = (await res.json()) as { error?: string };
       if (!res.ok) setError(d.error ?? "저장 실패");
       else {
-        setMsg(clear ? "커스텀 씨앗을 해제했어요." : "커스텀 씨앗을 저장했어요.");
+        setMsg(clear ? "콜라보 표시를 해제했어요." : "콜라보 표시를 저장했어요.");
         if (clear) {
           setColor(null);
           setLabel("");
@@ -85,11 +85,12 @@ export default function BrandSeedPanel({ puzzleId }: { puzzleId: string }) {
     <section className="rounded-xl border border-white/10 bg-white/[0.02] p-5">
       <div className="flex items-center gap-2 mb-1.5">
         <Sprout className="h-4 w-4 text-rose-300" />
-        <h2 className="text-sm font-bold text-white">커스텀 씨앗 (브랜드)</h2>
+        <h2 className="text-sm font-bold text-white">콜라보 표시 (라벨·색)</h2>
       </div>
       <p className="text-xs text-gray-400 leading-relaxed mb-4">
-        연결된 코스를 걸으면 지급되는 브랜드 씨앗의 색·이름을 정해요. 색을 지정하면
-        그 코스가 브랜드 코스가 되고, 걷기로 이 퍼즐 전용 씨앗이 적립됩니다.
+        지도 카드의 이벤트 칩에 표시되는 라벨과 색이에요. 설정하면 그 코스가
+        이벤트(인증) 코스가 되어, 걸을 때 일반 씨앗 부스트가 적용돼요.
+        (커스텀 씨앗 폐지 — 씨앗은 일반 하나, 라벨·색은 표시 전용. 2026-08-12)
       </p>
 
       {loading ? (
@@ -116,7 +117,7 @@ export default function BrandSeedPanel({ puzzleId }: { puzzleId: string }) {
               className="text-sm font-semibold"
               style={{ color: color ?? "#9ca3af" }}
             >
-              {label.trim() || "씨앗 조각 미설정"}
+              {label.trim() || "라벨 미설정"}
             </span>
           </div>
 
@@ -127,7 +128,7 @@ export default function BrandSeedPanel({ puzzleId }: { puzzleId: string }) {
             value={label}
             onChange={(e) => setLabel(e.target.value)}
             maxLength={20}
-            placeholder="예: 광교씨앗"
+            placeholder="예: 광교저수지 인증"
             className="w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 h-10 text-sm text-white mb-4 focus:outline-none focus:border-rose-400/40"
           />
 

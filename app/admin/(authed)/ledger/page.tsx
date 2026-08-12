@@ -41,6 +41,15 @@ const REASON_LABELS: Record<string, string> = {
   campfire_migration: "모닥불 이관",
   campfire_retired: "모닥불 폐지",
   firewood_merge: "장작 병합",
+  brand_seed_merge: "커스텀 씨앗 통합",
+  puzzle_resize_refund: "퍼즐 격자 조정 환급",
+  trail_seed_overflow: "커스텀 씨앗 상한 전환",
+  treasure_box_draw: "보물상자 뽑기",
+  puzzle_complete_reversal: "퍼즐 완성 회수",
+  discord_bonus: "디스코드 보너스",
+  discord_bonus_reversal: "디스코드 보너스 회수",
+  record_seed_give: "응원 보내기",
+  record_seed_recv: "응원 받기",
   legacy_unknown: "이전 이력",
 };
 

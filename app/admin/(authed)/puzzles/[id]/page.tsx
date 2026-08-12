@@ -17,7 +17,7 @@ export default async function PuzzleDetailPage({
   const { id } = await params;
 
   const { rows: puzzleRows } = await adminList<PuzzleFull>(
-    `puzzles?id=eq.${id}&select=id,name,description,total_pieces,cover_image_url,image_url,is_active,grid_rows,grid_cols,reward_description,trail_id,base_tier,puzzle_type,series_name,collab_title,collab_description,created_at`
+    `puzzles?id=eq.${id}&select=id,name,description,total_pieces,cover_image_url,image_url,is_active,grid_rows,grid_cols,reward_description,trail_id,base_tier,event_starts_at,event_ends_at,puzzle_type,series_name,collab_title,collab_description,created_at`
   );
   const puzzle = puzzleRows[0];
   if (!puzzle) notFound();
