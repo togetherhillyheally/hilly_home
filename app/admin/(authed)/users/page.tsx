@@ -67,30 +67,16 @@ export default async function UsersPage({
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   // 현재 페이지 유저들의 씨앗 잔액 (일반 + 브랜드 합계)
-  const seedMap = new Map<string, { generic: number; brand: number }>();
+  // 커스텀 씨앗 폐지(2026-08-12) — 씨앗은 일반 하나. 브랜드 합산 제거
+  const seedMap = new Map<string, number>();
   if (rows.length > 0) {
     const inList = rows.map((r) => r.id).join(",");
-    const [genRes, brandRes] = await Promise.all([
-      adminList<{ user_id: string; balance: number }>(
-        `garden_seed_balance?select=user_id,balance&user_id=in.(${inList})`
-      ),
-      adminList<{ user_id: string; pieces: number; trail_id: string | null }>(
-        `garden_trail_seed_balance?select=user_id,pieces,trail_id&user_id=in.(${inList})`
-      ),
-    ]);
-    genRes.rows.forEach((g) => {
-      const cur = seedMap.get(g.user_id) ?? { generic: 0, brand: 0 };
-      cur.generic = g.balance;
-      seedMap.set(g.user_id, cur);
-    });
-    brandRes.rows.forEach((b) => {
-      if (!b.trail_id) return;
-      const cur = seedMap.get(b.user_id) ?? { generic: 0, brand: 0 };
-      cur.brand += b.pieces;
-      seedMap.set(b.user_id, cur);
-    });
+    const genRes = await adminList<{ user_id: string; balance: number }>(
+      `garden_seed_balance?select=user_id,balance&user_id=in.(${inList})`
+    );
+    genRes.rows.forEach((g) => seedMap.set(g.user_id, g.balance));
   }
-  const seedByUser: Record<string, { generic: number; brand: number }> = {};
+  const seedByUser: Record<string, number> = {};
   seedMap.forEach((v, k) => (seedByUser[k] = v));
 
   return (

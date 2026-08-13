@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Sprout, X } from "lucide-react";
-import TrailPicker, { type TrailMini } from "@/components/admin/TrailPicker";
 
 type Props = {
   userId: string;
@@ -40,7 +39,6 @@ function GrantModal({
   const [, startTransition] = useTransition();
   const [delta, setDelta] = useState<string>("10");
   const [memo, setMemo] = useState("");
-  const [trail, setTrail] = useState<TrailMini | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,7 +57,6 @@ function GrantModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           currency: "seed",
-          trail_id: trail ? trail.id : null,
           delta: n,
           memo: memo.trim() || null,
         }),
@@ -156,14 +153,6 @@ function GrantModal({
             placeholder="예: 이벤트 보상, 어뷰징 회수…"
             className="w-full h-9 px-3 rounded-lg bg-white/[0.04] border border-white/10 text-white placeholder:text-gray-600 text-sm focus:outline-none focus:border-emerald-500/50"
           />
-        </div>
-
-        {/* 트레일 (선택 시 브랜드 씨앗) */}
-        <div>
-          <div className="text-xs text-gray-400 mb-1.5">
-            트레일 (선택 시 브랜드 씨앗, 미선택 시 일반 씨앗)
-          </div>
-          <TrailPicker value={trail} onChange={setTrail} />
         </div>
 
         {error ? (

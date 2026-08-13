@@ -60,14 +60,8 @@ export async function POST(
     );
   }
 
-  let trailId: string | null = null;
-  if (currency === "seed" && body.trail_id) {
-    const t = String(body.trail_id);
-    if (!UUID_RE.test(t)) {
-      return NextResponse.json({ error: "잘못된 trail_id" }, { status: 400 });
-    }
-    trailId = t;
-  }
+  // 커스텀 씨앗 폐지(2026-08-12) — trail_id 지급은 죽은 통장(garden_trail_seed_balance)
+  // 에 들어가 아무 데도 못 쓴다. 항상 일반 씨앗으로만 지급.
 
   const memo = body.memo ? String(body.memo).slice(0, 500) : null;
 
@@ -78,7 +72,7 @@ export async function POST(
       p_actor_user_id: session.userId,
       p_target_user_id: targetUserId,
       p_currency: currency,
-      p_trail_id: trailId,
+      p_trail_id: null,
       p_delta: delta,
       p_note: memo,
     }),

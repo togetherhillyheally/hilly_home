@@ -41,7 +41,7 @@ export default function UsersTable({
 }: {
   rows: UserRow[];
   currentUserId: string;
-  seedByUser: Record<string, { generic: number; brand: number }>;
+  seedByUser: Record<string, number>;
 }) {
   if (rows.length === 0) {
     return (
@@ -131,22 +131,13 @@ export default function UsersTable({
                   </td>
                   <td className="px-3 py-3 text-right whitespace-nowrap">
                     {(() => {
-                      const s = seedByUser[p.id];
-                      const gen = s?.generic ?? 0;
-                      const brand = s?.brand ?? 0;
+                      const gen = seedByUser[p.id] ?? 0;
                       return (
-                        <>
-                          <span
-                            className={`font-mono text-sm ${gen > 0 ? "text-emerald-200" : "text-gray-600"}`}
-                          >
-                            {gen.toLocaleString()}
-                          </span>
-                          {brand > 0 ? (
-                            <span className="ml-1 font-mono text-[10px] text-violet-300">
-                              +{brand.toLocaleString()}
-                            </span>
-                          ) : null}
-                        </>
+                        <span
+                          className={`font-mono text-sm ${gen > 0 ? "text-emerald-200" : "text-gray-600"}`}
+                        >
+                          {gen.toLocaleString()}
+                        </span>
                       );
                     })()}
                   </td>

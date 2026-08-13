@@ -16,7 +16,7 @@ async function connectedTrailId(puzzleId: string): Promise<string | null> {
   return rows[0]?.trail_id ?? null;
 }
 
-/** GET — 연결된 코스의 커스텀 씨앗(색/라벨) + 배율 현황 */
+/** GET — 연결된 코스의 콜라보 표시(색/라벨) + 부스트 배율 현황 */
 export async function GET(
   _req: Request,
   ctx: { params: Promise<{ id: string }> }
@@ -55,7 +55,7 @@ export async function GET(
   });
 }
 
-/** PUT — 연결된 코스의 커스텀 씨앗 색/라벨 설정 (null 이면 해제) */
+/** PUT — 연결된 코스의 콜라보 표시 색/라벨 설정 (null 이면 해제) */
 export async function PUT(
   req: Request,
   ctx: { params: Promise<{ id: string }> }

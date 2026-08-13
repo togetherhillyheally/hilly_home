@@ -36,7 +36,6 @@ type Profile = {
   admin_tier: "master" | "admin" | "manager" | "client" | null;
 };
 
-type SeedBalance = { trail_id: string | null; pieces: number };
 type SessionMini = {
   id: string;
   title: string;
@@ -198,7 +197,6 @@ export default async function UserDetailPage({
   // 한 번에 평행 fetch
   const [
     seedGen,
-    seedTrail,
     bottleGen,
     hosted,
     participations,
@@ -208,9 +206,6 @@ export default async function UserDetailPage({
   ] = await Promise.all([
     adminList<{ balance: number }>(
       `garden_seed_balance?select=balance&user_id=eq.${id}&limit=1`
-    ),
-    adminList<SeedBalance>(
-      `garden_trail_seed_balance?select=trail_id,pieces&user_id=eq.${id}`
     ),
     adminList<{ balance: number }>(
       `bottle_balance?select=balance&user_id=eq.${id}&limit=1`
@@ -238,10 +233,6 @@ export default async function UserDetailPage({
   ]);
 
   const seedGeneric = seedGen.rows[0]?.balance ?? 0;
-  const seedBrandTotal = seedTrail.rows
-    .filter((r) => r.trail_id)
-    .reduce((sum, r) => sum + r.pieces, 0);
-  const seedBrandTrails = seedTrail.rows.filter((r) => r.trail_id).length;
   const bottleBalance = bottleGen.rows[0]?.balance ?? 0;
 
   // 참가 모험의 session 정보 일괄 조회
@@ -357,15 +348,9 @@ export default async function UserDetailPage({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <MetricCard
           icon={Sprout}
-          label="씨앗 (일반)"
+          label="씨앗"
           value={seedGeneric.toLocaleString()}
           accent="emerald"
-        />
-        <MetricCard
-          icon={Sprout}
-          label={`브랜드 씨앗${seedBrandTrails > 0 ? ` (${seedBrandTrails} 트레일)` : ""}`}
-          value={seedBrandTotal.toLocaleString()}
-          accent="violet"
         />
         <MetricCard
           icon={GlassWater}
@@ -531,7 +516,7 @@ export default async function UserDetailPage({
                               ? "정원 씨앗"
                               : r.currency === "seed"
                                 ? r.trail_id
-                                  ? "브랜드 씨앗"
+                                  ? "씨앗(구 커스텀)"
                                   : "씨앗"
                                 : r.currency}
                           </span>

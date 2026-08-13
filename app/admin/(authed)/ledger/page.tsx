@@ -311,7 +311,7 @@ export default async function LedgerPage({
                             ? "정원 씨앗"
                             : r.currency === "seed"
                               ? r.trail_id
-                                ? "브랜드 씨앗"
+                                ? "씨앗(구 커스텀)"
                                 : "씨앗"
                               : r.currency}
                         </span>

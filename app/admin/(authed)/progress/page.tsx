@@ -1,4 +1,4 @@
-import { Coins, Search, Sprout, Trophy } from "lucide-react";
+import { Search, Sprout, Trophy } from "lucide-react";
 import { adminList, escapeIlike } from "@/lib/admin-rest";
 import Pagination from "../Pagination";
 
@@ -17,12 +17,6 @@ type Profile = {
 type GardenSeedBalance = {
   user_id: string;
   balance: number;
-};
-
-type SeedBalance = {
-  user_id: string;
-  trail_id: string | null;
-  pieces: number;
 };
 
 type TierRow = { user_id: string; puzzle_id: string };
@@ -61,19 +55,15 @@ export default async function ProgressPage({
 
   // 정원 씨앗 잔액 / 씨앗 합계 / 활성 퍼즐 일괄 조회
   const gardenSeedMap = new Map<string, number>();
-  const seedSumMap = new Map<string, number>();
-  const seedBrandTrailCountMap = new Map<string, number>();
   const tierCountMap = new Map<string, number>();
 
   if (userIds.length > 0) {
     const inList = userIds.join(",");
 
-    const [{ rows: gs }, { rows: sd }, { rows: tiers }] = await Promise.all([
+    // 커스텀 씨앗 폐지(2026-08-12) — garden_trail_seed_balance 잔액은 전부 0(일반 전환)
+    const [{ rows: gs }, { rows: tiers }] = await Promise.all([
       adminList<GardenSeedBalance>(
         `garden_seed_balance?select=user_id,balance&user_id=in.(${inList})`
-      ),
-      adminList<SeedBalance>(
-        `garden_trail_seed_balance?select=user_id,trail_id,pieces&user_id=in.(${inList})`
       ),
       adminList<TierRow>(
         `user_puzzle_tiers?select=user_id,puzzle_id&user_id=in.(${inList})`
@@ -81,15 +71,6 @@ export default async function ProgressPage({
     ]);
 
     gs.forEach((c) => gardenSeedMap.set(c.user_id, c.balance));
-    sd.forEach((f) => {
-      seedSumMap.set(f.user_id, (seedSumMap.get(f.user_id) ?? 0) + f.pieces);
-      if (f.trail_id) {
-        seedBrandTrailCountMap.set(
-          f.user_id,
-          (seedBrandTrailCountMap.get(f.user_id) ?? 0) + 1
-        );
-      }
-    });
     tiers.forEach((t) =>
       tierCountMap.set(t.user_id, (tierCountMap.get(t.user_id) ?? 0) + 1)
     );
@@ -102,7 +83,7 @@ export default async function ProgressPage({
           사용자 진행 상태
         </h1>
         <p className="text-sm text-gray-400 mt-1">
-          유저별 씨앗 / 정원 씨앗 / 퍼즐 진행 요약 · 총 {total.toLocaleString()}명
+          유저별 씨앗 · 퍼즐 진행 요약 · 총 {total.toLocaleString()}명
         </p>
       </header>
 
@@ -144,16 +125,9 @@ export default async function ProgressPage({
                   <th className="text-right px-4 py-3 font-medium">
                     <span className="inline-flex items-center gap-1">
                       <Sprout className="h-3 w-3 text-emerald-300" />
-                      씨앗 합계
+                      씨앗
                     </span>
                   </th>
-                  <th className="text-right px-4 py-3 font-medium">
-                    <span className="inline-flex items-center gap-1">
-                      <Coins className="h-3 w-3 text-orange-300" />
-                      정원 씨앗
-                    </span>
-                  </th>
-                  <th className="text-center px-4 py-3 font-medium">브랜드 트레일</th>
                   <th className="text-center px-4 py-3 font-medium">
                     <span className="inline-flex items-center gap-1">
                       <Trophy className="h-3 w-3 text-violet-300" />
@@ -165,9 +139,6 @@ export default async function ProgressPage({
               <tbody>
                 {profiles.map((p) => {
                   const cf = gardenSeedMap.get(p.id) ?? 0;
-                  const sd = seedSumMap.get(p.id) ?? 0;
-                  const brandTrailCount =
-                    seedBrandTrailCountMap.get(p.id) ?? 0;
                   const tierCount = tierCountMap.get(p.id) ?? 0;
                   return (
                     <tr
@@ -191,20 +162,10 @@ export default async function ProgressPage({
                       </td>
                       <td className="px-4 py-3 text-right">
                         <span
-                          className={`font-mono text-sm ${sd > 0 ? "text-emerald-200" : "text-gray-600"}`}
-                        >
-                          {sd.toLocaleString()}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <span
                           className={`font-mono text-sm ${cf > 0 ? "text-orange-200" : "text-gray-600"}`}
                         >
                           {cf.toLocaleString()}
                         </span>
-                      </td>
-                      <td className="px-4 py-3 text-center text-xs text-gray-300">
-                        {brandTrailCount}
                       </td>
                       <td className="px-4 py-3 text-center text-xs text-gray-300">
                         {tierCount}
