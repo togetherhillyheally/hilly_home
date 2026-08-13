@@ -1,13 +1,14 @@
 import {
   Map,
-  MapPin,
   Users,
   Menu,
   Star,
   Navigation,
   Puzzle,
   Stamp,
-  Sprout,
+  Package,
+  Footprints,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -83,9 +84,9 @@ export default function HillyheallyHomepage() {
             </div>
             <div className="animate-fade-in-up delay-500">
               <p className="text-lg text-gray-500 mb-10 max-w-xl mx-auto leading-relaxed">
-                코스를 찾고, 모험을 만들고, 걸어서 씨앗을 모아,
+                지도를 선택하고, 보물박스를 인증하며
                 <br />
-                나만의 정원을 가꾸는 아웃도어 소셜 플랫폼
+                나만의 퍼즐을 완성하는 워킹 앱
               </p>
             </div>
             <div className="animate-fade-in-up delay-700 flex flex-wrap items-center justify-center gap-4">
@@ -166,44 +167,37 @@ export default function HillyheallyHomepage() {
               {
                 step: "01",
                 icon: <Map className="h-5 w-5 text-orange-400" />,
-                title: "코스 & 지도 발견",
-                desc: "코스 지도와 스탬프 지도를 탐색하고, GPX 파일을 업로드해 나만의 트레일을 만들어보세요.",
+                title: "지도 선택",
+                desc: "코스 지도와 스탬프 지도를 탐색하고, 걷고 싶은 지도를 골라보세요. 거리·상승고도·예상 시간까지 미리 확인할 수 있어요.",
                 accent: "border-l-orange-500/60",
               },
               {
                 step: "02",
-                icon: <MapPin className="h-5 w-5 text-pink-400" />,
-                title: "트레일 수집",
-                desc: "마음에 드는 트레일을 수집하고, 체크포인트에 사진과 메모를 남겨 나만의 지도를 완성하세요.",
+                icon: <Footprints className="h-5 w-5 text-pink-400" />,
+                title: "혼자 or 함께 걷기",
+                desc: "나만의 페이스로 조용히 걸을지, 친구를 초대해 실시간으로 함께 걸을지 선택하세요. 초대 링크로 누구든 부를 수 있어요.",
                 accent: "border-l-pink-500/60",
               },
               {
                 step: "03",
-                icon: <Users className="h-5 w-5 text-orange-300" />,
-                title: "모험 만들기 & 모집",
-                desc: "코스 또는 스탬프 지도를 선택해 모험을 만들고, 같이 걸을 모험자를 모집하세요.",
+                icon: <Package className="h-5 w-5 text-orange-300" />,
+                title: "보물박스 인증",
+                desc: "지도 위 보이는 보물박스에 GPS로 도착하면 자동으로 인증돼요. 도착지에서 짧은 퀴즈로 인증할 수도 있어요.",
                 accent: "border-l-orange-400/60",
               },
               {
                 step: "04",
-                icon: <Navigation className="h-5 w-5 text-pink-300" />,
-                title: "실시간 위치 공유 & 산행",
-                desc: "모험이 시작되면 모험자 간 실시간 위치를 공유하고, GPS로 이동 경로를 자동 기록합니다.",
+                icon: <Puzzle className="h-5 w-5 text-pink-300" />,
+                title: "퍼즐 조각 맞추기",
+                desc: "각 지도에는 고유한 퍼즐 이미지가 연결돼 있어요. 인증할 때마다 조각을 뽑고, 알맞은 자리에 맞춰 퍼즐을 완성해보세요.",
                 accent: "border-l-pink-400/60",
               },
               {
                 step: "05",
-                icon: <Puzzle className="h-5 w-5 text-orange-400" />,
-                title: "기록 & 퍼즐 조각 수집",
-                desc: "모험을 완료하면 활동 거리와 시간에 따라 퍼즐 조각을 획득하고, 후기와 경험을 기록하세요.",
+                icon: <Sparkles className="h-5 w-5 text-orange-400" />,
+                title: "완성 · 공유",
+                desc: "완성한 퍼즐은 퍼즐함에 자동 보관되고, SNS에 공유해 나의 발자국을 남길 수 있어요.",
                 accent: "border-l-orange-500/60",
-              },
-              {
-                step: "06",
-                icon: <Sprout className="h-5 w-5 text-pink-400" />,
-                title: "퍼즐 완성 & 정원 가꾸기",
-                desc: "퍼즐을 완성해 보상을 얻고, 씨앗으로 나만의 정원에 꽃·나무·동물을 심고 키워보세요.",
-                accent: "border-l-pink-500/60",
               },
             ].map((item, idx) => (
               <div
@@ -266,38 +260,31 @@ export default function HillyheallyHomepage() {
                 hover: "hover:border-pink-500/30",
               },
               {
-                icon: <Users className="h-6 w-6 text-orange-300" />,
+                icon: <Package className="h-6 w-6 text-orange-300" />,
                 iconBg: "bg-orange-300/10",
-                title: "모험 생성 & 참가자 관리",
-                desc: "코스 또는 스탬프 모험을 만들고, 참가 신청 승인·거절, 유저 초대, 공지사항까지 호스트에게 필요한 모든 기능을 제공합니다.",
+                title: "보물박스 인증 & 퀴즈",
+                desc: "지도 위 배치된 보물박스에 GPS로 도착하면 자동 인증돼요. 관리자가 설정한 도착 반경과 객관식 퀴즈로 위·변조 없는 방문 데이터가 남습니다.",
                 hover: "hover:border-orange-400/30",
               },
               {
-                icon: <Navigation className="h-6 w-6 text-pink-300" />,
+                icon: <Puzzle className="h-6 w-6 text-pink-300" />,
                 iconBg: "bg-pink-300/10",
-                title: "실시간 위치 공유 & GPS 기록",
-                desc: "모험 중 모험자 간 실시간 위치를 공유하고, GPS로 이동 경로를 자동 기록합니다. 백그라운드에서도 동작합니다.",
-                hover: "hover:border-pink-400/30",
+                title: "퍼즐 조각 & 완성",
+                desc: "지도별 고유 퍼즐 이미지가 있어요. 인증할 때마다 조각을 뽑아 알맞은 자리에 맞추면, 나만의 발자국이 그림으로 남아요.",
+                hover: "hover:border-pink-500/30",
               },
               {
-                icon: <Puzzle className="h-6 w-6 text-orange-400" />,
+                icon: <Navigation className="h-6 w-6 text-orange-400" />,
                 iconBg: "bg-orange-400/10",
-                title: "퍼즐 & 씨앗",
-                desc: "모험을 완료하면 걸은 거리만큼 앱 내 화폐 '씨앗'을 얻습니다. 퍼즐을 완성하면 특별한 식물·동물이 정원 도감에 열려요.",
+                title: "함께 걷기 & 실시간 위치 공유",
+                desc: "초대 링크·주변 검색·닉네임으로 친구를 초대하고, 모험이 시작되면 실시간 위치를 공유하며 함께 걸어요. 백그라운드에서도 동작합니다.",
                 hover: "hover:border-orange-500/30",
-              },
-              {
-                icon: <Sprout className="h-6 w-6 text-violet-400" />,
-                iconBg: "bg-violet-400/10",
-                title: "나만의 정원",
-                desc: "씨앗으로 꽃·나무·동물을 심고 돌보며 나만의 정원을 가꿔보세요. 친구 정원에 발자국도 남길 수 있어요.",
-                hover: "hover:border-violet-500/30",
               },
               {
                 icon: <Star className="h-6 w-6 text-pink-400" />,
                 iconBg: "bg-pink-400/10",
                 title: "후기 & 경로 카드 공유",
-                desc: "산행을 마치면 별점 후기를 남기고, GPS 이동 경로를 카드로 만들어 공유할 수 있어요.",
+                desc: "산행을 마치면 별점 후기를 남기고, GPS 이동 경로와 완성한 퍼즐을 카드로 만들어 SNS에 공유할 수 있어요.",
                 hover: "hover:border-pink-500/30",
               },
             ].map((item, idx) => (
@@ -338,7 +325,7 @@ export default function HillyheallyHomepage() {
           </div>
           <div className="animate-fade-in-up delay-300">
             <p className="text-gray-500 mb-8 max-w-xl mx-auto text-sm leading-relaxed">
-              코스를 발견하고, 퍼즐을 완성하고, 나만의 정원을 가꿔보세요.
+              지도를 선택하고, 인증하며, 나만의 퍼즐을 완성해보세요.
             </p>
           </div>
           <div className="animate-fade-in-up delay-500 flex flex-wrap items-center justify-center gap-4">

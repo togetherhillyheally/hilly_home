@@ -24,7 +24,7 @@ export default function LinkInBioPage() {
       {/* 미세 그리드 */}
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:64px_64px]" />
 
-      {/* 하단 정원 실루엣 — 앱 정원의 능선·나무 무드 */}
+      {/* 하단 능선 실루엣 — 트레일·능선·나무 무드 */}
       <svg
         className="pointer-events-none absolute bottom-0 left-0 w-full h-44 opacity-[0.35]"
         viewBox="0 0 800 180"
@@ -107,7 +107,7 @@ export default function LinkInBioPage() {
 
         {/* 키워드 칩 */}
         <div className="animate-fade-in-up delay-400 mt-4 flex flex-wrap items-center justify-center gap-1.5">
-          {["🥾 코스 탐색", "⛰️ 모험", "🧩 퍼즐", "🌱 정원"].map((t) => (
+          {["🗺️ 지도 선택", "📦 보물 인증", "🧩 퍼즐 완성", "🤝 함께 걷기"].map((t) => (
             <span
               key={t}
               className="px-2.5 py-1 rounded-full bg-white/[0.05] border border-white/10 text-[11px] text-gray-300"
