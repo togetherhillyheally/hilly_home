@@ -1,0 +1,40 @@
+export const SEED_LEDGER_REASON_LABELS: Record<string, string> = {
+  session_complete: "모험 완료",
+  puzzle_reveal: "조각 뽑기",
+  puzzle_milestone: "퍼즐 마일스톤",
+  puzzle_complete: "퍼즐 완성",
+  tier_upgrade: "퍼즐 티어업",
+  basecamp_unlock: "오브젝트 해금",
+  signup_bonus: "가입 보너스",
+  admin_adjust: "관리자 조정",
+  admin_grant: "관리자 지급",
+  admin_grant_move: "관리자 이관",
+  walk_exchange: "걸음 교환",
+  garden_seed_earn: "정원 씨앗 획득",
+  garden_plant_seed: "식물 심기",
+  garden_plant_care: "식물 돌보기",
+  garden_help_care: "정원 돌봄 도움",
+  trail_download: "지도 다운로드",
+  stamp_completion_bonus: "스탬프 완주 보너스",
+  stamp_rank_bonus: "스탬프 등수 보너스",
+  companion_bonus: "함께 걷기 보너스",
+  companion_bonus_brand: "함께 걷기 브랜드 보너스",
+  campfire_migration: "모닥불 이관",
+  campfire_retired: "모닥불 폐지",
+  firewood_merge: "장작 병합",
+  brand_seed_merge: "커스텀 씨앗 통합",
+  puzzle_resize_refund: "퍼즐 격자 조정 환급",
+  trail_seed_overflow: "커스텀 씨앗 상한 전환",
+  treasure_box_draw: "보물상자 뽑기",
+  puzzle_complete_reversal: "퍼즐 완성 회수",
+  discord_bonus: "디스코드 보너스",
+  discord_bonus_reversal: "디스코드 보너스 회수",
+  record_seed_give: "응원 보내기",
+  record_seed_recv: "응원 받기",
+  legacy_unknown: "이전 이력",
+};
+
+export function seedLedgerReasonLabel(code: string | null): string | null {
+  if (!code) return null;
+  return SEED_LEDGER_REASON_LABELS[code] ?? code;
+}
