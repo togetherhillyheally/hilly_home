@@ -12,9 +12,13 @@ import {
   type SeedRules,
 } from "./seedRules";
 
-/** 함께 걷기 보너스 — 기본 씨앗의 30%, 최소 3 (2명 이상 함께 적립 시) */
-function companionBonus(baseSeeds: number): number {
-  return Math.max(3, Math.round(baseSeeds * 0.3));
+/**
+ * 함께 걷기 보너스 — 함께 걸은 인원 수(N)만큼 1인당 지급 (상한 CAP).
+ * award_companion_bonus 서버 RPC 와 동기화. 2명 미만이면 없음.
+ */
+const COMPANION_CAP = 10;
+function companionBonus(people: number): number {
+  return people >= 2 ? Math.min(people, COMPANION_CAP) : 0;
 }
 
 const MAX_KM = 100;
@@ -26,10 +30,10 @@ export default function SeedSimulator({
 }) {
   const [open, setOpen] = useState(false);
   const [km, setKm] = useState(5);
-  const [companion, setCompanion] = useState(false);
+  const [people, setPeople] = useState(1); // 함께 걸은 인원(본인 포함), 1=혼자
 
   const base = gardenSeedsForKm(km, rules);
-  const bonus = companion && km > 0 ? companionBonus(base) : 0;
+  const bonus = km > 0 ? companionBonus(people) : 0;
   const total = km > 0 ? base + bonus : 0;
 
   const brackets = rules.tiers.map((t, i) => ({
@@ -149,29 +153,43 @@ export default function SeedSimulator({
                 })}
               </div>
 
-              {/* 함께 걷기 토글 */}
-              <label className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.02] px-4 py-3 cursor-pointer">
-                <span className="flex items-center gap-2 text-sm text-gray-200">
-                  <Users className="h-4 w-4 text-orange-300" />
-                  함께 걷기 보너스
-                  <span className="text-[11px] text-gray-500">
-                    2명 이상 동시 적립 시 기본의 30% (최소 3)
+              {/* 함께 걷기 인원 */}
+              <div className="rounded-lg border border-white/10 bg-white/[0.02] px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-2 text-sm text-gray-200">
+                    <Users className="h-4 w-4 text-orange-300" />
+                    함께 걸은 인원
+                    <span className="text-[11px] text-gray-500">
+                      2명 이상 시 1인당 인원 수만큼 (최대 {COMPANION_CAP})
+                    </span>
                   </span>
-                </span>
-                <input
-                  type="checkbox"
-                  className="sr-only peer"
-                  checked={companion}
-                  onChange={(e) => setCompanion(e.target.checked)}
-                />
-                <span className="w-9 h-5 rounded-full bg-white/10 peer-checked:bg-orange-500/80 transition-colors relative flex-shrink-0">
-                  <span
-                    className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
-                      companion ? "translate-x-4" : ""
-                    }`}
-                  />
-                </span>
-              </label>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPeople((n) => Math.max(1, n - 1))}
+                      className="w-7 h-7 rounded-md border border-white/10 bg-white/[0.03] text-gray-200 hover:border-orange-500/40"
+                    >
+                      −
+                    </button>
+                    <span className="w-8 text-center font-mono font-bold text-white">
+                      {people}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setPeople((n) => Math.min(20, n + 1))}
+                      className="w-7 h-7 rounded-md border border-white/10 bg-white/[0.03] text-gray-200 hover:border-orange-500/40"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                {people >= 2 && people > COMPANION_CAP ? (
+                  <p className="mt-2 text-[10px] text-gray-600">
+                    {people}명이지만 상한({COMPANION_CAP})까지만 적립 — 1인당 +
+                    {COMPANION_CAP}
+                  </p>
+                ) : null}
+              </div>
 
               {/* 결과 */}
               <div className="grid grid-cols-3 gap-2">
