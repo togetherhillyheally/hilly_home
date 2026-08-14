@@ -108,7 +108,7 @@ export default function SeedSimulator({
               {/* 구간 요율 표 */}
               <div
                 className="text-[10px] text-gray-500 uppercase tracking-wider"
-                title="거리 구간마다 1km 당 적립되는 씨앗 수가 다릅니다 (초반일수록 후함). 현재 거리가 속한 구간이 하이라이트됩니다."
+                title="구간 규칙을 여러 개로 나누면 거리대별로 1km 당 적립 씨앗을 다르게 줄 수 있습니다. 현재 거리가 속한 구간이 하이라이트됩니다."
               >
                 구간별 적립량 — 현재 구간 하이라이트
               </div>

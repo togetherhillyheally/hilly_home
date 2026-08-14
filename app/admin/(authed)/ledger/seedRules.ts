@@ -11,15 +11,10 @@ export type SeedRules = {
   minDistanceKm: number;
 };
 
-/** DB 조회 실패 시 폴백 (서버 시드값과 동일) */
+/** DB 조회 실패 시 폴백 (서버 시드값과 동일: 1km당 1개) */
 export const DEFAULT_SEED_RULES: SeedRules = {
-  tiers: [
-    { uptoKm: 3, seedsPerKm: 4 },
-    { uptoKm: 7, seedsPerKm: 3 },
-    { uptoKm: 15, seedsPerKm: 2 },
-    { uptoKm: null, seedsPerKm: 1 },
-  ],
-  minGuarantee: 3,
+  tiers: [{ uptoKm: null, seedsPerKm: 1 }],
+  minGuarantee: 1,
   minDistanceKm: 0.5,
 };
 
