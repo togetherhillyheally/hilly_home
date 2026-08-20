@@ -4,7 +4,6 @@ import { ChevronLeft } from "lucide-react";
 import { adminList } from "@/lib/admin-rest";
 import PuzzleEditForm, { type PuzzleFull } from "./PuzzleEditForm";
 import TreasurePanel from "./TreasurePanel";
-import BrandSeedPanel from "./BrandSeedPanel";
 import PuzzleTabs from "./PuzzleTabs";
 
 export const dynamic = "force-dynamic";
@@ -52,15 +51,12 @@ export default async function PuzzleDetailPage({
       <PuzzleTabs
         settings={<PuzzleEditForm puzzle={puzzle} />}
         cert={
-          <>
-            <BrandSeedPanel puzzleId={puzzle.id} />
-            <TreasurePanel
-              puzzleId={puzzle.id}
-              trailId={puzzle.trail_id}
-              seriesName={puzzle.series_name}
-              totalPieces={puzzle.total_pieces}
-            />
-          </>
+          <TreasurePanel
+            puzzleId={puzzle.id}
+            trailId={puzzle.trail_id}
+            seriesName={puzzle.series_name}
+            totalPieces={puzzle.total_pieces}
+          />
         }
       />
     </main>

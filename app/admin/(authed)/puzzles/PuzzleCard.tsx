@@ -134,11 +134,11 @@ export default function PuzzleCard({
             <span className="text-gray-500">기본 티어</span>
             <span className="text-gray-200">{puzzle.base_tier}</span>
           </div>
-          {/* 브랜드 연결 — 트레일 또는 시리즈에 연결된 퍼즐만 */}
+          {/* 지도 연결 — 트레일 또는 시리즈에 연결된 퍼즐만 */}
           {puzzle.series_name || puzzle.trail_id ? (
             <div className="flex items-center gap-1.5 pt-1">
               <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-violet-500/15 text-violet-300 border border-violet-500/30 text-[10px] font-medium">
-                브랜드 연결
+                지도 연결
               </span>
               <span className="text-gray-300 truncate">
                 {puzzle.series_name

@@ -50,7 +50,7 @@ export default function PuzzleTabs({
         <p className="text-sm text-gray-400 mb-4 leading-relaxed">
           이 퍼즐을 코스 완주 인증으로 쓰기 위한 설정이에요. 먼저 「퍼즐 설정」
           탭에서 <span className="text-gray-200 font-medium">연결 코스</span>를 저장한
-          뒤, 아래에서 콜라보 표시 · 씨앗 부스트 · 보물을 맞춥니다.
+          뒤, 아래에서 씨앗 부스트 · 보물을 맞춥니다.
         </p>
         <div className="flex flex-col gap-6">{cert}</div>
       </div>
