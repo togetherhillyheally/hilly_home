@@ -25,6 +25,7 @@ export const MENU_KEYS = [
   "app-versions",
   "backgrounds",
   "surveys",
+  "content-reset",
 ] as const;
 
 export type MenuKey = (typeof MENU_KEYS)[number];

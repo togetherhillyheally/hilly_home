@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search, UploadCloud, Tags } from "lucide-react";
+import { Puzzle, Search, UploadCloud, Tags } from "lucide-react";
 import { adminList, escapeIlike } from "@/lib/admin-rest";
 import Pagination from "../Pagination";
 import TrailActiveToggle from "./TrailActiveToggle";
@@ -9,11 +9,18 @@ export const dynamic = "force-dynamic";
 const PAGE_SIZE = 50;
 
 type ActiveFilter = "all" | "active" | "inactive";
+type PuzzleMapFilter = "all" | "puzzle" | "plain";
 
 const ACTIVE_LABELS: Record<ActiveFilter, string> = {
   all: "전체",
   active: "활성",
   inactive: "비활성",
+};
+
+const PUZZLE_MAP_LABELS: Record<PuzzleMapFilter, string> = {
+  all: "전체",
+  puzzle: "퍼즐지도",
+  plain: "일반",
 };
 
 const ACTIVITY_LABELS: Record<string, string> = {
@@ -49,11 +56,13 @@ function formatDate(iso: string): string {
 function buildHref(s: {
   q?: string;
   active?: ActiveFilter;
+  puzzleMap?: PuzzleMapFilter;
   page?: number;
 }): string {
   const sp = new URLSearchParams();
   if (s.q) sp.set("q", s.q);
   if (s.active && s.active !== "all") sp.set("active", s.active);
+  if (s.puzzleMap && s.puzzleMap !== "all") sp.set("puzzle_map", s.puzzleMap);
   if (s.page && s.page > 1) sp.set("page", String(s.page));
   const qs = sp.toString();
   return qs ? `/admin/trails?${qs}` : "/admin/trails";
@@ -65,6 +74,7 @@ export default async function TrailsPage({
   searchParams: Promise<{
     q?: string;
     active?: string;
+    puzzle_map?: string;
     page?: string;
   }>;
 }) {
@@ -73,7 +83,17 @@ export default async function TrailsPage({
   const active = (
     ["active", "inactive"].includes(sp.active ?? "") ? sp.active : "all"
   ) as ActiveFilter;
+  const puzzleMapFilter = (
+    ["puzzle", "plain"].includes(sp.puzzle_map ?? "") ? sp.puzzle_map : "all"
+  ) as PuzzleMapFilter;
   const page = Math.max(1, Number(sp.page) || 1);
+
+  // 퍼즐지도 = 퍼즐이 연결된 트레일
+  const { rows: puzzleRows } = await adminList<{ trail_id: string }>(
+    "puzzles?select=trail_id&trail_id=not.is.null",
+    { from: 0, to: 4999 }
+  );
+  const puzzleMapTrailIds = new Set<string>(puzzleRows.map((r) => r.trail_id));
 
   const params = new URLSearchParams({
     select:
@@ -88,13 +108,24 @@ export default async function TrailsPage({
   if (active !== "all")
     params.set("is_active", active === "active" ? "eq.true" : "eq.false");
 
+  let emptyByPuzzleMapFilter = false;
+  if (puzzleMapFilter === "puzzle") {
+    if (puzzleMapTrailIds.size === 0) emptyByPuzzleMapFilter = true;
+    else params.set("id", `in.(${Array.from(puzzleMapTrailIds).join(",")})`);
+  } else if (puzzleMapFilter === "plain" && puzzleMapTrailIds.size > 0) {
+    params.set("id", `not.in.(${Array.from(puzzleMapTrailIds).join(",")})`);
+  }
+
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
-  const { rows, total } = await adminList<Trail>(
-    `trails?${params.toString()}`,
-    { from, to, count: true }
-  );
+  const { rows, total } = emptyByPuzzleMapFilter
+    ? { rows: [] as Trail[], total: 0 }
+    : await adminList<Trail>(`trails?${params.toString()}`, {
+        from,
+        to,
+        count: true,
+      });
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const creatorIds = Array.from(
@@ -109,6 +140,7 @@ export default async function TrailsPage({
   }
 
   const activeTabs: ActiveFilter[] = ["all", "active", "inactive"];
+  const puzzleMapTabs: PuzzleMapFilter[] = ["all", "puzzle", "plain"];
 
   return (
     <main className="p-6 lg:p-10">
@@ -146,6 +178,7 @@ export default async function TrailsPage({
           className="flex gap-2 flex-1 max-w-md min-w-[240px]"
         >
           <input type="hidden" name="active" value={active} />
+          <input type="hidden" name="puzzle_map" value={puzzleMapFilter} />
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
             <input
@@ -176,6 +209,7 @@ export default async function TrailsPage({
                 href={buildHref({
                   q: q || undefined,
                   active: t,
+                  puzzleMap: puzzleMapFilter,
                 })}
                 className={`px-3 h-7 inline-flex items-center rounded-md font-medium transition-colors ${
                   isActive
@@ -184,6 +218,31 @@ export default async function TrailsPage({
                 }`}
               >
                 {ACTIVE_LABELS[t]}
+              </Link>
+            );
+          })}
+        </div>
+
+        <div className="flex flex-wrap gap-1.5">
+          <span className="text-gray-500 self-center mr-1">종류</span>
+          {puzzleMapTabs.map((t) => {
+            const isActive = puzzleMapFilter === t;
+            return (
+              <Link
+                key={t}
+                href={buildHref({
+                  q: q || undefined,
+                  active,
+                  puzzleMap: t,
+                })}
+                className={`px-3 h-7 inline-flex items-center gap-1 rounded-md font-medium transition-colors ${
+                  isActive
+                    ? "bg-violet-500/20 text-violet-200 border border-violet-500/40"
+                    : "bg-white/[0.04] text-gray-400 border border-white/10 hover:text-white"
+                }`}
+              >
+                {t === "puzzle" ? <Puzzle className="h-3 w-3" /> : null}
+                {PUZZLE_MAP_LABELS[t]}
               </Link>
             );
           })}
@@ -219,9 +278,18 @@ export default async function TrailsPage({
                     <td className="px-4 py-3">
                       <Link
                         href={`/admin/trails/${t.id}`}
-                        className="text-white truncate max-w-[260px] block hover:text-orange-300 transition-colors"
+                        className="flex items-center gap-1.5 text-white hover:text-orange-300 transition-colors"
                       >
-                        {t.name}
+                        <span className="truncate max-w-[220px]">{t.name}</span>
+                        {puzzleMapTrailIds.has(t.id) ? (
+                          <span
+                            title="퍼즐지도 (연결된 퍼즐 있음)"
+                            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-violet-500/15 border border-violet-500/30 text-violet-300 text-[10px] font-medium flex-shrink-0"
+                          >
+                            <Puzzle className="h-2.5 w-2.5" />
+                            퍼즐지도
+                          </span>
+                        ) : null}
                       </Link>
                     </td>
                     <td className="px-4 py-3 text-xs text-gray-300">
