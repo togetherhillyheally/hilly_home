@@ -17,6 +17,7 @@ import CheckpointCarouselButton, {
   type CarouselCheckpoint,
 } from "./CheckpointCarouselPanel";
 import CheckpointGuide, { type GuideCheckpoint } from "./CheckpointGuide";
+import QuizPanel from "./QuizPanel";
 import { orderByRouteProgress } from "@/lib/checkpoint-order";
 
 export const dynamic = "force-dynamic";
@@ -333,6 +334,13 @@ export default async function TrailDetailPage({
 
           {/* 코스 가이드 — 앱 미리보기 (진행방향 순서) */}
           <CheckpointGuide checkpoints={guideCheckpoints} />
+
+          {/* 코스 퀴즈 — 경로 위 교육 퀴즈 배치 */}
+          <QuizPanel
+            trailId={trail.id}
+            coordinates={trail.coordinates}
+            bounds={trail.bounds}
+          />
         </div>
 
         {/* Right: 메타 편집 + GPX 교체 + 위험 구역 */}
