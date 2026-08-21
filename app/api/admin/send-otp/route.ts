@@ -60,6 +60,11 @@ export async function POST(req: Request) {
     return GENERIC_OK;
   }
 
+  // 개발 우회 — master 티어에 한해 OTP 발송 스킵 (verify에서 123456 허용)
+  if (process.env.NODE_ENV !== "production" && prof.admin_tier === "master") {
+    return GENERIC_OK;
+  }
+
   const phoneE164 = toE164(digits);
   const otpRes = await fetch(`${SUPABASE_URL}/auth/v1/otp`, {
     method: "POST",

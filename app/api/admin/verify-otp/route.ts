@@ -43,63 +43,98 @@ export async function POST(req: Request) {
 
   const phoneE164 = toE164(digits);
 
-  // 1) Supabase OTP 검증
-  const verifyRes = await fetch(`${SUPABASE_URL}/auth/v1/verify`, {
-    method: "POST",
-    headers: {
-      apikey: ANON_KEY,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      phone: phoneE164,
-      token: code,
-      type: "sms",
-    }),
-  });
-  if (!verifyRes.ok) {
-    return NextResponse.json(
-      { error: "인증번호가 일치하지 않거나 만료됐어요." },
-      { status: 401 }
-    );
-  }
-  const verifyData = (await verifyRes.json()) as {
-    user?: { id?: string };
-    access_token?: string;
-  };
-  const userId = verifyData.user?.id;
-  if (!userId) return GENERIC_FAIL;
+  // 개발 우회 — master 티어 & 코드 123456 이면 Supabase OTP 검증을 건너뛰고 폰번호로 user_id 조회
+  const devBypass =
+    process.env.NODE_ENV !== "production" && code === "123456";
 
-  // 2) Supabase Auth 세션 즉시 폐기 (웹은 자체 세션 사용)
-  if (verifyData.access_token) {
-    fetch(`${SUPABASE_URL}/auth/v1/logout`, {
+  let userId: string | null = null;
+
+  if (devBypass) {
+    const byPhone = await fetch(
+      `${SUPABASE_URL}/rest/v1/profiles?phone_number=eq.${digits}&select=id,admin_tier&limit=1`,
+      {
+        headers: {
+          apikey: SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+        },
+        cache: "no-store",
+      }
+    );
+    const profs = byPhone.ok
+      ? ((await byPhone.json()) as Array<{
+          id: string;
+          admin_tier: string | null;
+        }>)
+      : [];
+    const prof = profs[0];
+    if (!prof || prof.admin_tier !== "master") {
+      return NextResponse.json(
+        { error: "인증번호가 일치하지 않거나 만료됐어요." },
+        { status: 401 }
+      );
+    }
+    userId = prof.id;
+  } else {
+    // 1) Supabase OTP 검증
+    const verifyRes = await fetch(`${SUPABASE_URL}/auth/v1/verify`, {
       method: "POST",
       headers: {
         apikey: ANON_KEY,
-        Authorization: `Bearer ${verifyData.access_token}`,
+        "Content-Type": "application/json",
       },
-    }).catch(() => {});
+      body: JSON.stringify({
+        phone: phoneE164,
+        token: code,
+        type: "sms",
+      }),
+    });
+    if (!verifyRes.ok) {
+      return NextResponse.json(
+        { error: "인증번호가 일치하지 않거나 만료됐어요." },
+        { status: 401 }
+      );
+    }
+    const verifyData = (await verifyRes.json()) as {
+      user?: { id?: string };
+      access_token?: string;
+    };
+    userId = verifyData.user?.id ?? null;
+    if (!userId) return GENERIC_FAIL;
+
+    // 2) Supabase Auth 세션 즉시 폐기 (웹은 자체 세션 사용)
+    if (verifyData.access_token) {
+      fetch(`${SUPABASE_URL}/auth/v1/logout`, {
+        method: "POST",
+        headers: {
+          apikey: ANON_KEY,
+          Authorization: `Bearer ${verifyData.access_token}`,
+        },
+      }).catch(() => {});
+    }
+
+    // 3) admin_tier 재확인 (인증된 user_id 기준)
+    const profRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}&select=admin_tier&limit=1`,
+      {
+        headers: {
+          apikey: SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+        },
+        cache: "no-store",
+      }
+    );
+    const profs = profRes.ok
+      ? ((await profRes.json()) as Array<{ admin_tier: string | null }>)
+      : [];
+    if (!profs[0]?.admin_tier) {
+      return NextResponse.json(
+        { error: "관리자 권한이 없는 계정이에요." },
+        { status: 403 }
+      );
+    }
   }
 
-  // 3) admin_tier 재확인 (인증된 user_id 기준)
-  const profRes = await fetch(
-    `${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}&select=admin_tier&limit=1`,
-    {
-      headers: {
-        apikey: SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
-      },
-      cache: "no-store",
-    }
-  );
-  const profs = profRes.ok
-    ? ((await profRes.json()) as Array<{ admin_tier: string | null }>)
-    : [];
-  if (!profs[0]?.admin_tier) {
-    return NextResponse.json(
-      { error: "관리자 권한이 없는 계정이에요." },
-      { status: 403 }
-    );
-  }
+  if (!userId) return GENERIC_FAIL;
 
   // 4) 어드민 세션 생성 + 쿠키 설정
   const ip =
