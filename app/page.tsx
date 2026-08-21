@@ -9,6 +9,8 @@ import {
   Package,
   Footprints,
   Sparkles,
+  MonitorSmartphone,
+  ArrowUpRight,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -48,6 +50,15 @@ export default function HillyheallyHomepage() {
             >
               핵심 기능
             </Link>
+            <a
+              href="https://map.hillyheally.com"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 px-3 h-9 rounded-lg bg-white/[0.06] border border-white/10 text-white hover:bg-white/[0.1] hover:border-orange-400/40 transition-all duration-300 text-sm font-semibold tracking-wide"
+            >
+              지도 만들기
+              <ArrowUpRight className="h-3.5 w-3.5 text-orange-300" />
+            </a>
           </nav>
           <Button
             variant="ghost"
@@ -304,6 +315,49 @@ export default function HillyheallyHomepage() {
                 </p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Creator CTA — 웹에서 지도 만들기 */}
+      <section id="create" className="relative py-20 overflow-hidden">
+        <div className="absolute inset-0 bg-[#08080f]">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-[radial-gradient(ellipse_at_center,rgba(139,92,246,0.08),transparent_65%)]"></div>
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-3xl mx-auto rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.04] to-white/[0.02] p-8 lg:p-10 animate-fade-in-up">
+            <div className="flex flex-col lg:flex-row lg:items-center gap-8">
+              <div className="flex-shrink-0 mx-auto lg:mx-0">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-400/20 to-pink-400/20 border border-white/10 flex items-center justify-center">
+                  <MonitorSmartphone className="h-8 w-8 text-orange-300" />
+                </div>
+              </div>
+              <div className="flex-1 text-center lg:text-left">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-500/15 border border-orange-500/30 text-orange-300 text-[11px] font-semibold tracking-wide mb-3">
+                  <Sparkles className="h-3 w-3" />
+                  파트너·크리에이터
+                </div>
+                <h2 className="text-2xl lg:text-3xl font-bold text-white mb-3 tracking-tight">
+                  이제 <span className="bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">웹에서 직접 지도</span>를 만들 수 있어요
+                </h2>
+                <p className="text-gray-400 text-sm lg:text-base leading-relaxed mb-5">
+                  GPX 업로드, 체크포인트·보물박스 배치, 퍼즐 이미지 연결까지 —
+                  브라우저 하나로 나만의 힐리힐리 지도를 등록하세요.
+                </p>
+                <a
+                  href="https://map.hillyheally.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-pink-500 text-white text-sm font-semibold hover:from-orange-400 hover:to-pink-400 transition-all duration-300 shadow-lg shadow-orange-500/20"
+                >
+                  지도 만들러 가기
+                  <ArrowUpRight className="h-4 w-4" />
+                </a>
+                <p className="mt-3 text-[11px] text-gray-600">
+                  map.hillyheally.com
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
