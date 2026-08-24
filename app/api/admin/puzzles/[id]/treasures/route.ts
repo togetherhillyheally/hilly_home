@@ -101,7 +101,7 @@ async function loadPuzzle(id: string): Promise<PuzzleRow | null> {
   return rows[0] ?? null;
 }
 
-const TREASURE_STARTER = 3; // 무료 스타터 조각 수 (draw_starter_pieces)
+const TREASURE_STARTER = 0; // 스타터 무료조각 폐지 (2026-08-24)
 
 /** 완주 경제성 계산 — 1회 완주 씨앗 vs 퍼즐 필요 씨앗 + 권장 배율 */
 function computeEconomics(
