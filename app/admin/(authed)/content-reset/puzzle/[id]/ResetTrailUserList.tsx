@@ -10,6 +10,8 @@ export type TrailProgressRow = {
   phone_number: string | null;
   walk_count: number;
   total_pieces: number;
+  treasures_found: number;
+  map_pieces_found: number;
   latest_earned_at: string;
 };
 
@@ -60,7 +62,7 @@ export default function ResetTrailUserList({
       .join(", ");
     if (
       !window.confirm(
-        `선택한 ${selected.size}명의 이 코스 완주 진행 상태를 초기화할까요?\n\n${names}\n\n이미 지급된 브랜드 씨앗은 회수되지 않아요. 되돌릴 수 없습니다.`
+        `선택한 ${selected.size}명의 이 코스 완주/보물 수집/지도 조각 진행 상태를 초기화할까요?\n\n${names}\n\n씨앗으로 뽑은 조각과 이미 지급된 보상(브랜드 씨앗 등)은 그대로 유지돼요. 되돌릴 수 없습니다.`
       )
     ) {
       return;
@@ -93,7 +95,7 @@ export default function ResetTrailUserList({
   if (rows.length === 0) {
     return (
       <div className="rounded-xl border border-white/10 bg-white/[0.02] p-12 text-center text-sm text-gray-500">
-        이 코스를 완주한 유저가 없어요.
+        이 코스에서 진행한(완주, 보물 수집, 지도 조각) 유저가 없어요.
       </div>
     );
   }
@@ -146,7 +148,9 @@ export default function ResetTrailUserList({
                 <th className="text-left px-4 py-3 font-medium">연락처</th>
                 <th className="text-center px-3 py-3 font-medium">완주 횟수</th>
                 <th className="text-center px-3 py-3 font-medium">적립 씨앗</th>
-                <th className="text-left px-4 py-3 font-medium">최근 완주일</th>
+                <th className="text-center px-3 py-3 font-medium">보물 수집</th>
+                <th className="text-center px-3 py-3 font-medium">지도 조각</th>
+                <th className="text-left px-4 py-3 font-medium">최근 활동</th>
               </tr>
             </thead>
             <tbody>
@@ -174,6 +178,12 @@ export default function ResetTrailUserList({
                   </td>
                   <td className="px-3 py-3 text-center text-xs text-gray-300">
                     {r.total_pieces}
+                  </td>
+                  <td className="px-3 py-3 text-center text-xs text-gray-300">
+                    {r.treasures_found}
+                  </td>
+                  <td className="px-3 py-3 text-center text-xs text-gray-300">
+                    {r.map_pieces_found}
                   </td>
                   <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">
                     {formatDate(r.latest_earned_at)}

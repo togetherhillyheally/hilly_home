@@ -238,12 +238,16 @@ export default async function ContentResetPage({
                         className="border-t border-white/5 hover:bg-white/[0.02]"
                       >
                         <td className="px-4 py-3">
-                          <Link
-                            href={`/admin/content-reset/trail/${t.id}`}
-                            className="text-white hover:text-orange-300 transition-colors"
-                          >
-                            {t.name}
-                          </Link>
+                          {puzzleId ? (
+                            <Link
+                              href={`/admin/content-reset/puzzle/${puzzleId}?view=trail`}
+                              className="text-white hover:text-orange-300 transition-colors"
+                            >
+                              {t.name}
+                            </Link>
+                          ) : (
+                            t.name
+                          )}
                         </td>
                         <td className="px-4 py-3 text-xs text-gray-300">
                           {t.series_name ?? (
