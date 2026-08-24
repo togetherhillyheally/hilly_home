@@ -116,6 +116,18 @@ const PARTICIPANT_STATUS_COLOR: Record<string, string> = {
   cancelled: "bg-gray-500/15 text-gray-400 border-gray-500/30",
 };
 
+const PARTICIPANT_STATUS_LABEL: Record<string, string> = {
+  approved: "승인",
+  pending: "대기",
+  rejected: "거절",
+  cancelled: "취소",
+};
+
+const INVITE_SOURCE_LABEL: Record<string, string> = {
+  search: "닉네임 검색",
+  nearby: "근처 초대",
+};
+
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
   return new Date(iso).toLocaleString("ko-KR", {
@@ -125,6 +137,16 @@ function formatDate(iso: string | null): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function computeEndedAt(
+  startedAt: string | null,
+  elapsedMinutes: number | null
+): string | null {
+  if (!startedAt || elapsedMinutes == null) return null;
+  const start = new Date(startedAt).getTime();
+  if (Number.isNaN(start)) return null;
+  return new Date(start + elapsedMinutes * 60_000).toISOString();
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -300,8 +322,8 @@ export default async function SessionDetailPage({
             />
             <InfoRow
               icon={Calendar}
-              label="미팅 시각"
-              value={formatDate(session.meeting_at)}
+              label="생성 시각"
+              value={formatDate(session.created_at)}
             />
             <InfoRow
               icon={Users}
@@ -311,7 +333,11 @@ export default async function SessionDetailPage({
             <InfoRow
               icon={Calendar}
               label="예정 시간"
-              value={`${session.duration_minutes}분`}
+              value={
+                session.duration_minutes != null
+                  ? `${session.duration_minutes}분`
+                  : "—"
+              }
             />
             {session.trail_id ? (
               <InfoRow
@@ -327,6 +353,19 @@ export default async function SessionDetailPage({
                 value={formatDate(session.started_at)}
               />
             ) : null}
+            {(() => {
+              const endedAt = computeEndedAt(
+                session.started_at,
+                session.actual_elapsed_minutes
+              );
+              return endedAt ? (
+                <InfoRow
+                  icon={Calendar}
+                  label="종료 시각"
+                  value={formatDate(endedAt)}
+                />
+              ) : null;
+            })()}
             {session.actual_distance_km != null ? (
               <InfoRow
                 icon={MapPin}
@@ -365,8 +404,9 @@ export default async function SessionDetailPage({
             <span>
               session_id: <code className="text-gray-400">{session.id}</code>
             </span>
-            <span>생성 {formatDate(session.created_at)}</span>
-            <span>수정 {formatDate(session.updated_at)}</span>
+            {session.updated_at !== session.created_at ? (
+              <span>수정 {formatDate(session.updated_at)}</span>
+            ) : null}
           </div>
         </div>
       </div>
@@ -410,11 +450,13 @@ export default async function SessionDetailPage({
                       <span
                         className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium border ${PARTICIPANT_STATUS_COLOR[p.status] ?? "bg-white/[0.04] text-gray-400 border-white/10"}`}
                       >
-                        {p.status}
+                        {PARTICIPANT_STATUS_LABEL[p.status] ?? p.status}
                       </span>
                     </td>
                     <td className="px-3 py-2 text-xs text-gray-400">
-                      {p.invite_source ?? "—"}
+                      {p.invite_source
+                        ? (INVITE_SOURCE_LABEL[p.invite_source] ?? p.invite_source)
+                        : "—"}
                     </td>
                     <td className="px-4 py-2 text-xs text-gray-400 whitespace-nowrap">
                       {formatDate(p.applied_at)}
