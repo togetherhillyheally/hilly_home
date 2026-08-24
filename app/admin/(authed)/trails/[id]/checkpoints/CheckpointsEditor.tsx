@@ -368,6 +368,51 @@ export default function CheckpointsEditor({
     });
   };
 
+  // 두 체크포인트 합치기 — keep = 순서(sort_order) 앞 지점 유지, remove 삭제(사진 이동)
+  const mergeCp = (targetId: string) => {
+    if (!selectedId || targetId === selectedId) return;
+    const a = cps.find((c) => c.id === selectedId);
+    const b = cps.find((c) => c.id === targetId);
+    if (!a || !b) return;
+    const keepId = a.sort_order <= b.sort_order ? a.id : b.id;
+    const removeId = a.sort_order <= b.sort_order ? b.id : a.id;
+    if (
+      !confirm(
+        `"${a.title}" 와 "${b.title}" 를 합칠까요?\n사진이 한 지점으로 모이고, 순서가 앞선 지점만 남습니다. 되돌릴 수 없어요.`
+      )
+    )
+      return;
+    startSave(async () => {
+      try {
+        const res = await fetch(
+          `/api/admin/trails/${trailId}/checkpoints/merge`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ keepId, removeId }),
+          }
+        );
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data?.success) {
+          showError(data?.error ?? "합치기 실패");
+          return;
+        }
+        setCps((prev) => prev.filter((c) => c.id !== removeId));
+        // keep·remove 사진 캐시 비워 keep 사진 재조회 유도
+        setPhotosByCp((prev) => {
+          const next = { ...prev };
+          delete next[removeId];
+          delete next[keepId];
+          return next;
+        });
+        setSelectedId(keepId);
+        showInfo("합쳤습니다.");
+      } catch (e: unknown) {
+        showError(e instanceof Error ? e.message : "합치기 실패");
+      }
+    });
+  };
+
   // 기존 체크포인트에 사진 추가
   const addPhotoToSelected = async (
     e: React.ChangeEvent<HTMLInputElement>
@@ -746,6 +791,8 @@ export default function CheckpointsEditor({
             cp={selected}
             photos={photosByCp[selected.id] ?? []}
             saving={saving}
+            others={cps.filter((c) => c.id !== selected.id)}
+            onMerge={mergeCp}
             onSaveMeta={(patch) => updateCp(selected.id, patch)}
             onDelete={() => deleteCp(selected.id)}
             onAddPhoto={addPhotoToSelected}
@@ -763,6 +810,8 @@ type DetailProps = {
   cp: CheckpointRow;
   photos: PhotoRow[];
   saving: boolean;
+  others: CheckpointRow[];
+  onMerge: (targetId: string) => void;
   onSaveMeta: (patch: CheckpointPatch) => void;
   onDelete: () => void;
   onAddPhoto: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -786,12 +835,15 @@ function CheckpointDetail({
   cp,
   photos,
   saving,
+  others,
+  onMerge,
   onSaveMeta,
   onDelete,
   onAddPhoto,
   onDeletePhoto,
   onError,
 }: DetailProps) {
+  const [mergeTarget, setMergeTarget] = useState("");
   const [title, setTitle] = useState(cp.title);
   const [note, setNote] = useState(cp.note ?? "");
   const [lat, setLat] = useState(String(cp.lat));
@@ -988,6 +1040,44 @@ function CheckpointDetail({
           </div>
         )}
       </div>
+
+      {/* 다른 지점과 합치기 — 가까이서 나뉜 지점을 하나로. 순서 앞 지점이 남음 */}
+      {others.length > 0 && (
+        <div className="pt-3 border-t border-white/10">
+          <div className="text-[11px] text-gray-400 mb-1.5">
+            다른 지점과 합치기
+          </div>
+          <div className="flex items-center gap-2">
+            <select
+              value={mergeTarget}
+              onChange={(e) => setMergeTarget(e.target.value)}
+              disabled={saving}
+              className="flex-1 h-9 rounded-lg bg-white/[0.04] border border-white/10 px-2 text-xs text-white focus:border-sky-500/50 focus:outline-none"
+            >
+              <option value="">합칠 지점 선택…</option>
+              {others.map((o) => (
+                <option key={o.id} value={o.id}>
+                  #{o.sort_order} {o.title}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              disabled={saving || !mergeTarget}
+              onClick={() => {
+                if (mergeTarget) onMerge(mergeTarget);
+                setMergeTarget("");
+              }}
+              className="h-9 px-3 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-200 text-xs disabled:opacity-40"
+            >
+              합치기
+            </button>
+          </div>
+          <div className="text-[10px] text-gray-500 mt-1.5">
+            사진이 한 지점으로 모이고, 순서가 앞선 지점의 위치가 남아요.
+          </div>
+        </div>
+      )}
 
       <div className="pt-3 border-t border-white/10">
         <button
