@@ -141,12 +141,24 @@ function formatDate(iso: string | null): string {
 
 function computeEndedAt(
   startedAt: string | null,
-  elapsedMinutes: number | null
-): string | null {
-  if (!startedAt || elapsedMinutes == null) return null;
-  const start = new Date(startedAt).getTime();
-  if (Number.isNaN(start)) return null;
-  return new Date(start + elapsedMinutes * 60_000).toISOString();
+  elapsedMinutes: number | null,
+  status: string,
+  updatedAt: string | null
+): { at: string; approx: boolean } | null {
+  if (startedAt && elapsedMinutes != null) {
+    const start = new Date(startedAt).getTime();
+    if (!Number.isNaN(start)) {
+      return {
+        at: new Date(start + elapsedMinutes * 60_000).toISOString(),
+        approx: false,
+      };
+    }
+  }
+  // 폴백 — 앱이 소요시간을 기록 못 한 완료 세션은 updated_at 을 근사치로 사용
+  if (status === "completed" && updatedAt) {
+    return { at: updatedAt, approx: true };
+  }
+  return null;
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -354,15 +366,26 @@ export default async function SessionDetailPage({
               />
             ) : null}
             {(() => {
-              const endedAt = computeEndedAt(
+              const ended = computeEndedAt(
                 session.started_at,
-                session.actual_elapsed_minutes
+                session.actual_elapsed_minutes,
+                session.status,
+                session.updated_at
               );
-              return endedAt ? (
+              return ended ? (
                 <InfoRow
                   icon={Calendar}
                   label="종료 시각"
-                  value={formatDate(endedAt)}
+                  value={
+                    <>
+                      {formatDate(ended.at)}
+                      {ended.approx ? (
+                        <span className="ml-1.5 text-[10px] text-gray-500">
+                          (근사)
+                        </span>
+                      ) : null}
+                    </>
+                  }
                 />
               ) : null;
             })()}
