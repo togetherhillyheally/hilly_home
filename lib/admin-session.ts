@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from "crypto";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
@@ -94,7 +95,12 @@ export async function createAdminSession(opts: {
   return { token, expiresAt };
 }
 
-export async function readAdminSession(): Promise<AdminSession | null> {
+/**
+ * 매 페이지 로드마다 루트 (authed)/layout.tsx 와 메뉴별 layout.tsx 가 각자
+ * 이 함수를 호출하기 때문에, React cache() 로 요청 1건당 한 번만 실제로
+ * 조회하도록 메모이즈 — 안 하면 네비게이션마다 DB 왕복이 2배로 들어감.
+ */
+export const readAdminSession = cache(async (): Promise<AdminSession | null> => {
   const store = await cookies();
   const token = store.get(ADMIN_COOKIE)?.value;
   if (!token) return null;
@@ -205,7 +211,7 @@ export async function readAdminSession(): Promise<AdminSession | null> {
     menuKeys: resolveMenuKeys(prof.admin_tier, overrides),
     scopes,
   };
-}
+});
 
 export async function revokeAdminSession(token: string): Promise<void> {
   const tokenHash = hashToken(token);
