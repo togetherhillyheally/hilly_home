@@ -175,80 +175,18 @@ export default function TreasurePanel({
         </div>
       </div>
 
-      {/* 완주 경제성 + 씨앗 배율 */}
-      {eco && (
-        <div className="rounded-lg border border-white/10 bg-black/20 p-4 mb-4">
-          <div className="flex items-center gap-1.5 mb-2.5">
-            <Sprout className="h-4 w-4 text-emerald-300" />
-            <span className="text-xs font-bold text-white">완주 = 완성 튜닝</span>
-          </div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs mb-3">
-            <Row label="코스 거리" value={`${eco.distanceKm.toFixed(1)} km`} />
-            <Row
-              label="퍼즐 조각"
-              value={`${eco.totalPieces}개 (보물 ${eco.treasureCount} + 스타터 ${eco.starter})`}
-            />
-            <Row
-              label="씨앗으로 뽑을 조각"
-              value={`${eco.needed}개`}
-              strong
-            />
-            <Row
-              label="1회 완주 예상 씨앗"
-              value={`~${eco.currentPerWalk}개`}
-              tone={eco.currentPerWalk >= eco.needed ? "ok" : "warn"}
-            />
-          </div>
-
-          <div
-            className={`rounded-md px-3 py-2 text-xs mb-3 ${
-              eco.currentPerWalk >= eco.needed
-                ? "bg-emerald-500/[0.08] text-emerald-200 border border-emerald-500/20"
-                : "bg-amber-500/[0.08] text-amber-200 border border-amber-500/20"
-            }`}
-          >
-            {eco.currentPerWalk >= eco.needed
-              ? `현재 배율 ×${eco.currentMultiplier} 로 1회 완주하면 퍼즐이 완성돼요 (남는 씨앗은 잔고).`
-              : `현재 배율 ×${eco.currentMultiplier} 로는 1회 완주로 부족해요. 권장 배율 ×${eco.recommendedMultiplier} 이상을 적용하세요.`}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <label className="text-xs text-gray-400">완주 씨앗 배율 ×</label>
-            <input
-              type="number"
-              step="0.5"
-              min="0.1"
-              max="20"
-              value={multInput}
-              onChange={(e) => setMultInput(e.target.value)}
-              className="w-20 rounded-md border border-white/10 bg-white/[0.03] px-2 h-8 text-sm text-white tabular-nums focus:outline-none focus:border-emerald-400/40"
-            />
-            <button
-              type="button"
-              onClick={() => saveMultiplier(Number(multInput))}
-              disabled={busy || multInput === "" || Number(multInput) === eco.currentMultiplier}
-              className="inline-flex items-center gap-1.5 rounded-md bg-white/[0.06] hover:bg-white/[0.1] disabled:opacity-40 disabled:cursor-not-allowed px-3 h-8 text-xs font-semibold text-white transition"
-            >
-              저장
-            </button>
-            {eco.recommendedMultiplier !== eco.currentMultiplier && (
-              <button
-                type="button"
-                onClick={() => saveMultiplier(eco.recommendedMultiplier)}
-                disabled={busy}
-                className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/30 bg-emerald-500/[0.08] hover:bg-emerald-500/[0.15] disabled:opacity-40 px-3 h-8 text-xs font-semibold text-emerald-200 transition"
-              >
-                권장 ×{eco.recommendedMultiplier} 적용
-              </button>
-            )}
-          </div>
-          <p className="text-[11px] text-gray-500 mt-2">
-            부스트 배율은 이 코스를 걸을 때 받는 씨앗에 곱해져요. 연결 퍼즐의
-            칸 수만큼 받으면 자동으로 멈춰요(상한). 거리·배속 안전장치는 그대로
-            유지됩니다.
-          </p>
+      {/* 완주 씨앗 모델 안내 — 배율 폐지(2026-08-27) */}
+      <div className="rounded-lg border border-white/10 bg-black/20 p-4 mb-4">
+        <div className="flex items-center gap-1.5 mb-2">
+          <Sprout className="h-4 w-4 text-emerald-300" />
+          <span className="text-xs font-bold text-white">완주 = 완성 (자동)</span>
         </div>
-      )}
+        <p className="text-[11px] text-gray-400 leading-relaxed">
+          거리 1km당 씨앗 1개 고정 + 보물상자가 퍼즐 완성에 필요한 나머지 씨앗을
+          자동 분배해요(보물 배치·삭제 시 자동 재계산). 배율 설정은 폐지됐습니다 —
+          별도 조정 없이 1회 완주로 딱 완성돼요.
+        </p>
+      </div>
 
       <div className="flex flex-wrap gap-2">
         <button
