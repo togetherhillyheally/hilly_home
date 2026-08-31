@@ -21,25 +21,25 @@ import type { MenuKey } from "@/lib/admin-permissions";
 import { cn } from "@/lib/utils";
 
 type Session = { nickname: string | null; phoneNumber: string | null };
-type Badges = Partial<Record<NavBadgeKey, number>>;
+type BadgeSlots = Partial<Record<NavBadgeKey, React.ReactNode>>;
 
 type Props = {
   allowedMenuKeys: MenuKey[];
   session: Session;
-  badges: Badges;
+  badgeSlots: BadgeSlots;
 };
 
 function NavBody({
   nav,
   pathname,
-  badges,
+  badgeSlots,
   session,
   onItemClick,
   onLogout,
 }: {
   nav: AdminNavGroup[];
   pathname: string;
-  badges: Badges;
+  badgeSlots: BadgeSlots;
   session: Session;
   onItemClick?: () => void;
   onLogout: () => void;
@@ -66,9 +66,9 @@ function NavBody({
                 const active =
                   pathname === item.href ||
                   pathname.startsWith(item.href + "/");
-                const badgeVal = item.badgeKey
-                  ? (badges[item.badgeKey] ?? 0)
-                  : 0;
+                const badgeSlot = item.badgeKey
+                  ? badgeSlots[item.badgeKey]
+                  : null;
                 return (
                   <li key={item.href}>
                     <Link
@@ -83,11 +83,7 @@ function NavBody({
                     >
                       <Icon className="h-4 w-4 flex-shrink-0" />
                       <span className="flex-1 truncate">{item.label}</span>
-                      {badgeVal > 0 ? (
-                        <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-orange-500/15 text-orange-300 text-[10px] font-medium border border-orange-500/30">
-                          {badgeVal}
-                        </span>
-                      ) : null}
+                      {badgeSlot}
                     </Link>
                   </li>
                 );
@@ -118,7 +114,7 @@ function NavBody({
   );
 }
 
-export default function AdminSidebar({ allowedMenuKeys, session, badges }: Props) {
+export default function AdminSidebar({ allowedMenuKeys, session, badgeSlots }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -153,7 +149,7 @@ export default function AdminSidebar({ allowedMenuKeys, session, badges }: Props
             <NavBody
               nav={nav}
               pathname={pathname}
-              badges={badges}
+              badgeSlots={badgeSlots}
               session={session}
               onItemClick={() => setOpen(false)}
               onLogout={handleLogout}
@@ -170,7 +166,7 @@ export default function AdminSidebar({ allowedMenuKeys, session, badges }: Props
         <NavBody
           nav={nav}
           pathname={pathname}
-          badges={badges}
+          badgeSlots={badgeSlots}
           session={session}
           onLogout={handleLogout}
         />
