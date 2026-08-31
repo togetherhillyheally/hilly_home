@@ -18,6 +18,7 @@ type ProfileMini = { id: string; nickname: string | null; phone_number: string |
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
   return new Date(iso).toLocaleString("ko-KR", {
+    timeZone: "Asia/Seoul",
     year: "2-digit",
     month: "2-digit",
     day: "2-digit",

@@ -21,6 +21,7 @@ export type ReportRow = {
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString("ko-KR", {
+    timeZone: "Asia/Seoul",
     year: "2-digit",
     month: "2-digit",
     day: "2-digit",

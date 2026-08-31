@@ -75,6 +75,7 @@ function formatTime(iso: string): string {
   const day = Math.floor(hour / 24);
   if (day < 7) return `${day}일 전`;
   return d.toLocaleDateString("ko-KR", {
+    timeZone: "Asia/Seoul",
     year: "2-digit",
     month: "2-digit",
     day: "2-digit",
