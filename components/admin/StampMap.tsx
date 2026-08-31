@@ -87,6 +87,20 @@ function MarkerContent({
   );
 }
 
+// React 18의 createRoot는 부모 트리가 아직 렌더링/커밋 중일 때 동기적으로
+// unmount 되면 "Attempted to synchronously unmount a root while React was
+// already rendering" 에러를 던진다. 마커 root의 unmount는 다음 tick으로
+// 미뤄서 현재 렌더 사이클 밖에서 실행되도록 한다.
+function safeUnmount(root: Root) {
+  setTimeout(() => {
+    try {
+      root.unmount();
+    } catch {
+      /* noop */
+    }
+  }, 0);
+}
+
 function makePendingEl(): HTMLDivElement {
   const el = document.createElement("div");
   el.style.cssText = `
@@ -172,11 +186,7 @@ export default function StampMap({
       // 마커 cleanup
       for (const [, { marker, root }] of markersRef.current) {
         marker.remove();
-        try {
-          root.unmount();
-        } catch {
-          /* noop */
-        }
+        safeUnmount(root);
       }
       markersRef.current.clear();
       pendingMarkerRef.current?.remove();
@@ -213,11 +223,7 @@ export default function StampMap({
       for (const [id, { marker, root }] of existing) {
         if (!nextIds.has(id)) {
           marker.remove();
-          try {
-            root.unmount();
-          } catch {
-            /* noop */
-          }
+          safeUnmount(root);
           existing.delete(id);
         }
       }
