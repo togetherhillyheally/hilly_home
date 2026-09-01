@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { readAdminSession } from "@/lib/admin-session";
 import AdminSidebar from "./AdminSidebar";
 import BadgeCount from "./BadgeCount";
+import RouteLoadingBoundary from "./RouteLoadingBoundary";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +36,9 @@ export default async function AuthedAdminLayout({
           ),
         }}
       />
-      <div className="lg:pl-64 min-w-0">{children}</div>
+      <div className="lg:pl-64 min-w-0">
+        <RouteLoadingBoundary>{children}</RouteLoadingBoundary>
+      </div>
     </div>
   );
 }
