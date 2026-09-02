@@ -15,6 +15,7 @@ import { readAdminSession } from "@/lib/admin-session";
 import { canManagePermissions } from "@/lib/admin-permissions";
 import { menuLabelMap } from "@/lib/admin-nav";
 import { SEED_LEDGER_REASON_LABELS } from "@/lib/seed-ledger-labels";
+import { regionLabel, profileActivityLabel } from "@/lib/profile-labels";
 import RoleBadge from "../../RoleBadge";
 import GrantSeedsButton from "./GrantSeedsButton";
 import GrantBottlesButton from "./GrantBottlesButton";
@@ -272,8 +273,8 @@ export default async function UserDetailPage({
               <dl className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-2 text-xs">
                 <Field label="휴대폰" value={profile.phone_number} />
                 <Field label="이메일" value={profile.email} />
-                <Field label="지역" value={profile.region} />
-                <Field label="활동" value={profile.activity} />
+                <Field label="지역" value={regionLabel(profile.region)} />
+                <Field label="활동" value={profileActivityLabel(profile.activity)} />
                 <Field label="생일" value={profile.birthday} />
                 <Field label="가입일" value={formatDate(profile.created_at)} />
                 <Field
