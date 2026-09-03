@@ -19,6 +19,7 @@ import {
   Trophy,
   UserMinus,
   Users,
+  UserX,
   type LucideIcon,
 } from "lucide-react";
 import type { MenuKey } from "@/lib/admin-permissions";
@@ -187,6 +188,12 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         label: "컨텐츠 초기화",
         icon: RotateCcw,
         menuKey: "content-reset",
+      },
+      {
+        href: "/admin/nickname-denylist",
+        label: "닉네임 차단",
+        icon: UserX,
+        menuKey: "nickname-denylist",
       },
     ],
   },

@@ -26,6 +26,7 @@ export const MENU_KEYS = [
   "backgrounds",
   "surveys",
   "content-reset",
+  "nickname-denylist",
 ] as const;
 
 export type MenuKey = (typeof MENU_KEYS)[number];
