@@ -1,21 +1,37 @@
 import Link from "next/link";
-import { ChevronRight, Lock, Search, User } from "lucide-react";
+import { AlertTriangle, ChevronRight, Lock, Search, User } from "lucide-react";
 import { adminList, escapeIlike } from "@/lib/admin-rest";
 import Pagination from "../Pagination";
+import {
+  isAbandonedSession,
+  isShortSession,
+  SHORT_SESSION_MAX_KM,
+  SHORT_SESSION_MAX_MINUTES,
+} from "@/lib/session-flags";
 
 export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 50;
 
-type StatusFilter = "all" | "open" | "completed" | "cancelled";
+type StatusFilter =
+  | "all"
+  | "completed_ok"
+  | "completed"
+  | "open"
+  | "cancelled"
+  | "short";
 
 const STATUS_META: Record<
-  Exclude<StatusFilter, "all">,
+  "open" | "closed" | "completed" | "cancelled",
   { label: string; color: string }
 > = {
   open: {
     label: "모집중",
     color: "bg-orange-500/15 text-orange-300 border-orange-500/30",
+  },
+  closed: {
+    label: "진행중",
+    color: "bg-sky-500/15 text-sky-300 border-sky-500/30",
   },
   completed: {
     label: "완료",
@@ -29,9 +45,11 @@ const STATUS_META: Record<
 
 const TAB_LABELS: Record<StatusFilter, string> = {
   all: "전체",
-  open: "모집중",
+  completed_ok: "정상완료",
   completed: "완료",
+  open: "모집중",
   cancelled: "취소",
+  short: "짧은세션",
 };
 
 type Session = {
@@ -51,6 +69,8 @@ type Session = {
   auto_approve: boolean;
   invite_code: string | null;
   duration_minutes: number;
+  actual_distance_km: number | null;
+  actual_elapsed_minutes: number | null;
 };
 
 type ProfileMini = { id: string; nickname: string | null };
@@ -96,12 +116,18 @@ function StatusBadge({ status }: { status: string }) {
 export default async function SessionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; page?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    status?: string;
+    page?: string;
+  }>;
 }) {
   const sp = await searchParams;
   const q = (sp.q ?? "").trim();
   const status = (
-    ["open", "completed", "cancelled"].includes(sp.status ?? "")
+    ["completed_ok", "completed", "open", "cancelled", "short"].includes(
+      sp.status ?? ""
+    )
       ? sp.status
       : "all"
   ) as StatusFilter;
@@ -109,17 +135,36 @@ export default async function SessionsPage({
 
   const params = new URLSearchParams({
     select:
-      "id,host_id,title,mountain_name,meeting_at,meeting_place,capacity,status,created_at,started_at,cover_image_url,is_solo,is_private,auto_approve,invite_code,duration_minutes",
+      "id,host_id,title,mountain_name,meeting_at,meeting_place,capacity,status,created_at,started_at,cover_image_url,is_solo,is_private,auto_approve,invite_code,duration_minutes,actual_distance_km,actual_elapsed_minutes",
     order: "meeting_at.desc",
   });
+  const andGroups: string[] = [];
   if (q) {
     const t = escapeIlike(q);
-    params.set(
-      "or",
-      `(title.ilike.*${t}*,mountain_name.ilike.*${t}*,meeting_place.ilike.*${t}*)`
+    andGroups.push(
+      `or(title.ilike.*${t}*,mountain_name.ilike.*${t}*,meeting_place.ilike.*${t}*)`
     );
   }
-  if (status !== "all") {
+  if (status === "short") {
+    andGroups.push(
+      `or(actual_elapsed_minutes.lt.${SHORT_SESSION_MAX_MINUTES},actual_distance_km.lte.${SHORT_SESSION_MAX_KM})`
+    );
+  }
+  if (status === "completed_ok") {
+    // "짧은 세션"과 "방치됨"을 제외한 정상 완료.
+    // actual_elapsed_minutes 는 null 을 허용하지 않는다 — null 이면 방치(자동종료)
+    // 세션이라 애초에 정상 완료가 아님. actual_distance_km 는 null 이어도
+    // (실측 소요시간만 있고 거리가 0으로 기록된 정상 종료) 통과시킨다.
+    andGroups.push(
+      `and(actual_elapsed_minutes.gte.${SHORT_SESSION_MAX_MINUTES},or(actual_distance_km.is.null,actual_distance_km.gt.${SHORT_SESSION_MAX_KM}))`
+    );
+  }
+  if (andGroups.length > 0) {
+    params.set("and", `(${andGroups.join(",")})`);
+  }
+  if (status === "completed_ok") {
+    params.set("status", "eq.completed");
+  } else if (status !== "all" && status !== "short") {
     params.set("status", `eq.${status}`);
   }
 
@@ -142,7 +187,14 @@ export default async function SessionsPage({
     hosts.forEach((p) => hostMap.set(p.id, p.nickname));
   }
 
-  const tabs: StatusFilter[] = ["all", "open", "completed", "cancelled"];
+  const tabs: StatusFilter[] = [
+    "all",
+    "completed_ok",
+    "completed",
+    "open",
+    "cancelled",
+    "short",
+  ];
 
   return (
     <main className="p-6 lg:p-10">
@@ -187,12 +239,15 @@ export default async function SessionsPage({
               <Link
                 key={t}
                 href={buildHref({ q: q || undefined, status: t })}
-                className={`px-3 h-8 inline-flex items-center rounded-lg text-xs font-medium transition-colors ${
+                className={`px-3 h-8 inline-flex items-center gap-1.5 rounded-lg text-xs font-medium transition-colors ${
                   active
-                    ? "bg-orange-500/20 text-orange-200 border border-orange-500/40"
+                    ? t === "short"
+                      ? "bg-rose-500/20 text-rose-200 border border-rose-500/40"
+                      : "bg-orange-500/20 text-orange-200 border border-orange-500/40"
                     : "bg-white/[0.04] text-gray-400 border border-white/10 hover:text-white"
                 }`}
               >
+                {t === "short" ? <AlertTriangle className="h-3 w-3" /> : null}
                 {TAB_LABELS[t]}
               </Link>
             );
@@ -296,6 +351,31 @@ export default async function SessionsPage({
                         {s.auto_approve ? (
                           <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium border bg-emerald-500/15 text-emerald-300 border-emerald-500/30">
                             자동승인
+                          </span>
+                        ) : null}
+                        {isShortSession(
+                          s.actual_elapsed_minutes,
+                          s.actual_distance_km
+                        ) ? (
+                          <span
+                            title={`실제 소요 ${s.actual_elapsed_minutes ?? "—"}분 · 실제 거리 ${s.actual_distance_km ?? "—"}km`}
+                            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-medium border bg-rose-500/15 text-rose-300 border-rose-500/30"
+                          >
+                            <AlertTriangle className="h-2.5 w-2.5" />
+                            짧은 세션
+                          </span>
+                        ) : null}
+                        {isAbandonedSession(
+                          s.status,
+                          s.started_at,
+                          s.actual_elapsed_minutes
+                        ) ? (
+                          <span
+                            title="종료 버튼을 누르지 않아 24시간 idle 타임아웃으로 자동 완료 처리됨"
+                            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-medium border bg-amber-500/15 text-amber-300 border-amber-500/30"
+                          >
+                            <AlertTriangle className="h-2.5 w-2.5" />
+                            방치됨
                           </span>
                         ) : null}
                       </div>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
+  AlertTriangle,
   Bell,
   Calendar,
   ChevronLeft,
@@ -15,6 +16,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { adminList } from "@/lib/admin-rest";
+import { isAbandonedSession, isShortSession } from "@/lib/session-flags";
 
 export const dynamic = "force-dynamic";
 
@@ -100,11 +102,13 @@ type TrailMini = { id: string; name: string };
 
 const STATUS_LABEL: Record<string, string> = {
   open: "모집중",
+  closed: "진행중",
   completed: "완료",
   cancelled: "취소",
 };
 const STATUS_COLOR: Record<string, string> = {
   open: "bg-orange-500/15 text-orange-300 border-orange-500/30",
+  closed: "bg-sky-500/15 text-sky-300 border-sky-500/30",
   completed: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
   cancelled: "bg-gray-500/15 text-gray-400 border-gray-500/30",
 };
@@ -288,6 +292,26 @@ export default async function SessionDetailPage({
               {session.auto_approve ? (
                 <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border bg-emerald-500/15 text-emerald-300 border-emerald-500/30">
                   자동승인
+                </span>
+              ) : null}
+              {isShortSession(
+                session.actual_elapsed_minutes,
+                session.actual_distance_km
+              ) ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border bg-rose-500/15 text-rose-300 border-rose-500/30">
+                  <AlertTriangle className="h-3 w-3" /> 짧은 세션
+                </span>
+              ) : null}
+              {isAbandonedSession(
+                session.status,
+                session.started_at,
+                session.actual_elapsed_minutes
+              ) ? (
+                <span
+                  title="종료 버튼을 누르지 않아 24시간 idle 타임아웃으로 자동 완료 처리됨"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border bg-amber-500/15 text-amber-300 border-amber-500/30"
+                >
+                  <AlertTriangle className="h-3 w-3" /> 방치됨
                 </span>
               ) : null}
             </div>
