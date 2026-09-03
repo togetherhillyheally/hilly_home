@@ -28,12 +28,16 @@ const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
 /**
  * 세션 참가자별 GPS 경로를 Mapbox 지도에 폴리라인으로 오버레이.
- * 참가자마다 색으로 구분. 좌표 자동 fit.
+ * - 트레일 원본 GPX 는 빨간색으로 (기준 코스)
+ * - 참가자 실제 경로는 색상 구분 (오렌지 등)
+ * - 좌표 자동 fit.
  */
 export default function SessionRouteMap({
   tracks,
+  trailCoords,
 }: {
   tracks: ParticipantTrack[];
+  trailCoords?: LngLat[] | null;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -47,8 +51,11 @@ export default function SessionRouteMap({
 
     mapboxgl.accessToken = MAPBOX_TOKEN;
 
-    // 최초 중심 — 첫 트랙의 첫 좌표. 없으면 서울시청 (기본)
-    const firstPoint = tracks[0]?.segments[0]?.[0] ?? [126.978, 37.5665];
+    // 최초 중심 — 참가자 트랙 우선, 없으면 트레일 원본, 그것도 없으면 서울시청
+    const firstPoint =
+      tracks[0]?.segments[0]?.[0] ??
+      trailCoords?.[0] ??
+      ([126.978, 37.5665] as LngLat);
 
     const map = new mapboxgl.Map({
       container: containerRef.current,
@@ -62,8 +69,34 @@ export default function SessionRouteMap({
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
 
     map.on("load", () => {
-      // 모든 좌표 수집해서 bounds 계산
-      const allPoints: LngLat[] = tracks.flatMap((t) => t.segments.flat());
+      // 모든 좌표 수집해서 bounds 계산 (트레일 원본 + 참가자 트랙)
+      const allPoints: LngLat[] = [
+        ...(trailCoords ?? []),
+        ...tracks.flatMap((t) => t.segments.flat()),
+      ];
+
+      // 트레일 원본 GPX — 빨간색 (기준 코스). 참가자 트랙보다 먼저 그려서 아래에 깔림.
+      if (trailCoords && trailCoords.length >= 2) {
+        map.addSource("trail-gpx", {
+          type: "geojson",
+          data: {
+            type: "Feature",
+            geometry: { type: "LineString", coordinates: trailCoords },
+            properties: {},
+          },
+        });
+        map.addLayer({
+          id: "trail-gpx-line",
+          type: "line",
+          source: "trail-gpx",
+          layout: { "line-cap": "round", "line-join": "round" },
+          paint: {
+            "line-color": "#ef4444",
+            "line-width": 4,
+            "line-opacity": 0.85,
+          },
+        });
+      }
 
       tracks.forEach((t, i) => {
         if (t.segments.length === 0) return;
@@ -134,7 +167,7 @@ export default function SessionRouteMap({
       map.remove();
       mapRef.current = null;
     };
-  }, [tracks]);
+  }, [tracks, trailCoords]);
 
   if (!MAPBOX_TOKEN) {
     return (
@@ -144,13 +177,15 @@ export default function SessionRouteMap({
     );
   }
 
-  if (tracks.length === 0) {
+  if (tracks.length === 0 && (!trailCoords || trailCoords.length === 0)) {
     return (
       <div className="rounded-xl border border-white/10 bg-white/[0.02] p-8 text-center text-xs text-gray-500">
         기록된 GPS 경로가 없어요.
       </div>
     );
   }
+
+  const showLegend = trailCoords?.length || tracks.length > 1;
 
   return (
     <div className="rounded-xl border border-white/10 bg-black/40 overflow-hidden">
@@ -159,8 +194,14 @@ export default function SessionRouteMap({
         className="w-full h-[380px] lg:h-[460px]"
         aria-label="세션 경로 지도"
       />
-      {tracks.length > 1 ? (
-        <div className="flex flex-wrap gap-2 px-4 py-2 border-t border-white/5 bg-white/[0.02]">
+      {showLegend ? (
+        <div className="flex flex-wrap gap-3 px-4 py-2 border-t border-white/5 bg-white/[0.02]">
+          {trailCoords?.length ? (
+            <div className="flex items-center gap-1.5 text-[11px]">
+              <span className="inline-block h-2.5 w-2.5 rounded-full bg-red-500" />
+              <span className="text-gray-300">트레일 원본 (GPX)</span>
+            </div>
+          ) : null}
           {tracks.map((t, i) => (
             <div key={t.userId} className="flex items-center gap-1.5 text-[11px]">
               <span

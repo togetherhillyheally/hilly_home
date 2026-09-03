@@ -110,7 +110,11 @@ type UserStat = {
 };
 
 type ProfileMini = { id: string; nickname: string | null };
-type TrailMini = { id: string; name: string };
+type TrailMini = {
+  id: string;
+  name: string;
+  coordinates: number[][] | null;
+};
 
 const STATUS_LABEL: Record<string, string> = {
   open: "모집중",
@@ -294,13 +298,21 @@ export default async function SessionDetailPage({
     })
     .map(({ userId, nickname, segments }) => ({ userId, nickname, segments }));
 
-  // 트레일 매핑
+  // 트레일 매핑 (이름 + GPX 좌표)
   let trailName: string | null = null;
+  let trailCoords: [number, number][] | null = null;
   if (session.trail_id) {
     const { rows } = await adminList<TrailMini>(
-      `trails?select=id,name&id=eq.${session.trail_id}&limit=1`
+      `trails?select=id,name,coordinates&id=eq.${session.trail_id}&limit=1`
     );
     trailName = rows[0]?.name ?? null;
+    const raw = rows[0]?.coordinates;
+    // trails.coordinates 는 [lng, lat, elevation?] 배열. 지도엔 [lng, lat] 만.
+    if (Array.isArray(raw) && raw.length >= 2) {
+      trailCoords = raw
+        .filter((p) => Array.isArray(p) && p.length >= 2)
+        .map((p) => [Number(p[0]), Number(p[1])] as [number, number]);
+    }
   }
 
   const approvedCount = participants.filter((p) => p.status === "approved")
@@ -534,9 +546,9 @@ export default async function SessionDetailPage({
         </div>
       </div>
 
-      {/* 경로 지도 — 참가자별 색상 오버레이 */}
+      {/* 경로 지도 — 트레일 GPX(빨간색) + 참가자 실제 경로(색상 구분) */}
       <div className="mb-6">
-        <SessionRouteMap tracks={tracks} />
+        <SessionRouteMap tracks={tracks} trailCoords={trailCoords} />
       </div>
 
       <SessionTabs

@@ -66,10 +66,13 @@ export default function SessionTabs({
         })}
       </div>
 
-      {/* 모든 탭 마운트 유지 — 지도 상단은 계속 살아있고, 아래만 전환. 상태 보존. */}
-      <div className={tab === "overview" ? "" : "hidden"}>{overview}</div>
-      <div className={tab === "activity" ? "" : "hidden"}>{activity}</div>
-      <div className={tab === "chat" ? "" : "hidden"}>{chat}</div>
+      {/* 모든 탭 마운트 유지 — 지도 상단은 계속 살아있고, 아래만 전환. 상태 보존.
+          min-h 로 탭 전환 시 스크롤 위치·주변 요소 흔들리지 않게 고정. */}
+      <div className="min-h-[520px]">
+        <div className={tab === "overview" ? "" : "hidden"}>{overview}</div>
+        <div className={tab === "activity" ? "" : "hidden"}>{activity}</div>
+        <div className={tab === "chat" ? "" : "hidden"}>{chat}</div>
+      </div>
     </div>
   );
 }
