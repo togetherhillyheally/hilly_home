@@ -211,7 +211,7 @@ export default async function SessionsPage({
     <main className="p-6 lg:p-10">
       <header className="mb-6">
         <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
-          모험 (세션)
+          모험
         </h1>
         <p className="text-sm text-gray-400 mt-1">
           {TAB_LABELS[status]} · 총 {total.toLocaleString()}건
@@ -296,32 +296,15 @@ export default async function SessionsPage({
                     className="border-t border-white/5 hover:bg-white/[0.04] group"
                   >
                     <td className="px-4 py-3">
-                      <div className="flex items-start gap-3">
-                        <div className="w-12 h-12 rounded-lg bg-white/[0.04] flex items-center justify-center text-xs text-gray-500 overflow-hidden flex-shrink-0">
-                          {s.cover_image_url ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={s.cover_image_url}
-                              alt=""
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <span>—</span>
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <Link
-                            href={`/admin/sessions/${s.id}`}
-                            className="text-white truncate max-w-[260px] block hover:text-orange-300 transition-colors"
-                          >
-                            {s.title}
-                          </Link>
-                          <div className="text-[11px] text-gray-500 truncate max-w-[260px]">
-                            {s.mountain_name} · {s.meeting_place}
-                          </div>
-                          <code className="text-[10px] text-gray-600">
-                            {s.id.slice(0, 8)}…
-                          </code>
+                      <div className="min-w-0">
+                        <Link
+                          href={`/admin/sessions/${s.id}`}
+                          className="text-white truncate max-w-[280px] block hover:text-orange-300 transition-colors"
+                        >
+                          {s.title}
+                        </Link>
+                        <div className="text-[11px] text-gray-500 truncate max-w-[280px]">
+                          {s.mountain_name} · {s.meeting_place}
                         </div>
                       </div>
                     </td>
@@ -340,21 +323,11 @@ export default async function SessionsPage({
                           {s.duration_minutes}분 예정
                         </div>
                       ) : null}
-                    </td>
-                    <td className="px-3 py-3 text-center text-xs text-gray-300">
-                      {s.capacity}명
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={s.status} />
-                      {s.started_at && s.started_at !== s.meeting_at ? (
-                        <div className="text-[10px] text-gray-500 mt-1">
-                          시작 {formatDate(s.started_at)}
-                        </div>
-                      ) : null}
                       {s.status === "completed" &&
                       (s.actual_distance_km != null ||
                         s.actual_elapsed_minutes != null) ? (
                         <div className="text-[10px] text-emerald-300/80 mt-1 whitespace-nowrap">
+                          실측{" "}
                           {s.actual_distance_km != null
                             ? `${Number(s.actual_distance_km).toFixed(2)}km`
                             : null}
@@ -365,6 +338,17 @@ export default async function SessionsPage({
                           {s.actual_elapsed_minutes != null
                             ? `${s.actual_elapsed_minutes}분`
                             : null}
+                        </div>
+                      ) : null}
+                    </td>
+                    <td className="px-3 py-3 text-center text-xs text-gray-300">
+                      {s.capacity}명
+                    </td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={s.status} />
+                      {s.started_at && s.started_at !== s.meeting_at ? (
+                        <div className="text-[10px] text-gray-500 mt-1">
+                          시작 {formatDate(s.started_at)}
                         </div>
                       ) : null}
                     </td>
