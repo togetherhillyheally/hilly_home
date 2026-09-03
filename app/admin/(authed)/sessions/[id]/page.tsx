@@ -97,6 +97,14 @@ type LiveLocation = {
   joined_at: string;
 };
 
+type UserStat = {
+  user_id: string;
+  distance_km: number | string | null;
+  elapsed_minutes: number | null;
+  elevation_gain_m: number | null;
+  updated_at: string;
+};
+
 type ProfileMini = { id: string; nickname: string | null };
 type TrailMini = { id: string; name: string };
 
@@ -195,6 +203,7 @@ export default async function SessionDetailPage({
     { rows: notices },
     { rows: chatMessages, total: chatTotal },
     { rows: liveParticipants },
+    { rows: userStats },
   ] = await Promise.all([
     adminList<Participant>(
       `hiking_session_participants?select=*&session_id=eq.${id}&order=status.asc,applied_at.asc`,
@@ -216,7 +225,30 @@ export default async function SessionDetailPage({
       `hiking_session_live_participants?select=*&session_id=eq.${id}&order=last_seen.desc`,
       { from: 0, to: 99 }
     ),
+    adminList<UserStat>(
+      `hiking_session_user_stats?select=user_id,distance_km,elapsed_minutes,elevation_gain_m,updated_at&session_id=eq.${id}`,
+      { from: 0, to: 199 }
+    ),
   ]);
+
+  // hiking_sessions.actual_* 가 비어있을 때 user_stats 로 폴백.
+  // 솔로면 유일한 row, 다중이면 호스트 기준 (호스트 row 없으면 최댓값).
+  const hostStat = userStats.find((s) => s.user_id === session.host_id) ?? null;
+  const maxStat = userStats.reduce<UserStat | null>((acc, s) => {
+    if (!acc) return s;
+    return Number(s.distance_km ?? 0) > Number(acc.distance_km ?? 0) ? s : acc;
+  }, null);
+  const fallbackStat = hostStat ?? maxStat;
+  const displayDistanceKm =
+    session.actual_distance_km != null
+      ? Number(session.actual_distance_km)
+      : fallbackStat?.distance_km != null
+        ? Number(fallbackStat.distance_km)
+        : null;
+  const displayElapsedMin =
+    session.actual_elapsed_minutes != null
+      ? session.actual_elapsed_minutes
+      : fallbackStat?.elapsed_minutes ?? null;
 
   // 유저 닉네임 일괄 매핑
   const userIds = Array.from(
@@ -393,7 +425,7 @@ export default async function SessionDetailPage({
             {(() => {
               const ended = computeEndedAt(
                 session.started_at,
-                session.actual_elapsed_minutes,
+                displayElapsedMin,
                 session.status,
                 session.updated_at
               );
@@ -414,18 +446,36 @@ export default async function SessionDetailPage({
                 />
               ) : null;
             })()}
-            {session.actual_distance_km != null ? (
+            {displayDistanceKm != null ? (
               <InfoRow
                 icon={MapPin}
                 label="실제 거리"
-                value={`${Number(session.actual_distance_km).toFixed(2)} km`}
+                value={
+                  <>
+                    {displayDistanceKm.toFixed(2)} km
+                    {session.actual_distance_km == null ? (
+                      <span className="ml-1.5 text-[10px] text-gray-500">
+                        (라이브 기록)
+                      </span>
+                    ) : null}
+                  </>
+                }
               />
             ) : null}
-            {session.actual_elapsed_minutes != null ? (
+            {displayElapsedMin != null ? (
               <InfoRow
                 icon={Calendar}
                 label="실제 소요"
-                value={`${session.actual_elapsed_minutes}분`}
+                value={
+                  <>
+                    {displayElapsedMin}분
+                    {session.actual_elapsed_minutes == null ? (
+                      <span className="ml-1.5 text-[10px] text-gray-500">
+                        (라이브 기록)
+                      </span>
+                    ) : null}
+                  </>
+                }
               />
             ) : null}
             {session.invite_code ? (
