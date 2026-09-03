@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { AlertTriangle, ChevronRight, Lock, Search, User } from "lucide-react";
+import { AlertTriangle, ChevronRight, Search, User } from "lucide-react";
 import { adminList, escapeIlike } from "@/lib/admin-rest";
 import Pagination from "../Pagination";
+import ClickableRow from "./ClickableRow";
 import {
   isAbandonedSession,
   isShortSession,
@@ -277,36 +278,98 @@ export default async function SessionsPage({
       ) : (
         <div className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[920px]">
-              <thead className="bg-white/[0.03] text-gray-400 text-xs">
+            <table className="w-full text-sm min-w-[1080px]">
+              <thead className="bg-white/[0.03] text-gray-200 text-xs">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium">모험</th>
-                  <th className="text-left px-4 py-3 font-medium">호스트</th>
-                  <th className="text-left px-4 py-3 font-medium">미팅</th>
-                  <th className="text-center px-3 py-3 font-medium">정원</th>
-                  <th className="text-left px-4 py-3 font-medium">상태</th>
-                  <th className="text-left px-4 py-3 font-medium">플래그</th>
-                  <th className="text-right px-3 py-3 font-medium w-12"></th>
+                  <th className="text-left px-4 py-3 font-semibold">구분</th>
+                  <th className="text-left px-4 py-3 font-semibold">모험명</th>
+                  <th className="text-left px-4 py-3 font-semibold">지도</th>
+                  <th className="text-left px-4 py-3 font-semibold">호스트</th>
+                  <th className="text-left px-4 py-3 font-semibold">일정</th>
+                  <th className="text-left px-4 py-3 font-semibold">결과</th>
+                  <th className="text-center px-3 py-3 font-semibold">정원</th>
+                  <th className="text-left px-4 py-3 font-semibold">상태</th>
+                  <th className="text-right px-3 py-3 font-semibold w-12"></th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map((s) => (
-                  <tr
+                  <ClickableRow
                     key={s.id}
+                    href={`/admin/sessions/${s.id}`}
                     className="border-t border-white/5 hover:bg-white/[0.04] group"
                   >
                     <td className="px-4 py-3">
-                      <div className="min-w-0">
+                      {s.is_solo ? (
+                        <span
+                          className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold border"
+                          style={{
+                            backgroundColor: "rgba(74, 222, 128, 0.14)",
+                            color: "#4ade80",
+                            borderColor: "rgba(74, 222, 128, 0.35)",
+                          }}
+                        >
+                          혼자
+                        </span>
+                      ) : (
+                        <span
+                          className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold border"
+                          style={{
+                            backgroundColor: "#2D1319",
+                            color: "#DC2F55",
+                            borderColor: "rgba(220, 47, 85, 0.35)",
+                          }}
+                        >
+                          함께
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1.5">
+                        {isShortSession(
+                          s.actual_elapsed_minutes,
+                          s.actual_distance_km
+                        ) ? (
+                          <span
+                            title="짧은 세션 — 실제 소요/거리 기준 미달"
+                            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-medium border bg-rose-500/15 text-rose-300 border-rose-500/30 flex-shrink-0"
+                          >
+                            <AlertTriangle className="h-2.5 w-2.5" />
+                            짧음
+                          </span>
+                        ) : null}
+                        {isAbandonedSession(
+                          s.status,
+                          s.started_at,
+                          s.actual_elapsed_minutes
+                        ) ? (
+                          <span
+                            title="방치됨 — 종료 버튼 미클릭, 24h idle 타임아웃으로 자동 완료"
+                            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-medium border bg-amber-500/15 text-amber-300 border-amber-500/30 flex-shrink-0"
+                          >
+                            <AlertTriangle className="h-2.5 w-2.5" />
+                            방치
+                          </span>
+                        ) : null}
                         <Link
                           href={`/admin/sessions/${s.id}`}
-                          className="text-white truncate max-w-[280px] block hover:text-orange-300 transition-colors"
+                          className="text-white truncate max-w-[220px] hover:text-orange-300 transition-colors"
                         >
                           {s.title}
                         </Link>
-                        <div className="text-[11px] text-gray-500 truncate max-w-[280px]">
-                          {s.mountain_name} · {s.meeting_place}
-                        </div>
                       </div>
+                    </td>
+                    <td className="px-4 py-3 text-xs">
+                      <div className="text-gray-200 truncate max-w-[200px]">
+                        {s.mountain_name || (
+                          <span className="text-gray-600">—</span>
+                        )}
+                      </div>
+                      {s.meeting_place ? (
+                        <div className="text-[10px] text-gray-500 truncate max-w-[200px]">
+                          {s.meeting_place}
+                        </div>
+                      ) : null}
                     </td>
                     <td className="px-4 py-3 text-xs">
                       <div className="flex items-center gap-1.5 text-gray-200">
@@ -320,14 +383,20 @@ export default async function SessionsPage({
                       <div>{formatDate(s.meeting_at)}</div>
                       {s.duration_minutes != null ? (
                         <div className="text-[10px] text-gray-500">
-                          {s.duration_minutes}분 예정
+                          예정 {s.duration_minutes}분
                         </div>
                       ) : null}
+                      {s.started_at && s.started_at !== s.meeting_at ? (
+                        <div className="text-[10px] text-gray-500">
+                          시작 {formatDate(s.started_at)}
+                        </div>
+                      ) : null}
+                    </td>
+                    <td className="px-4 py-3 text-xs whitespace-nowrap">
                       {s.status === "completed" &&
                       (s.actual_distance_km != null ||
                         s.actual_elapsed_minutes != null) ? (
-                        <div className="text-[10px] text-emerald-300/80 mt-1 whitespace-nowrap">
-                          실측{" "}
+                        <div className="text-emerald-300/90">
                           {s.actual_distance_km != null
                             ? `${Number(s.actual_distance_km).toFixed(2)}km`
                             : null}
@@ -339,74 +408,22 @@ export default async function SessionsPage({
                             ? `${s.actual_elapsed_minutes}분`
                             : null}
                         </div>
-                      ) : null}
+                      ) : (
+                        <span className="text-gray-600">—</span>
+                      )}
                     </td>
                     <td className="px-3 py-3 text-center text-xs text-gray-300">
                       {s.capacity}명
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge status={s.status} />
-                      {s.started_at && s.started_at !== s.meeting_at ? (
-                        <div className="text-[10px] text-gray-500 mt-1">
-                          시작 {formatDate(s.started_at)}
-                        </div>
-                      ) : null}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-1">
-                        {s.is_solo ? (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium border bg-violet-500/15 text-violet-300 border-violet-500/30">
-                            솔로
-                          </span>
-                        ) : null}
-                        {s.is_private ? (
-                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-medium border bg-gray-500/15 text-gray-300 border-gray-500/30">
-                            <Lock className="h-2.5 w-2.5" />
-                            비공개
-                          </span>
-                        ) : null}
-                        {s.auto_approve ? (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium border bg-emerald-500/15 text-emerald-300 border-emerald-500/30">
-                            자동승인
-                          </span>
-                        ) : null}
-                        {isShortSession(
-                          s.actual_elapsed_minutes,
-                          s.actual_distance_km
-                        ) ? (
-                          <span
-                            title={`실제 소요 ${s.actual_elapsed_minutes ?? "—"}분 · 실제 거리 ${s.actual_distance_km ?? "—"}km`}
-                            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-medium border bg-rose-500/15 text-rose-300 border-rose-500/30"
-                          >
-                            <AlertTriangle className="h-2.5 w-2.5" />
-                            짧은 세션
-                          </span>
-                        ) : null}
-                        {isAbandonedSession(
-                          s.status,
-                          s.started_at,
-                          s.actual_elapsed_minutes
-                        ) ? (
-                          <span
-                            title="종료 버튼을 누르지 않아 24시간 idle 타임아웃으로 자동 완료 처리됨"
-                            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-medium border bg-amber-500/15 text-amber-300 border-amber-500/30"
-                          >
-                            <AlertTriangle className="h-2.5 w-2.5" />
-                            방치됨
-                          </span>
-                        ) : null}
-                      </div>
                     </td>
                     <td className="px-3 py-3 text-right">
-                      <Link
-                        href={`/admin/sessions/${s.id}`}
-                        className="inline-flex text-gray-600 group-hover:text-white transition-colors"
-                        aria-label="상세 보기"
-                      >
+                      <span className="inline-flex text-gray-500 group-hover:text-white transition-colors">
                         <ChevronRight className="h-4 w-4" />
-                      </Link>
+                      </span>
                     </td>
-                  </tr>
+                  </ClickableRow>
                 ))}
               </tbody>
             </table>

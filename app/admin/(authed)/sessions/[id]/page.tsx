@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { adminList } from "@/lib/admin-rest";
 import { isAbandonedSession, isShortSession } from "@/lib/session-flags";
+import { estimateCaloriesKcal } from "@/lib/calories";
 import SessionRouteMap, {
   type ParticipantTrack,
 } from "./SessionRouteMap";
@@ -105,6 +106,7 @@ type UserStat = {
   distance_km: number | string | null;
   elapsed_minutes: number | null;
   elevation_gain_m: number | null;
+  calories_kcal: number | null;
   updated_at: string;
   track_segments: number[][][] | null;
 };
@@ -234,7 +236,7 @@ export default async function SessionDetailPage({
       { from: 0, to: 99 }
     ),
     adminList<UserStat>(
-      `hiking_session_user_stats?select=user_id,distance_km,elapsed_minutes,elevation_gain_m,updated_at,track_segments&session_id=eq.${id}`,
+      `hiking_session_user_stats?select=user_id,distance_km,elapsed_minutes,elevation_gain_m,calories_kcal,updated_at,track_segments&session_id=eq.${id}`,
       { from: 0, to: 199 }
     ),
   ]);
@@ -297,6 +299,37 @@ export default async function SessionDetailPage({
       return b.distanceKm - a.distanceKm;
     })
     .map(({ userId, nickname, segments }) => ({ userId, nickname, segments }));
+
+  // 호스트 체중 (칼로리 추정용) + 이 세션이 원인이 된 씨앗 지급 합계.
+  // ref_id = session.id 로 정확히 세션 완주 보상만 집계 (앱 표기와 일치).
+  // 이 세션에서 수집한 treasure_box 는 별도(ref_id=treasure_id) 라 여기 안 포함.
+  const [{ rows: bodyRows }, { rows: seedRows }] = await Promise.all([
+    adminList<{ weight_kg: number | null }>(
+      `user_body_profile?select=weight_kg&user_id=eq.${session.host_id}&limit=1`
+    ),
+    adminList<{ delta: number; reason: string | null }>(
+      `currency_ledger?select=delta,reason&user_id=eq.${session.host_id}&currency=eq.seed&delta=gt.0&ref_id=eq.${session.id}`,
+      { from: 0, to: 199 }
+    ),
+  ]);
+  const hostWeightKg = bodyRows[0]?.weight_kg ?? null;
+  const seedsEarned = seedRows.reduce((sum, r) => sum + (r.delta ?? 0), 0);
+  const hostElevationM =
+    hostStat?.elevation_gain_m ?? fallbackStat?.elevation_gain_m ?? null;
+  // 칼로리: DB 저장값(앱이 계산해 저장) 우선. 없으면 BO 에서 임시로 재계산해 "(추정)" 표시.
+  const storedCaloriesKcal =
+    hostStat?.calories_kcal ?? fallbackStat?.calories_kcal ?? null;
+  const estimatedCaloriesKcal =
+    storedCaloriesKcal == null
+      ? estimateCaloriesKcal({
+          distanceKm: displayDistanceKm,
+          elapsedMinutes: displayElapsedMin,
+          elevationGainM: hostElevationM,
+          weightKg: hostWeightKg,
+        })
+      : null;
+  const caloriesKcal = storedCaloriesKcal ?? estimatedCaloriesKcal;
+  const caloriesIsEstimate = storedCaloriesKcal == null;
 
   // 트레일 매핑 (이름 + GPX 좌표)
   let trailName: string | null = null;
@@ -404,28 +437,30 @@ export default async function SessionDetailPage({
             />
             <InfoRow
               icon={MapPin}
-              label="산"
-              value={session.mountain_name}
+              label="지도"
+              value={trailName ?? session.mountain_name}
             />
-            <InfoRow
-              icon={MapPin}
-              label="만남 장소"
-              value={
-                session.meeting_place_lat != null &&
-                session.meeting_place_lng != null ? (
-                  <a
-                    href={`https://map.kakao.com/link/map/${encodeURIComponent(session.meeting_place)},${session.meeting_place_lat},${session.meeting_place_lng}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="hover:text-orange-300"
-                  >
-                    {session.meeting_place}
-                  </a>
-                ) : (
-                  session.meeting_place
-                )
-              }
-            />
+            {session.meeting_place ? (
+              <InfoRow
+                icon={MapPin}
+                label="만남 장소"
+                value={
+                  session.meeting_place_lat != null &&
+                  session.meeting_place_lng != null ? (
+                    <a
+                      href={`https://map.kakao.com/link/map/${encodeURIComponent(session.meeting_place)},${session.meeting_place_lat},${session.meeting_place_lng}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="hover:text-orange-300"
+                    >
+                      {session.meeting_place}
+                    </a>
+                  ) : (
+                    session.meeting_place
+                  )
+                }
+              />
+            ) : null}
             <InfoRow
               icon={Calendar}
               label="생성 시각"
@@ -445,13 +480,6 @@ export default async function SessionDetailPage({
                   : "—"
               }
             />
-            {session.trail_id ? (
-              <InfoRow
-                icon={MapPin}
-                label="연결된 트레일"
-                value={trailName ?? session.trail_id.slice(0, 8) + "…"}
-              />
-            ) : null}
             {session.started_at ? (
               <InfoRow
                 icon={Calendar}
@@ -515,6 +543,48 @@ export default async function SessionDetailPage({
                 }
               />
             ) : null}
+            {hostElevationM != null && hostElevationM > 0 ? (
+              <InfoRow
+                icon={MapPin}
+                label="누적 상승"
+                value={`${hostElevationM} m`}
+              />
+            ) : null}
+            {caloriesKcal != null ? (
+              <InfoRow
+                icon={Calendar}
+                label="소모 칼로리"
+                value={
+                  <>
+                    {caloriesIsEstimate ? "약 " : ""}
+                    {caloriesKcal.toLocaleString()} kcal
+                    {caloriesIsEstimate ? (
+                      <span className="ml-1.5 text-[10px] text-gray-500">
+                        (추정 · {hostWeightKg ? `${hostWeightKg}kg` : "체중 미보유, 65kg 가정"})
+                      </span>
+                    ) : null}
+                  </>
+                }
+              />
+            ) : null}
+            <InfoRow
+              icon={Users}
+              label="획득 씨앗"
+              value={
+                seedsEarned > 0 ? (
+                  <>
+                    {seedsEarned.toLocaleString()}개
+                    {seedRows.length > 1 ? (
+                      <span className="ml-1.5 text-[10px] text-gray-500">
+                        ({seedRows.length}건 합산)
+                      </span>
+                    ) : null}
+                  </>
+                ) : (
+                  <span className="text-gray-500">—</span>
+                )
+              }
+            />
             {session.invite_code ? (
               <InfoRow
                 icon={Lock}
@@ -566,13 +636,13 @@ export default async function SessionDetailPage({
         {participants.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-white/[0.03] text-gray-400 text-xs">
+              <thead className="bg-white/[0.03] text-gray-200 text-xs">
                 <tr>
-                  <th className="text-left px-4 py-2 font-medium">유저</th>
-                  <th className="text-left px-3 py-2 font-medium">상태</th>
-                  <th className="text-left px-3 py-2 font-medium">초대 경로</th>
-                  <th className="text-left px-4 py-2 font-medium">신청</th>
-                  <th className="text-left px-4 py-2 font-medium">결정</th>
+                  <th className="text-left px-4 py-2 font-semibold">유저</th>
+                  <th className="text-left px-3 py-2 font-semibold">상태</th>
+                  <th className="text-left px-3 py-2 font-semibold">초대 경로</th>
+                  <th className="text-left px-4 py-2 font-semibold">신청</th>
+                  <th className="text-left px-4 py-2 font-semibold">결정</th>
                 </tr>
               </thead>
               <tbody>
@@ -807,10 +877,10 @@ function InfoRow({
 }) {
   return (
     <div className="flex items-start gap-2.5">
-      <Icon className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
+      <Icon className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
       <div className="min-w-0">
-        <div className="text-[11px] text-gray-500">{label}</div>
-        <div className="text-gray-200 truncate">{value}</div>
+        <div className="text-xs text-gray-300 font-medium">{label}</div>
+        <div className="text-gray-100 truncate mt-0.5">{value}</div>
       </div>
     </div>
   );

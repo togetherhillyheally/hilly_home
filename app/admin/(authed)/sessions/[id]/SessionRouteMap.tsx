@@ -12,11 +12,12 @@ export type ParticipantTrack = {
   segments: LngLat[][];
 };
 
-// 여러 참가자 색상 팔레트 (오렌지 → 핑크 → 시안 → 그린 순환)
+// 여러 참가자 색상 팔레트 (블루 시작 — 빨간색 트레일 원본과 확실히 대조).
+// 두 번째 참가자부터는 시안·핑크·라임 등 순환.
 const TRACK_COLORS = [
-  "#fb923c",
-  "#ec4899",
+  "#3b82f6",
   "#22d3ee",
+  "#ec4899",
   "#84cc16",
   "#a78bfa",
   "#facc15",
