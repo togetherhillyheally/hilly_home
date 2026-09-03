@@ -335,18 +335,36 @@ export default async function SessionsPage({
                     </td>
                     <td className="px-4 py-3 text-xs text-gray-300 whitespace-nowrap">
                       <div>{formatDate(s.meeting_at)}</div>
-                      <div className="text-[10px] text-gray-500">
-                        {s.duration_minutes}분 예정
-                      </div>
+                      {s.duration_minutes != null ? (
+                        <div className="text-[10px] text-gray-500">
+                          {s.duration_minutes}분 예정
+                        </div>
+                      ) : null}
                     </td>
                     <td className="px-3 py-3 text-center text-xs text-gray-300">
                       {s.capacity}명
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge status={s.status} />
-                      {s.started_at ? (
+                      {s.started_at && s.started_at !== s.meeting_at ? (
                         <div className="text-[10px] text-gray-500 mt-1">
                           시작 {formatDate(s.started_at)}
+                        </div>
+                      ) : null}
+                      {s.status === "completed" &&
+                      (s.actual_distance_km != null ||
+                        s.actual_elapsed_minutes != null) ? (
+                        <div className="text-[10px] text-emerald-300/80 mt-1 whitespace-nowrap">
+                          {s.actual_distance_km != null
+                            ? `${Number(s.actual_distance_km).toFixed(2)}km`
+                            : null}
+                          {s.actual_distance_km != null &&
+                          s.actual_elapsed_minutes != null
+                            ? " · "
+                            : null}
+                          {s.actual_elapsed_minutes != null
+                            ? `${s.actual_elapsed_minutes}분`
+                            : null}
                         </div>
                       ) : null}
                     </td>

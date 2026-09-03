@@ -8,7 +8,6 @@ import {
   Lock,
   MapPin,
   MessageCircle,
-  MessageSquare,
   Navigation,
   Star,
   User,
@@ -17,6 +16,10 @@ import {
 } from "lucide-react";
 import { adminList } from "@/lib/admin-rest";
 import { isAbandonedSession, isShortSession } from "@/lib/session-flags";
+import SessionRouteMap, {
+  type ParticipantTrack,
+} from "./SessionRouteMap";
+import SessionTabs from "./SessionTabs";
 
 export const dynamic = "force-dynamic";
 
@@ -103,6 +106,7 @@ type UserStat = {
   elapsed_minutes: number | null;
   elevation_gain_m: number | null;
   updated_at: string;
+  track_segments: number[][][] | null;
 };
 
 type ProfileMini = { id: string; nickname: string | null };
@@ -226,7 +230,7 @@ export default async function SessionDetailPage({
       { from: 0, to: 99 }
     ),
     adminList<UserStat>(
-      `hiking_session_user_stats?select=user_id,distance_km,elapsed_minutes,elevation_gain_m,updated_at&session_id=eq.${id}`,
+      `hiking_session_user_stats?select=user_id,distance_km,elapsed_minutes,elevation_gain_m,updated_at,track_segments&session_id=eq.${id}`,
       { from: 0, to: 199 }
     ),
   ]);
@@ -259,6 +263,7 @@ export default async function SessionDetailPage({
       ...notices.map((n) => n.author_id),
       ...chatMessages.map((c) => c.user_id),
       ...liveParticipants.map((l) => l.user_id),
+      ...userStats.map((s) => s.user_id),
     ])
   );
   const userMap = new Map<string, string | null>();
@@ -268,6 +273,26 @@ export default async function SessionDetailPage({
     );
     rows.forEach((u) => userMap.set(u.id, u.nickname));
   }
+
+  // 지도 경로 데이터 — 유효한 세그먼트만 (2점 이상). 호스트 먼저, 그다음 거리 내림차순.
+  const tracks: ParticipantTrack[] = userStats
+    .map((s) => ({
+      userId: s.user_id,
+      nickname: userMap.get(s.user_id) ?? null,
+      segments: Array.isArray(s.track_segments)
+        ? (s.track_segments as number[][][])
+            .filter((seg) => Array.isArray(seg) && seg.length >= 2)
+            .map((seg) => seg as [number, number][])
+        : [],
+      distanceKm: Number(s.distance_km ?? 0),
+    }))
+    .filter((t) => t.segments.length > 0)
+    .sort((a, b) => {
+      if (a.userId === session.host_id) return -1;
+      if (b.userId === session.host_id) return 1;
+      return b.distanceKm - a.distanceKm;
+    })
+    .map(({ userId, nickname, segments }) => ({ userId, nickname, segments }));
 
   // 트레일 매핑
   let trailName: string | null = null;
@@ -509,13 +534,23 @@ export default async function SessionDetailPage({
         </div>
       </div>
 
-      {/* 참가자 */}
-      <Section
-        title="참가자"
-        count={participants.length}
-        icon={Users}
-        empty="참가자가 없어요."
-      >
+      {/* 경로 지도 — 참가자별 색상 오버레이 */}
+      <div className="mb-6">
+        <SessionRouteMap tracks={tracks} />
+      </div>
+
+      <SessionTabs
+        overviewCount={participants.length}
+        activityCount={liveParticipants.length}
+        chatCount={chatTotal}
+        overview={
+          <div className="flex flex-col gap-4">
+            <Section
+              title="참가자"
+              count={participants.length}
+              icon={Users}
+              empty="참가자가 없어요."
+            >
         {participants.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -570,9 +605,8 @@ export default async function SessionDetailPage({
         ) : null}
       </Section>
 
-      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* 공지 */}
-        <Section
+      {/* 공지 (개요 탭) */}
+      <Section
           title="호스트 공지"
           count={notices.length}
           icon={Bell}
@@ -607,9 +641,95 @@ export default async function SessionDetailPage({
             </li>
           ))}
         </Section>
-
-        {/* 후기 */}
-        <Section
+          </div>
+        }
+        activity={
+          <Section
+            title="실시간 위치 (라이브)"
+            count={liveParticipants.length}
+            icon={Navigation}
+            empty="라이브 참가 기록이 없어요."
+            asList
+          >
+            {liveParticipants.map((l) => (
+              <li
+                key={l.user_id}
+                className="px-5 py-3 border-t border-white/5 first:border-t-0 hover:bg-white/[0.02]"
+              >
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Link
+                      href={`/admin/users/${l.user_id}`}
+                      className="text-sm text-white hover:text-orange-300 truncate"
+                    >
+                      {l.nickname ?? userMap.get(l.user_id) ?? "(없음)"}
+                    </Link>
+                    {l.hidden ? (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] border bg-gray-500/15 text-gray-300 border-gray-500/30">
+                        숨김
+                      </span>
+                    ) : null}
+                  </div>
+                  <span className="text-[10px] text-gray-500 whitespace-nowrap">
+                    {formatDate(l.last_seen)}
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px]">
+                  {l.lat != null && l.lng != null ? (
+                    <a
+                      href={`https://map.kakao.com/link/map/${encodeURIComponent(l.nickname ?? "위치")},${l.lat},${l.lng}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-mono text-gray-300 hover:text-orange-300"
+                    >
+                      {l.lat.toFixed(5)}, {l.lng.toFixed(5)}
+                    </a>
+                  ) : (
+                    <span className="text-gray-600">위치 없음</span>
+                  )}
+                  <span className="text-gray-500">
+                    스탬프 {l.stamp_count ?? 0}
+                  </span>
+                  <span className="text-gray-500">
+                    참가 {formatDate(l.joined_at)}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </Section>
+        }
+        chat={
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Section
+              title={`채팅 메시지 (최근 ${chatMessages.length}건 / 총 ${chatTotal})`}
+              count={chatMessages.length}
+              icon={MessageCircle}
+              empty="채팅 메시지가 없어요."
+              asList
+            >
+              {chatMessages.map((m) => (
+                <li
+                  key={m.id}
+                  className="px-5 py-3 border-t border-white/5 first:border-t-0 hover:bg-white/[0.02]"
+                >
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <Link
+                      href={`/admin/users/${m.user_id}`}
+                      className="text-xs text-gray-200 hover:text-orange-300 truncate"
+                    >
+                      {m.nickname ?? userMap.get(m.user_id) ?? "(없음)"}
+                    </Link>
+                    <span className="text-[10px] text-gray-500 whitespace-nowrap">
+                      {formatDate(m.created_at)}
+                    </span>
+                  </div>
+                  <div className="text-sm text-gray-100 whitespace-pre-wrap break-words">
+                    {m.content}
+                  </div>
+                </li>
+              ))}
+            </Section>
+            <Section
           title="후기"
           count={reviews.length}
           icon={Star}
@@ -657,94 +777,9 @@ export default async function SessionDetailPage({
             </li>
           ))}
         </Section>
-      </div>
-
-      {/* 실시간 위치 & 채팅 */}
-      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Section
-          title="실시간 위치 (라이브)"
-          count={liveParticipants.length}
-          icon={Navigation}
-          empty="라이브 참가 기록이 없어요."
-          asList
-        >
-          {liveParticipants.map((l) => (
-            <li
-              key={l.user_id}
-              className="px-5 py-3 border-t border-white/5 first:border-t-0 hover:bg-white/[0.02]"
-            >
-              <div className="flex items-start justify-between gap-2 mb-1">
-                <div className="flex items-center gap-2 min-w-0">
-                  <Link
-                    href={`/admin/users/${l.user_id}`}
-                    className="text-sm text-white hover:text-orange-300 truncate"
-                  >
-                    {l.nickname ?? userMap.get(l.user_id) ?? "(없음)"}
-                  </Link>
-                  {l.hidden ? (
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] border bg-gray-500/15 text-gray-300 border-gray-500/30">
-                      숨김
-                    </span>
-                  ) : null}
-                </div>
-                <span className="text-[10px] text-gray-500 whitespace-nowrap">
-                  {formatDate(l.last_seen)}
-                </span>
-              </div>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px]">
-                {l.lat != null && l.lng != null ? (
-                  <a
-                    href={`https://map.kakao.com/link/map/${encodeURIComponent(l.nickname ?? "위치")},${l.lat},${l.lng}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="font-mono text-gray-300 hover:text-orange-300"
-                  >
-                    {l.lat.toFixed(5)}, {l.lng.toFixed(5)}
-                  </a>
-                ) : (
-                  <span className="text-gray-600">위치 없음</span>
-                )}
-                <span className="text-gray-500">
-                  스탬프 {l.stamp_count ?? 0}
-                </span>
-                <span className="text-gray-500">
-                  참가 {formatDate(l.joined_at)}
-                </span>
-              </div>
-            </li>
-          ))}
-        </Section>
-
-        <Section
-          title={`채팅 메시지 (최근 ${chatMessages.length}건 / 총 ${chatTotal})`}
-          count={chatMessages.length}
-          icon={MessageCircle}
-          empty="채팅 메시지가 없어요."
-          asList
-        >
-          {chatMessages.map((m) => (
-            <li
-              key={m.id}
-              className="px-5 py-3 border-t border-white/5 first:border-t-0 hover:bg-white/[0.02]"
-            >
-              <div className="flex items-start justify-between gap-2 mb-1">
-                <Link
-                  href={`/admin/users/${m.user_id}`}
-                  className="text-xs text-gray-200 hover:text-orange-300 truncate"
-                >
-                  {m.nickname ?? userMap.get(m.user_id) ?? "(없음)"}
-                </Link>
-                <span className="text-[10px] text-gray-500 whitespace-nowrap">
-                  {formatDate(m.created_at)}
-                </span>
-              </div>
-              <div className="text-sm text-gray-100 whitespace-pre-wrap break-words">
-                {m.content}
-              </div>
-            </li>
-          ))}
-        </Section>
-      </div>
+          </div>
+        }
+      />
     </main>
   );
 }
