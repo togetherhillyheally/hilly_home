@@ -19,7 +19,8 @@ type StatusFilter =
   | "completed"
   | "open"
   | "cancelled"
-  | "short";
+  | "short"
+  | "abandoned";
 
 const STATUS_META: Record<
   "open" | "closed" | "completed" | "cancelled",
@@ -50,6 +51,7 @@ const TAB_LABELS: Record<StatusFilter, string> = {
   open: "모집중",
   cancelled: "취소",
   short: "짧은세션",
+  abandoned: "방치됨",
 };
 
 type Session = {
@@ -125,9 +127,14 @@ export default async function SessionsPage({
   const sp = await searchParams;
   const q = (sp.q ?? "").trim();
   const status = (
-    ["completed_ok", "completed", "open", "cancelled", "short"].includes(
-      sp.status ?? ""
-    )
+    [
+      "completed_ok",
+      "completed",
+      "open",
+      "cancelled",
+      "short",
+      "abandoned",
+    ].includes(sp.status ?? "")
       ? sp.status
       : "all"
   ) as StatusFilter;
@@ -150,6 +157,9 @@ export default async function SessionsPage({
       `or(actual_elapsed_minutes.lt.${SHORT_SESSION_MAX_MINUTES},actual_distance_km.lte.${SHORT_SESSION_MAX_KM})`
     );
   }
+  if (status === "abandoned") {
+    andGroups.push(`and(started_at.not.is.null,actual_elapsed_minutes.is.null)`);
+  }
   if (status === "completed_ok") {
     // "짧은 세션"과 "방치됨"을 제외한 정상 완료.
     // actual_elapsed_minutes 는 null 을 허용하지 않는다 — null 이면 방치(자동종료)
@@ -162,7 +172,7 @@ export default async function SessionsPage({
   if (andGroups.length > 0) {
     params.set("and", `(${andGroups.join(",")})`);
   }
-  if (status === "completed_ok") {
+  if (status === "completed_ok" || status === "abandoned") {
     params.set("status", "eq.completed");
   } else if (status !== "all" && status !== "short") {
     params.set("status", `eq.${status}`);
@@ -194,6 +204,7 @@ export default async function SessionsPage({
     "open",
     "cancelled",
     "short",
+    "abandoned",
   ];
 
   return (
@@ -243,11 +254,15 @@ export default async function SessionsPage({
                   active
                     ? t === "short"
                       ? "bg-rose-500/20 text-rose-200 border border-rose-500/40"
-                      : "bg-orange-500/20 text-orange-200 border border-orange-500/40"
+                      : t === "abandoned"
+                        ? "bg-amber-500/20 text-amber-200 border border-amber-500/40"
+                        : "bg-orange-500/20 text-orange-200 border border-orange-500/40"
                     : "bg-white/[0.04] text-gray-400 border border-white/10 hover:text-white"
                 }`}
               >
-                {t === "short" ? <AlertTriangle className="h-3 w-3" /> : null}
+                {t === "short" || t === "abandoned" ? (
+                  <AlertTriangle className="h-3 w-3" />
+                ) : null}
                 {TAB_LABELS[t]}
               </Link>
             );
