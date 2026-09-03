@@ -56,7 +56,7 @@ function NavBody({
         {nav.map((group, gi) => (
           <div key={gi}>
             {group.title ? (
-              <div className="px-3 mb-2 text-[10px] font-semibold tracking-[0.12em] text-gray-500 uppercase">
+              <div className="px-3 mb-2 text-[11px] font-bold tracking-[0.12em] text-gray-300 uppercase">
                 {group.title}
               </div>
             ) : null}
@@ -77,8 +77,8 @@ function NavBody({
                       className={cn(
                         "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
                         active
-                          ? "bg-white/[0.08] text-white"
-                          : "text-gray-400 hover:bg-white/[0.04] hover:text-white"
+                          ? "bg-white/[0.08] text-white font-medium"
+                          : "text-gray-200 hover:bg-white/[0.04] hover:text-white"
                       )}
                     >
                       <Icon className="h-4 w-4 flex-shrink-0" />
