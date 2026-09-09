@@ -20,6 +20,7 @@ import {
   UserMinus,
   Users,
   UserX,
+  IdCard,
   type LucideIcon,
 } from "lucide-react";
 import type { MenuKey } from "@/lib/admin-permissions";
@@ -194,6 +195,12 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         label: "닉네임 차단",
         icon: UserX,
         menuKey: "nickname-denylist",
+      },
+      {
+        href: "/admin/trail-resumes",
+        label: "트레일 이력서",
+        icon: IdCard,
+        menuKey: "trail-resumes",
       },
     ],
   },
