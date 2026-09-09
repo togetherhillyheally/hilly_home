@@ -12,19 +12,16 @@ function formatPeriod(exp: TrailExperience): string {
   return `${from}${to ? ` ~ ${to}` : ""}`;
 }
 
-/** 사진 URL 을 서버에서 fetch 해 data:image base64 로 반환. 실패 시 null (인쇄 preview 대기 방지). */
-async function fetchPhotoDataUrl(url: string | null): Promise<string | null> {
-  if (!url) return null;
-  try {
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) return null;
-    const contentType = res.headers.get("content-type") || "image/jpeg";
-    const buf = await res.arrayBuffer();
-    const b64 = Buffer.from(buf).toString("base64");
-    return `data:${contentType};base64,${b64}`;
-  } catch {
-    return null;
-  }
+/** 트레일 경력 정렬 — 시작일 최신 순. 날짜 미기입은 맨 아래. */
+function sortByDateDesc(exps: TrailExperience[]): TrailExperience[] {
+  return [...exps].sort((a, b) => {
+    const av = a.period_from?.trim() || "";
+    const bv = b.period_from?.trim() || "";
+    if (!av && !bv) return 0;
+    if (!av) return 1;
+    if (!bv) return -1;
+    return bv.localeCompare(av);
+  });
 }
 
 /**
@@ -47,31 +44,35 @@ export default async function TrailResumePrintPage({
   const r = rows[0];
   if (!r) notFound();
 
-  const exps: TrailExperience[] = Array.isArray(r.trail_experiences)
-    ? r.trail_experiences
-    : [];
-  const photoData = await fetchPhotoDataUrl(r.photo_url);
+  const exps: TrailExperience[] = sortByDateDesc(
+    Array.isArray(r.trail_experiences) ? r.trail_experiences : []
+  );
 
   return (
     <>
       <style
-        // 화면·인쇄 모두 이 스타일 우선 적용. body 를 흰색으로 덮음.
+        // 화면에서는 A4 시트가 회색 배경 위에 떠 있는 프리뷰 모드,
+        // 인쇄에서는 회색 배경/그림자 제거하고 순수 A4 흰 페이지만 남김.
         dangerouslySetInnerHTML={{
           __html: `
-            html, body { background: #ffffff !important; color: #111827 !important; }
-            body { margin: 0; }
+            html, body { background: #f3f4f6; color: #111827; margin: 0; }
             @page { size: A4; margin: 20mm 18mm; }
             @media print {
+              html, body { background: #ffffff !important; }
               .no-print { display: none !important; }
+              .a4-sheet { box-shadow: none !important; margin: 0 !important; width: auto !important; min-height: 0 !important; padding: 0 !important; }
             }
           `,
         }}
       />
-      <div className="no-print bg-amber-50 border-b border-amber-200 px-8 py-3 text-xs text-amber-900">
-        <strong>PDF 저장:</strong> ⌘+P (Mac) / Ctrl+P (Windows) → 대상을 &quot;PDF로 저장&quot; 선택.
-      </div>
-
-      <main className="mx-auto max-w-[210mm] px-8 py-10 print:p-0 text-[13px] leading-relaxed">
+      <main
+        className="a4-sheet mx-auto my-8 bg-white shadow-lg text-[13px] leading-relaxed"
+        style={{
+          width: "210mm",
+          minHeight: "297mm",
+          padding: "20mm 18mm",
+        }}
+      >
         {/* 헤더 — 제목 + 사진 */}
         <header className="flex items-start justify-between gap-6 pb-6 mb-6 border-b-2 border-gray-800">
           <div>
@@ -82,11 +83,15 @@ export default async function TrailResumePrintPage({
               {r.name}
             </div>
           </div>
-          {photoData ? (
+          {r.photo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={photoData}
+              src={r.photo_url}
               alt=""
+              width={90}
+              height={120}
+              loading="eager"
+              decoding="sync"
               className="w-[90px] h-[120px] object-cover border border-gray-300"
             />
           ) : null}
@@ -147,15 +152,6 @@ export default async function TrailResumePrintPage({
           </ResumeRow>
         </section>
 
-        {r.notes ? (
-          <section className="mb-8">
-            <ResumeRow label="추가 안내">
-              <p className="pt-3 whitespace-pre-wrap text-gray-800">
-                {r.notes}
-              </p>
-            </ResumeRow>
-          </section>
-        ) : null}
       </main>
     </>
   );

@@ -346,21 +346,6 @@ export default function TrailResumeForm() {
           </div>
         </section>
 
-        {/* 기타 */}
-        <section className="rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-sm p-6 lg:p-8 mb-8">
-          <h2 className="text-lg font-semibold mb-4 flex items-baseline gap-2">
-            <span className="text-orange-400 tabular-nums text-sm">03</span>
-            <span className="text-white">추가로 알려주실 내용</span>
-          </h2>
-          <textarea
-            value={form.notes}
-            onChange={(e) => set("notes", e.target.value)}
-            rows={4}
-            placeholder="자유롭게 적어주세요 (선택)"
-            className="w-full rounded-lg bg-white/[0.03] border border-white/10 text-gray-100 placeholder:text-gray-600 px-3 py-2 text-sm focus:outline-none focus:border-orange-400/40"
-          />
-        </section>
-
         <div className="flex flex-col items-center gap-3">
           {error ? (
             <p className="text-sm text-red-400 text-center" role="alert">

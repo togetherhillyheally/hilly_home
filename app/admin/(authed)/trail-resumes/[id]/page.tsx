@@ -36,9 +36,18 @@ export default async function TrailResumeDetailPage({
   const r = rows[0];
   if (!r) notFound();
 
-  const exps: TrailExperience[] = Array.isArray(r.trail_experiences)
+  // 최신순 정렬 (시작일 desc, 미기입은 맨 아래)
+  const rawExps: TrailExperience[] = Array.isArray(r.trail_experiences)
     ? r.trail_experiences
     : [];
+  const exps = [...rawExps].sort((a, b) => {
+    const av = a.period_from?.trim() || "";
+    const bv = b.period_from?.trim() || "";
+    if (!av && !bv) return 0;
+    if (!av) return 1;
+    if (!bv) return -1;
+    return bv.localeCompare(av);
+  });
 
   return (
     <main className="p-6 lg:p-10">
@@ -130,16 +139,6 @@ export default async function TrailResumeDetailPage({
           )}
         </section>
 
-        {r.notes ? (
-          <section className="pt-6 mt-6 border-t border-white/5">
-            <h2 className="text-sm font-semibold text-gray-300 mb-3">
-              추가 안내
-            </h2>
-            <p className="text-sm text-gray-200 whitespace-pre-wrap">
-              {r.notes}
-            </p>
-          </section>
-        ) : null}
       </div>
     </main>
   );
