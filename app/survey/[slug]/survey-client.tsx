@@ -7,6 +7,7 @@ import { CheckCircle2, Loader2 } from "lucide-react";
 
 import type { Question, Survey } from "@/lib/survey-parser";
 import { submitSurveyResponse, type SurveyAnswers } from "@/lib/supabase";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
@@ -107,15 +108,19 @@ export default function SurveyClient({ survey, slug }: Props) {
         ) : (
           <>
             <div className="mb-12 text-center">
-              <h1 className="text-3xl lg:text-4xl font-bold mb-3 leading-tight">
+              <h1 className="text-3xl lg:text-4xl font-bold mb-3 leading-tight whitespace-pre-line">
                 <span className="bg-gradient-to-r from-orange-300 via-orange-400 to-pink-500 bg-clip-text text-transparent">
                   {survey.title}
                 </span>
               </h1>
-              <p className="text-sm text-gray-400">
-                자유롭게 생각나는대로 답해주세요. 어려운 질문엔 답을 안 써도
-                돼요.
-              </p>
+              {survey.intro ? (
+                <IntroBlock intro={survey.intro} />
+              ) : (
+                <p className="text-sm text-gray-400">
+                  자유롭게 생각나는대로 답해주세요. 어려운 질문엔 답을 안 써도
+                  돼요.
+                </p>
+              )}
             </div>
 
             <div className="space-y-10">
@@ -200,6 +205,85 @@ function SubmittedView() {
   );
 }
 
+/** 인트로 블록 — markdown 표 문법(| a | b |)을 만나면 <table> 로 렌더. 그 외는 텍스트. */
+function IntroBlock({ intro }: { intro: string }) {
+  const lines = intro.split("\n");
+  const blocks: Array<
+    { kind: "text"; content: string } | { kind: "table"; rows: string[][] }
+  > = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    const isTableRow = /^\s*\|.*\|\s*$/.test(line);
+    if (isTableRow) {
+      const rows: string[][] = [];
+      while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) {
+        const cells = lines[i]
+          .trim()
+          .slice(1, -1)
+          .split("|")
+          .map((c) => c.trim());
+        // 헤더 구분자 라인(| --- | --- |)은 스킵
+        if (!cells.every((c) => /^:?-{3,}:?$/.test(c))) rows.push(cells);
+        i++;
+      }
+      if (rows.length > 0) blocks.push({ kind: "table", rows });
+      continue;
+    }
+    // 연속된 non-table 라인 묶기
+    const textLines: string[] = [];
+    while (i < lines.length && !/^\s*\|.*\|\s*$/.test(lines[i])) {
+      textLines.push(lines[i]);
+      i++;
+    }
+    const content = textLines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+    if (content) blocks.push({ kind: "text", content });
+  }
+
+  return (
+    <div className="mt-6 rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-sm p-6 lg:p-8 text-left text-base text-gray-200 leading-relaxed space-y-4">
+      {blocks.map((b, idx) =>
+        b.kind === "text" ? (
+          <div key={idx} className="whitespace-pre-wrap">
+            {b.content}
+          </div>
+        ) : (
+          <div key={idx} className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead className="bg-white/[0.04] text-gray-300 text-xs">
+                <tr>
+                  {b.rows[0].map((h, ci) => (
+                    <th
+                      key={ci}
+                      className="text-left px-3 py-2 font-semibold border-b border-white/10"
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {b.rows.slice(1).map((r, ri) => (
+                  <tr key={ri} className="border-b border-white/5">
+                    {r.map((c, ci) => (
+                      <td
+                        key={ci}
+                        className="px-3 py-2 text-gray-200 tabular-nums"
+                      >
+                        {c}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
+      )}
+    </div>
+  );
+}
+
 function QuestionField({
   question,
   value,
@@ -220,14 +304,21 @@ function QuestionField({
       {question.type === "choice" && (
         <ChoiceField question={question} value={value} onChange={onChange} />
       )}
-      {question.type === "text" && (
-        <Textarea
-          value={typeof value === "string" ? value : ""}
-          onChange={(e) => onChange(e.target.value || null)}
-          placeholder="자유롭게 적어주세요"
-          className="bg-white/[0.03] border-white/10 text-gray-100 placeholder:text-gray-600 focus-visible:ring-orange-400/40"
-        />
-      )}
+      {question.type === "text" &&
+        (question.long ? (
+          <Textarea
+            value={typeof value === "string" ? value : ""}
+            onChange={(e) => onChange(e.target.value || null)}
+            placeholder="자유롭게 적어주세요"
+            className="bg-white/[0.03] border-white/10 text-gray-100 placeholder:text-gray-600 focus-visible:ring-orange-400/40"
+          />
+        ) : (
+          <Input
+            value={typeof value === "string" ? value : ""}
+            onChange={(e) => onChange(e.target.value || null)}
+            className="bg-white/[0.03] border-white/10 text-gray-100 placeholder:text-gray-600 focus-visible:ring-orange-400/40"
+          />
+        ))}
     </div>
   );
 }

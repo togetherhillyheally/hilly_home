@@ -22,6 +22,7 @@ function formatDate(iso: string): string {
 }
 
 export default async function SurveysPage() {
+  const surveyAdminKey = process.env.SURVEY_ADMIN_KEY ?? "";
   const { rows, total } = await adminList<Response>(
     "survey_responses?select=survey_slug,user_id,submitted_at&order=submitted_at.desc",
     { from: 0, to: 4999, count: true }
@@ -75,7 +76,8 @@ export default async function SurveysPage() {
           {groupArr.map((g) => (
             <Link
               key={g.slug}
-              href={`/survey/${g.slug}/admin`}
+              href={`/survey/${g.slug}/admin?key=${encodeURIComponent(surveyAdminKey)}`}
+              target="_blank"
               className="group rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/20 transition-colors p-5"
             >
               <div className="flex items-start justify-between gap-3 mb-4">
