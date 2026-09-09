@@ -6,8 +6,11 @@ import Link from "next/link";
 import { parseSurvey, type Question, type Section } from "@/lib/survey-parser";
 import {
   fetchSurveyResponses,
+  fetchSurveyStatus,
   type SurveyResponseRow,
 } from "@/lib/supabase";
+import SurveyAdminTabs from "./SurveyAdminTabs";
+import CloseToggle from "./CloseToggle";
 
 const SURVEY_DIR = path.join(process.cwd(), "surveys");
 
@@ -47,6 +50,7 @@ export default async function SurveyAdminPage({
   } catch (e) {
     fetchError = e instanceof Error ? e.message : "응답 조회 실패";
   }
+  const status = await fetchSurveyStatus(slug);
 
   const lastAt = responses[0]?.submitted_at;
   const allQuestions = survey.sections.flatMap((s) => s.questions);
@@ -73,21 +77,29 @@ export default async function SurveyAdminPage({
       </header>
 
       <main className="relative z-10 container mx-auto px-4 py-10 max-w-5xl">
-        <div className="mb-10">
-          <h1 className="text-2xl lg:text-3xl font-bold mb-2">
-            <span className="bg-gradient-to-r from-orange-300 via-orange-400 to-pink-500 bg-clip-text text-transparent">
-              {survey.title}
-            </span>{" "}
-            <span className="text-gray-400 text-base">응답 모아보기</span>
-          </h1>
-          <div className="flex flex-wrap gap-4 text-sm text-gray-400">
-            <Stat label="총 응답" value={`${responses.length}건`} />
-            <Stat label="총 문항" value={`${allQuestions.length}개`} />
-            <Stat
-              label="마지막 응답"
-              value={lastAt ? formatDateTime(lastAt) : "-"}
-            />
+        <div className="mb-10 flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl lg:text-3xl font-bold mb-2">
+              <span className="bg-gradient-to-r from-orange-300 via-orange-400 to-pink-500 bg-clip-text text-transparent">
+                {survey.title}
+              </span>{" "}
+              <span className="text-gray-400 text-base">응답 모아보기</span>
+            </h1>
+            <div className="flex flex-wrap gap-4 text-sm text-gray-400">
+              <Stat label="총 응답" value={`${responses.length}건`} />
+              <Stat label="총 문항" value={`${allQuestions.length}개`} />
+              <Stat
+                label="마지막 응답"
+                value={lastAt ? formatDateTime(lastAt) : "-"}
+              />
+            </div>
           </div>
+          <CloseToggle
+            slug={slug}
+            adminKey={key}
+            initialIsClosed={status?.is_closed ?? false}
+            initialReason={status?.closed_reason ?? null}
+          />
         </div>
 
         {fetchError && (
@@ -101,15 +113,32 @@ export default async function SurveyAdminPage({
             아직 응답이 없습니다.
           </div>
         ) : (
-          <div className="space-y-8">
-            {survey.sections.map((section) => (
-              <SectionBlock
-                key={section.number}
-                section={section}
-                responses={responses}
-              />
-            ))}
-          </div>
+          <SurveyAdminTabs
+            cardCount={responses.length}
+            cards={
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {responses.map((r, i) => (
+                  <ResponseCard
+                    key={r.id ?? i}
+                    index={i + 1}
+                    response={r}
+                    sections={survey.sections}
+                  />
+                ))}
+              </div>
+            }
+            stats={
+              <div className="space-y-8">
+                {survey.sections.map((section) => (
+                  <SectionBlock
+                    key={section.number}
+                    section={section}
+                    responses={responses}
+                  />
+                ))}
+              </div>
+            }
+          />
         )}
       </main>
     </div>
@@ -122,6 +151,62 @@ function Stat({ label, value }: { label: string; value: string }) {
       <span className="text-gray-500">{label}</span>
       <span className="text-gray-100 font-medium">{value}</span>
     </div>
+  );
+}
+
+/**
+ * 응답 카드 — 한 지원자의 전체 응답을 한 카드에서 확인.
+ * 첫 질문(보통 이름) 은 헤더에 크게 강조.
+ */
+function ResponseCard({
+  index,
+  response,
+  sections,
+}: {
+  index: number;
+  response: SurveyResponseRow;
+  sections: Section[];
+}) {
+  const allQuestions = sections.flatMap((s) => s.questions);
+  const nameQ = allQuestions[0];
+  const nameValue = nameQ ? response.answers?.[nameQ.id] : null;
+  const nameStr =
+    nameValue == null || nameValue === "" ? "(이름 미기입)" : String(nameValue);
+  const restQuestions = allQuestions.slice(1);
+
+  return (
+    <section className="rounded-2xl border border-white/5 bg-white/[0.02] overflow-hidden">
+      <header className="px-5 py-3 border-b border-white/5 bg-white/[0.02] flex items-baseline justify-between gap-2">
+        <div className="flex items-baseline gap-2 min-w-0">
+          <span className="text-[11px] font-mono text-gray-500 tabular-nums">
+            #{index}
+          </span>
+          <h3 className="text-base font-bold text-white truncate">
+            {nameStr}
+          </h3>
+        </div>
+        <span className="text-[11px] text-gray-500 tabular-nums shrink-0">
+          {formatDateTime(response.submitted_at)}
+        </span>
+      </header>
+      <dl className="px-5 py-4 grid grid-cols-1 sm:grid-cols-[minmax(100px,140px)_1fr] gap-x-4 gap-y-2.5">
+        {restQuestions.map((q) => {
+          const v = response.answers?.[q.id];
+          const display =
+            v === null || v === undefined || v === "" ? null : String(v);
+          return (
+            <div key={q.id} className="contents">
+              <dt className="text-xs text-gray-400 pt-0.5 sm:pt-1">
+                {q.text}
+              </dt>
+              <dd className="text-sm text-gray-100 break-words whitespace-pre-wrap">
+                {display ?? <span className="text-gray-600">—</span>}
+              </dd>
+            </div>
+          );
+        })}
+      </dl>
+    </section>
   );
 }
 

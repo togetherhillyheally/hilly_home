@@ -48,6 +48,40 @@ export type SurveyResponseRow = {
   submitted_at: string;
 };
 
+export type SurveyStatus = {
+  survey_slug: string;
+  is_closed: boolean;
+  closed_at: string | null;
+  closed_reason: string | null;
+  updated_at: string;
+};
+
+/** 설문 마감 상태 조회. row 없으면 열린 상태(기본). */
+export async function fetchSurveyStatus(
+  slug: string
+): Promise<SurveyStatus | null> {
+  if (!SUPABASE_URL || !SUPABASE_KEY) return null;
+  const params = new URLSearchParams({
+    survey_slug: `eq.${slug}`,
+    select: "*",
+    limit: "1",
+  });
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/survey_status?${params}`,
+    {
+      method: "GET",
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+      },
+      cache: "no-store",
+    }
+  );
+  if (!res.ok) return null;
+  const rows = (await res.json()) as SurveyStatus[];
+  return rows[0] ?? null;
+}
+
 export async function fetchSurveyResponses(
   slug: string
 ): Promise<SurveyResponseRow[]> {
