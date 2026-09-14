@@ -94,12 +94,20 @@ export default async function SurveyAdminPage({
               />
             </div>
           </div>
-          <CloseToggle
-            slug={slug}
-            adminKey={key}
-            initialIsClosed={status?.is_closed ?? false}
-            initialReason={status?.closed_reason ?? null}
-          />
+          <div className="flex items-center gap-2">
+            <a
+              href={`/api/admin/surveys/${encodeURIComponent(slug)}/export?key=${encodeURIComponent(key)}`}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] px-3 h-9 text-sm font-semibold text-white transition"
+            >
+              HTML 다운로드
+            </a>
+            <CloseToggle
+              slug={slug}
+              adminKey={key}
+              initialIsClosed={status?.is_closed ?? false}
+              initialReason={status?.closed_reason ?? null}
+            />
+          </div>
         </div>
 
         {fetchError && (
