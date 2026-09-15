@@ -7,6 +7,7 @@ import {
   ArrowRight,
   Check,
   ChevronDown,
+  ChevronUp,
   Copy,
   Info,
   Lock,
@@ -67,6 +68,7 @@ const LS_PREFIX = "dongseo-survey/v1/";
 const LS_LAST_SEGMENT = "dongseo-survey/v1/last-segment";
 const LS_LAST_INVESTIGATOR = "dongseo-survey/v1/last-investigator";
 const LS_SEGMENT_LOCKED = "dongseo-survey/v1/segment-locked";
+const LS_HEADER_COLLAPSED = "dongseo-survey/v1/header-collapsed";
 
 function loadSegment(segment: string): SegmentState {
   if (typeof window === "undefined") {
@@ -183,6 +185,7 @@ export default function DongseoSurveyClient({
   const [itemTab, setItemTab] = useState<"range" | "facility" | "risk">(
     "range"
   );
+  const [headerCollapsed, setHeaderCollapsed] = useState(false);
 
   const rangeItems = useMemo(
     () => ITEMS.filter((it) => it.type === "range"),
@@ -219,15 +222,19 @@ export default function DongseoSurveyClient({
     | null;
   const [confirmState, setConfirmState] = useState<ConfirmState>(null);
 
-  // 최초 로드 — localStorage 에서 마지막 구간·조사자·잠금 상태 복원
+  // 최초 로드 — localStorage 에서 마지막 구간·조사자·잠금·헤더 상태 복원
   useEffect(() => {
     const lastSeg =
       window.localStorage.getItem(LS_LAST_SEGMENT) || SEGMENT_OPTIONS[0];
     const lastInv = window.localStorage.getItem(LS_LAST_INVESTIGATOR) || "";
     const locked = window.localStorage.getItem(LS_SEGMENT_LOCKED) === "1";
+    const collapsedPref =
+      window.localStorage.getItem(LS_HEADER_COLLAPSED) === "1";
     setSegment(lastSeg);
     setInvestigator(lastInv);
     setSegmentLocked(locked);
+    // 조사자 이름이 비어 있으면 무조건 펼쳐서 입력 유도
+    setHeaderCollapsed(collapsedPref && !!lastInv.trim());
     const loaded = loadSegment(lastSeg);
     setState({
       ...loaded,
@@ -235,6 +242,18 @@ export default function DongseoSurveyClient({
     });
     setReady(true);
   }, []);
+
+  const toggleHeaderCollapsed = () => {
+    setHeaderCollapsed((prev) => {
+      const next = !prev;
+      try {
+        window.localStorage.setItem(LS_HEADER_COLLAPSED, next ? "1" : "0");
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  };
 
   const toggleSegmentLock = () => {
     setSegmentLocked((prev) => {
@@ -578,33 +597,40 @@ export default function DongseoSurveyClient({
             onChange={changeSegment}
             locked={segmentLocked}
             onToggleLock={toggleSegmentLock}
+            collapsed={headerCollapsed}
+            onToggleCollapsed={toggleHeaderCollapsed}
+            investigator={investigator}
           />
-          <div className="mt-4">
-            <label className="block text-xs text-gray-400 mb-1.5">
-              조사자 <span className="text-red-400">*</span>
-            </label>
-            <input
-              value={investigator}
-              onChange={(e) => setInvestigator(e.target.value)}
-              readOnly={segmentLocked}
-              disabled={segmentLocked}
-              placeholder="예: 홍길동"
-              className={`w-full h-11 px-3 rounded-lg bg-white/[0.05] border text-white text-base placeholder:text-gray-600 focus:outline-none focus:border-orange-400/50 disabled:opacity-70 disabled:cursor-not-allowed ${
-                !investigator.trim()
-                  ? "border-red-500/40"
-                  : "border-white/10"
-              }`}
-            />
-            {!investigator.trim() ? (
-              <p className="mt-1.5 text-[11px] text-red-400">
-                조사자 이름을 먼저 입력해주세요. 카운터 기록은 이름 입력 후 활성화됩니다.
+          {!headerCollapsed ? (
+            <>
+              <div className="mt-4">
+                <label className="block text-xs text-gray-400 mb-1.5">
+                  조사자 <span className="text-red-400">*</span>
+                </label>
+                <input
+                  value={investigator}
+                  onChange={(e) => setInvestigator(e.target.value)}
+                  readOnly={segmentLocked}
+                  disabled={segmentLocked}
+                  placeholder="예: 홍길동"
+                  className={`w-full h-11 px-3 rounded-lg bg-white/[0.05] border text-white text-base placeholder:text-gray-600 focus:outline-none focus:border-orange-400/50 disabled:opacity-70 disabled:cursor-not-allowed ${
+                    !investigator.trim()
+                      ? "border-red-500/40"
+                      : "border-white/10"
+                  }`}
+                />
+                {!investigator.trim() ? (
+                  <p className="mt-1.5 text-[11px] text-red-400">
+                    조사자 이름을 먼저 입력해주세요. 카운터 기록은 이름 입력 후 활성화됩니다.
+                  </p>
+                ) : null}
+              </div>
+              <p className="mt-3 text-[11px] text-gray-500">
+                기록은 서버에 자동 저장돼요. 마지막 업데이트:{" "}
+                {state.updatedAt ? formatClock(state.updatedAt) : "-"}
               </p>
-            ) : null}
-          </div>
-          <p className="mt-3 text-[11px] text-gray-500">
-            이 브라우저에만 저장돼요. 다른 기기·브라우저와 공유 안 됨.
-            마지막 업데이트: {state.updatedAt ? formatClock(state.updatedAt) : "-"}
-          </p>
+            </>
+          ) : null}
         </section>
 
         {/* 카운터 그리드 */}
@@ -616,9 +642,9 @@ export default function DongseoSurveyClient({
             <button
               type="button"
               onClick={() => setConfirmState({ kind: "reset" })}
-              className="inline-flex items-center gap-1 text-[11px] text-gray-500 hover:text-red-400"
+              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-semibold bg-red-500/10 border border-red-500/40 text-red-300 hover:bg-red-500/20 active:bg-red-500/30"
             >
-              <RotateCcw className="h-3 w-3" /> {segment} 초기화
+              <RotateCcw className="h-3.5 w-3.5" /> {segment} 초기화
             </button>
           </div>
 
@@ -796,11 +822,17 @@ function SegmentPicker({
   onChange,
   locked,
   onToggleLock,
+  collapsed,
+  onToggleCollapsed,
+  investigator,
 }: {
   value: string;
   onChange: (v: string) => void;
   locked: boolean;
   onToggleLock: () => void;
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
+  investigator: string;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -830,23 +862,43 @@ function SegmentPicker({
 
   return (
     <div>
-      <div className="mb-3">
-        <div className="flex items-baseline gap-2">
-          <span className="text-3xl font-black leading-none bg-gradient-to-r from-orange-300 via-orange-400 to-pink-500 bg-clip-text text-transparent tabular-nums">
-            {value || "미선택"}
-          </span>
-          {locked ? (
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-300">
-              <Lock className="h-3 w-3" /> 고정됨
+      <div className={collapsed ? "" : "mb-3"}>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-baseline gap-3 min-w-0">
+            <span className="text-3xl font-black leading-none bg-gradient-to-r from-orange-300 via-orange-400 to-pink-500 bg-clip-text text-transparent tabular-nums">
+              {value || "미선택"}
             </span>
-          ) : null}
+            {collapsed && investigator.trim() ? (
+              <span className="text-3xl font-black leading-none bg-gradient-to-r from-orange-300 via-orange-400 to-pink-500 bg-clip-text text-transparent truncate">
+                {investigator}
+              </span>
+            ) : null}
+            {!collapsed && locked ? (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-300 shrink-0">
+                <Lock className="h-3 w-3" /> 고정
+              </span>
+            ) : null}
+          </div>
+          <button
+            type="button"
+            onClick={onToggleCollapsed}
+            aria-label={collapsed ? "펼치기" : "접기"}
+            className="inline-flex items-center gap-1 h-8 px-2 rounded-md text-[11px] font-semibold text-gray-400 hover:text-white hover:bg-white/[0.05] shrink-0"
+          >
+            {collapsed ? (
+              <>
+                펼치기 <ChevronDown className="h-3.5 w-3.5" />
+              </>
+            ) : (
+              <>
+                접기 <ChevronUp className="h-3.5 w-3.5" />
+              </>
+            )}
+          </button>
         </div>
-        {locked ? (
-          <p className="mt-1 text-[11px] text-amber-300/80">
-            구간·조사자 모두 고정 중 — 바꾸려면 오른쪽 해제 버튼을 눌러주세요.
-          </p>
-        ) : null}
       </div>
+      {collapsed ? null : (
+        <>
       <label className="block text-xs text-gray-400 mb-1.5">구간 선택</label>
       <div className="flex items-center gap-2">
         <Popover
@@ -956,7 +1008,8 @@ function SegmentPicker({
           )}
         </button>
       </div>
-
+        </>
+      )}
     </div>
   );
 }
