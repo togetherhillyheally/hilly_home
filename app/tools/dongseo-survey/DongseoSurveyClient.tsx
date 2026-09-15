@@ -222,6 +222,23 @@ export default function DongseoSurveyClient({
     | null;
   const [confirmState, setConfirmState] = useState<ConfirmState>(null);
 
+  // 서비스 워커 등록 (PWA)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!("serviceWorker" in navigator)) return;
+    if (window.location.protocol !== "https:" && window.location.hostname !== "localhost") return;
+    const onLoad = () => {
+      navigator.serviceWorker
+        .register("/sw.js", { scope: "/tools/" })
+        .catch(() => {
+          /* SW 등록 실패는 무시 — 앱은 정상 동작 */
+        });
+    };
+    if (document.readyState === "complete") onLoad();
+    else window.addEventListener("load", onLoad, { once: true });
+    return () => window.removeEventListener("load", onLoad);
+  }, []);
+
   // 최초 로드 — localStorage 에서 마지막 구간·조사자·잠금·헤더 상태 복원
   useEffect(() => {
     const lastSeg =
