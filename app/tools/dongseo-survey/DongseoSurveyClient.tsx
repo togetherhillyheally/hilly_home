@@ -582,11 +582,6 @@ export default function DongseoSurveyClient({
           <div className="mt-4">
             <label className="block text-xs text-gray-400 mb-1.5">
               조사자 <span className="text-red-400">*</span>
-              {segmentLocked ? (
-                <span className="ml-1 inline-flex items-center gap-0.5 text-[10px] font-semibold text-amber-300">
-                  <Lock className="h-2.5 w-2.5" /> 고정
-                </span>
-              ) : null}
             </label>
             <input
               value={investigator}
@@ -603,10 +598,6 @@ export default function DongseoSurveyClient({
             {!investigator.trim() ? (
               <p className="mt-1.5 text-[11px] text-red-400">
                 조사자 이름을 먼저 입력해주세요. 카운터 기록은 이름 입력 후 활성화됩니다.
-              </p>
-            ) : segmentLocked ? (
-              <p className="mt-1.5 text-[11px] text-amber-300/80">
-                조사자도 고정돼 있어요. 바꾸려면 잠금을 먼저 해제해주세요.
               </p>
             ) : null}
           </div>
@@ -839,14 +830,21 @@ function SegmentPicker({
 
   return (
     <div>
-      <div className="mb-3 flex items-baseline gap-2">
-        <span className="text-3xl font-black leading-none bg-gradient-to-r from-orange-300 via-orange-400 to-pink-500 bg-clip-text text-transparent tabular-nums">
-          {value || "미선택"}
-        </span>
-        {locked ? (
-          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-300">
-            <Lock className="h-3 w-3" /> 고정됨
+      <div className="mb-3">
+        <div className="flex items-baseline gap-2">
+          <span className="text-3xl font-black leading-none bg-gradient-to-r from-orange-300 via-orange-400 to-pink-500 bg-clip-text text-transparent tabular-nums">
+            {value || "미선택"}
           </span>
+          {locked ? (
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-300">
+              <Lock className="h-3 w-3" /> 고정됨
+            </span>
+          ) : null}
+        </div>
+        {locked ? (
+          <p className="mt-1 text-[11px] text-amber-300/80">
+            구간·조사자 모두 고정 중 — 바꾸려면 오른쪽 해제 버튼을 눌러주세요.
+          </p>
         ) : null}
       </div>
       <label className="block text-xs text-gray-400 mb-1.5">구간 선택</label>
@@ -949,21 +947,16 @@ function SegmentPicker({
         >
           {locked ? (
             <>
-              <Lock className="h-3.5 w-3.5" /> 잠금
+              <Unlock className="h-3.5 w-3.5" /> 해제
             </>
           ) : (
             <>
-              <Unlock className="h-3.5 w-3.5" /> 해제
+              <Lock className="h-3.5 w-3.5" /> 잠금
             </>
           )}
         </button>
       </div>
 
-      {locked ? (
-        <p className="mt-1.5 text-[11px] text-amber-300/80">
-          구간이 고정돼 있어요. 바꾸려면 잠금을 먼저 해제해주세요.
-        </p>
-      ) : null}
     </div>
   );
 }
