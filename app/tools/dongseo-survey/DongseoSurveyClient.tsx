@@ -231,16 +231,37 @@ export default function DongseoSurveyClient({
     if (typeof window === "undefined") return;
     if (!("serviceWorker" in navigator)) return;
     if (window.location.protocol !== "https:" && window.location.hostname !== "localhost") return;
+    let reloaded = false;
+    const onControllerChange = () => {
+      if (reloaded) return;
+      reloaded = true;
+      // 새 SW 가 활성화되면 즉시 새 HTML/JS 로 재로드
+      window.location.reload();
+    };
+    navigator.serviceWorker.addEventListener(
+      "controllerchange",
+      onControllerChange
+    );
     const onLoad = () => {
       navigator.serviceWorker
-        .register("/sw.js", { scope: "/tools/" })
+        .register("/sw.js", { scope: "/tools/", updateViaCache: "none" })
+        .then((reg) => {
+          // 페이지 열 때마다 SW 업데이트 확인
+          reg.update().catch(() => undefined);
+        })
         .catch(() => {
           /* SW 등록 실패는 무시 — 앱은 정상 동작 */
         });
     };
     if (document.readyState === "complete") onLoad();
     else window.addEventListener("load", onLoad, { once: true });
-    return () => window.removeEventListener("load", onLoad);
+    return () => {
+      window.removeEventListener("load", onLoad);
+      navigator.serviceWorker.removeEventListener(
+        "controllerchange",
+        onControllerChange
+      );
+    };
   }, []);
 
   // 최초 로드 — localStorage 에서 마지막 구간·조사자 상태 복원
