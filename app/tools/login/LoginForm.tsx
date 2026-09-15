@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Loader2, ShieldCheck } from "lucide-react";
 import { formatTimer, maskPhone, normalizePhone } from "@/lib/phone";
 
 const OTP_TTL = 300;
@@ -103,15 +103,24 @@ export default function LoginForm({ nextPath }: { nextPath: string }) {
 
   return (
     <div className="min-h-screen bg-[#08080f] text-gray-100 flex flex-col">
-      <header className="sticky top-0 z-50 bg-[#08080f]/80 backdrop-blur-md border-b border-white/5">
-        <div className="container mx-auto px-4 h-16 flex items-center">
+      <header
+        className="sticky top-0 z-50 bg-[#08080f]/80 backdrop-blur-md border-b border-white/5"
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
+      >
+        <div
+          className="container mx-auto h-16 flex items-center gap-2"
+          style={{
+            paddingLeft: "max(0.75rem, env(safe-area-inset-left))",
+            paddingRight: "max(0.75rem, env(safe-area-inset-right))",
+          }}
+        >
           <Link href="/" className="flex items-center">
             <Image
               src="/images/home_logo.png"
               alt="Hillyheally"
               width={72}
               height={40}
-              className="h-10 w-auto"
+              className="h-8 w-auto"
             />
           </Link>
         </div>
@@ -172,6 +181,16 @@ export default function LoginForm({ nextPath }: { nextPath: string }) {
                 ) : (
                   "인증번호 받기"
                 )}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.history.length > 1) router.back();
+                  else router.replace(nextPath || "/");
+                }}
+                className="mt-3 w-full h-11 rounded-lg text-sm text-gray-400 hover:text-white inline-flex items-center justify-center gap-1.5"
+              >
+                <ArrowLeft className="h-4 w-4" /> 돌아가기
               </button>
             </div>
           ) : (

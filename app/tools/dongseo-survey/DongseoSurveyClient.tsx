@@ -7,9 +7,9 @@ import {
   ArrowRight,
   Check,
   ChevronDown,
-  ChevronUp,
   Copy,
   Info,
+  Loader2,
   Lock,
   RotateCcw,
   Undo2,
@@ -47,6 +47,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
+import { Settings } from "lucide-react";
 import { Toaster, toast } from "sonner";
 
 // ─────────────────────────────────────────────────────────────
@@ -68,7 +75,6 @@ const LS_PREFIX = "dongseo-survey/v1/";
 const LS_LAST_SEGMENT = "dongseo-survey/v1/last-segment";
 const LS_LAST_INVESTIGATOR = "dongseo-survey/v1/last-investigator";
 const LS_SEGMENT_LOCKED = "dongseo-survey/v1/segment-locked";
-const LS_HEADER_COLLAPSED = "dongseo-survey/v1/header-collapsed";
 
 function loadSegment(segment: string): SegmentState {
   if (typeof window === "undefined") {
@@ -185,7 +191,7 @@ export default function DongseoSurveyClient({
   const [itemTab, setItemTab] = useState<"range" | "facility" | "risk">(
     "range"
   );
-  const [headerCollapsed, setHeaderCollapsed] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const rangeItems = useMemo(
     () => ITEMS.filter((it) => it.type === "range"),
@@ -239,38 +245,26 @@ export default function DongseoSurveyClient({
     return () => window.removeEventListener("load", onLoad);
   }, []);
 
-  // 최초 로드 — localStorage 에서 마지막 구간·조사자·잠금·헤더 상태 복원
+  // 최초 로드 — localStorage 에서 마지막 구간·조사자·잠금 상태 복원
   useEffect(() => {
     const lastSeg =
       window.localStorage.getItem(LS_LAST_SEGMENT) || SEGMENT_OPTIONS[0];
     const lastInv = window.localStorage.getItem(LS_LAST_INVESTIGATOR) || "";
     const locked = window.localStorage.getItem(LS_SEGMENT_LOCKED) === "1";
-    const collapsedPref =
-      window.localStorage.getItem(LS_HEADER_COLLAPSED) === "1";
     setSegment(lastSeg);
     setInvestigator(lastInv);
     setSegmentLocked(locked);
-    // 조사자 이름이 비어 있으면 무조건 펼쳐서 입력 유도
-    setHeaderCollapsed(collapsedPref && !!lastInv.trim());
     const loaded = loadSegment(lastSeg);
     setState({
       ...loaded,
       investigator: loaded.investigator || lastInv,
     });
+    // 조사자 이름이 비어 있으면 자동으로 설정 시트를 띄워 입력 유도
+    if (!lastInv.trim()) {
+      setSettingsOpen(true);
+    }
     setReady(true);
   }, []);
-
-  const toggleHeaderCollapsed = () => {
-    setHeaderCollapsed((prev) => {
-      const next = !prev;
-      try {
-        window.localStorage.setItem(LS_HEADER_COLLAPSED, next ? "1" : "0");
-      } catch {
-        /* ignore */
-      }
-      return next;
-    });
-  };
 
   const toggleSegmentLock = () => {
     setSegmentLocked((prev) => {
@@ -545,8 +539,9 @@ export default function DongseoSurveyClient({
 
   if (!ready) {
     return (
-      <div className="min-h-screen bg-[#08080f] text-gray-100 flex items-center justify-center">
-        <p className="text-gray-500">로딩 중…</p>
+      <div className="min-h-screen bg-[#08080f] text-gray-100 flex flex-col items-center justify-center gap-3">
+        <Loader2 className="h-8 w-8 animate-spin text-orange-400" />
+        <p className="text-sm text-gray-400">로딩중...</p>
       </div>
     );
   }
@@ -571,34 +566,63 @@ export default function DongseoSurveyClient({
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:72px_72px]" />
       </div>
 
-      <header className="sticky top-0 z-40 bg-[#08080f]/90 backdrop-blur-md border-b border-white/10">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center">
+      <header
+        className="sticky top-0 z-40 bg-[#08080f]/90 backdrop-blur-md border-b border-white/10"
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
+      >
+        <div
+          className="container mx-auto h-16 flex items-center gap-3"
+          style={{
+            paddingLeft: "max(0.75rem, env(safe-area-inset-left))",
+            paddingRight: "max(0.75rem, env(safe-area-inset-right))",
+          }}
+        >
+          <Link href="/" className="flex items-center shrink-0">
             <Image
               src="/images/home_logo.png"
               alt="Hillyheally"
               width={72}
               height={40}
-              className="h-10 w-auto"
+              className="h-8 w-auto"
             />
           </Link>
-          {loggedInNickname ? (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-white font-semibold">
-                {loggedInNickname}
+
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            className="flex-1 min-w-0 h-10 px-3 rounded-lg bg-white/[0.05] hover:bg-white/[0.08] active:bg-white/[0.1] border border-white/10 flex items-center gap-2"
+          >
+            <span className="text-sm font-bold bg-gradient-to-r from-orange-300 via-orange-400 to-pink-500 bg-clip-text text-transparent tabular-nums truncate">
+              {segment || "구간 미선택"}
+            </span>
+            {investigator.trim() ? (
+              <span className="text-xs text-gray-300 truncate min-w-0">
+                · {investigator}
               </span>
-              <button
-                type="button"
-                onClick={logout}
-                className="text-[11px] text-gray-500 hover:text-white"
-              >
-                로그아웃
-              </button>
-            </div>
+            ) : (
+              <span className="text-xs text-red-400 truncate">
+                · 조사자 입력
+              </span>
+            )}
+            {segmentLocked ? (
+              <Lock className="h-3 w-3 text-amber-300 shrink-0" />
+            ) : null}
+            <Settings className="h-4 w-4 text-gray-400 shrink-0 ml-auto" />
+          </button>
+
+          {loggedInNickname ? (
+            <button
+              type="button"
+              onClick={logout}
+              className="text-[11px] text-gray-400 hover:text-white shrink-0"
+              title={`${loggedInNickname} 로그아웃`}
+            >
+              로그아웃
+            </button>
           ) : (
             <Link
               href={`/tools/login?next=${encodeURIComponent("/tools/dongseo-survey")}`}
-              className="text-xs text-orange-300 hover:text-orange-200 font-semibold"
+              className="text-xs text-orange-300 hover:text-orange-200 font-semibold shrink-0"
             >
               로그인
             </Link>
@@ -606,49 +630,24 @@ export default function DongseoSurveyClient({
         </div>
       </header>
 
-      <main className="relative z-10 container mx-auto px-4 py-8 max-w-4xl">
-        {/* 헤더 카드 — 구간 + 조사자 */}
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 mb-6">
-          <SegmentPicker
-            value={segment}
-            onChange={changeSegment}
-            locked={segmentLocked}
-            onToggleLock={toggleSegmentLock}
-            collapsed={headerCollapsed}
-            onToggleCollapsed={toggleHeaderCollapsed}
-            investigator={investigator}
-          />
-          {!headerCollapsed ? (
-            <>
-              <div className="mt-4">
-                <label className="block text-xs text-gray-400 mb-1.5">
-                  조사자 <span className="text-red-400">*</span>
-                </label>
-                <input
-                  value={investigator}
-                  onChange={(e) => setInvestigator(e.target.value)}
-                  readOnly={segmentLocked}
-                  disabled={segmentLocked}
-                  placeholder="예: 홍길동"
-                  className={`w-full h-11 px-3 rounded-lg bg-white/[0.05] border text-white text-base placeholder:text-gray-600 focus:outline-none focus:border-orange-400/50 disabled:opacity-70 disabled:cursor-not-allowed ${
-                    !investigator.trim()
-                      ? "border-red-500/40"
-                      : "border-white/10"
-                  }`}
-                />
-                {!investigator.trim() ? (
-                  <p className="mt-1.5 text-[11px] text-red-400">
-                    조사자 이름을 먼저 입력해주세요. 카운터 기록은 이름 입력 후 활성화됩니다.
-                  </p>
-                ) : null}
-              </div>
-              <p className="mt-3 text-[11px] text-gray-500">
-                기록은 서버에 자동 저장돼요. 마지막 업데이트:{" "}
-                {state.updatedAt ? formatClock(state.updatedAt) : "-"}
-              </p>
-            </>
-          ) : null}
-        </section>
+      <main
+        className="relative z-10 container mx-auto py-8 max-w-4xl"
+        style={{
+          paddingLeft: "max(1rem, env(safe-area-inset-left))",
+          paddingRight: "max(1rem, env(safe-area-inset-right))",
+          paddingBottom: "max(2rem, env(safe-area-inset-bottom))",
+        }}
+      >
+        {/* 조사자 미입력 시 강조 배너 (설정 시트로 유도) */}
+        {!investigator.trim() ? (
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            className="w-full mb-4 rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-left text-sm text-red-300 hover:bg-red-500/20"
+          >
+            조사자 이름을 먼저 입력해주세요. 탭하면 설정이 열려요.
+          </button>
+        ) : null}
 
         {/* 카운터 그리드 */}
         <section className="mb-6">
@@ -665,40 +664,45 @@ export default function DongseoSurveyClient({
             </button>
           </div>
 
-          <div className="flex items-center gap-1 rounded-lg bg-white/[0.03] border border-white/10 p-1 mb-3 overflow-x-auto">
-            <button
-              type="button"
-              onClick={() => setItemTab("range")}
-              className={`h-9 px-3 rounded text-sm font-semibold transition whitespace-nowrap ${
-                itemTab === "range"
-                  ? "bg-white/[0.12] text-white"
-                  : "text-gray-400"
-              }`}
-            >
-              시작·종료 ({rangeItems.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setItemTab("facility")}
-              className={`h-9 px-3 rounded text-sm font-semibold transition whitespace-nowrap ${
-                itemTab === "facility"
-                  ? "bg-white/[0.12] text-white"
-                  : "text-gray-400"
-              }`}
-            >
-              시설물 ({facilityItems.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setItemTab("risk")}
-              className={`h-9 px-3 rounded text-sm font-semibold transition whitespace-nowrap ${
-                itemTab === "risk"
-                  ? "bg-white/[0.12] text-white"
-                  : "text-gray-400"
-              }`}
-            >
-              위험·기타 ({riskItems.length})
-            </button>
+          <div
+            className="sticky z-30 -mx-4 px-4 py-2 mb-3 bg-[#08080f]/95 backdrop-blur-md border-b border-white/5"
+            style={{ top: "calc(env(safe-area-inset-top) + 64px)" }}
+          >
+            <div className="flex items-center gap-1 rounded-lg bg-white/[0.03] border border-white/10 p-1 overflow-x-auto">
+              <button
+                type="button"
+                onClick={() => setItemTab("range")}
+                className={`h-9 px-3 rounded text-sm font-semibold transition whitespace-nowrap ${
+                  itemTab === "range"
+                    ? "bg-white/[0.12] text-white"
+                    : "text-gray-400"
+                }`}
+              >
+                시작·종료 ({rangeItems.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setItemTab("facility")}
+                className={`h-9 px-3 rounded text-sm font-semibold transition whitespace-nowrap ${
+                  itemTab === "facility"
+                    ? "bg-white/[0.12] text-white"
+                    : "text-gray-400"
+                }`}
+              >
+                시설물 ({facilityItems.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setItemTab("risk")}
+                className={`h-9 px-3 rounded text-sm font-semibold transition whitespace-nowrap ${
+                  itemTab === "risk"
+                    ? "bg-white/[0.12] text-white"
+                    : "text-gray-400"
+                }`}
+              >
+                위험·기타 ({riskItems.length})
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -736,6 +740,63 @@ export default function DongseoSurveyClient({
           <Reference />
         </section>
       </main>
+
+      <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <SheetContent
+          side="bottom"
+          className="bg-[#0f0f16] border-white/10 text-gray-100 max-h-[85vh] overflow-y-auto rounded-t-2xl"
+          style={{
+            paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))",
+          }}
+        >
+          <SheetTitle className="sr-only">조사 설정</SheetTitle>
+          <SheetDescription className="sr-only">
+            구간 선택·조사자 이름·잠금
+          </SheetDescription>
+          <div className="pt-2">
+            <SegmentPicker
+              value={segment}
+              onChange={changeSegment}
+              locked={segmentLocked}
+              onToggleLock={toggleSegmentLock}
+            />
+            <div className="mt-5">
+              <label className="block text-xs text-gray-400 mb-1.5">
+                조사자 <span className="text-red-400">*</span>
+              </label>
+              <input
+                value={investigator}
+                onChange={(e) => setInvestigator(e.target.value)}
+                readOnly={segmentLocked}
+                disabled={segmentLocked}
+                placeholder="예: 홍길동"
+                className={`w-full h-11 px-3 rounded-lg bg-white/[0.05] border text-white text-base placeholder:text-gray-600 focus:outline-none focus:border-orange-400/50 disabled:opacity-70 disabled:cursor-not-allowed ${
+                  !investigator.trim()
+                    ? "border-red-500/40"
+                    : "border-white/10"
+                }`}
+              />
+              {!investigator.trim() ? (
+                <p className="mt-1.5 text-[11px] text-red-400">
+                  조사자 이름을 먼저 입력해주세요. 카운터 기록은 이름 입력 후 활성화됩니다.
+                </p>
+              ) : null}
+            </div>
+            <p className="mt-4 text-[11px] text-gray-500">
+              기록은 서버에 자동 저장돼요. 마지막 업데이트:{" "}
+              {state.updatedAt ? formatClock(state.updatedAt) : "-"}
+            </p>
+            <button
+              type="button"
+              onClick={() => setSettingsOpen(false)}
+              disabled={!investigator.trim()}
+              className="mt-5 w-full h-11 rounded-lg bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              닫기
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       <AlertDialog
         open={confirmState !== null}
@@ -839,17 +900,11 @@ function SegmentPicker({
   onChange,
   locked,
   onToggleLock,
-  collapsed,
-  onToggleCollapsed,
-  investigator,
 }: {
   value: string;
   onChange: (v: string) => void;
   locked: boolean;
   onToggleLock: () => void;
-  collapsed: boolean;
-  onToggleCollapsed: () => void;
-  investigator: string;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -879,43 +934,16 @@ function SegmentPicker({
 
   return (
     <div>
-      <div className={collapsed ? "" : "mb-3"}>
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-baseline gap-3 min-w-0">
-            <span className="text-3xl font-black leading-none bg-gradient-to-r from-orange-300 via-orange-400 to-pink-500 bg-clip-text text-transparent tabular-nums">
-              {value || "미선택"}
-            </span>
-            {collapsed && investigator.trim() ? (
-              <span className="text-3xl font-black leading-none bg-gradient-to-r from-orange-300 via-orange-400 to-pink-500 bg-clip-text text-transparent truncate">
-                {investigator}
-              </span>
-            ) : null}
-            {!collapsed && locked ? (
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-300 shrink-0">
-                <Lock className="h-3 w-3" /> 고정
-              </span>
-            ) : null}
-          </div>
-          <button
-            type="button"
-            onClick={onToggleCollapsed}
-            aria-label={collapsed ? "펼치기" : "접기"}
-            className="inline-flex items-center gap-1 h-8 px-2 rounded-md text-[11px] font-semibold text-gray-400 hover:text-white hover:bg-white/[0.05] shrink-0"
-          >
-            {collapsed ? (
-              <>
-                펼치기 <ChevronDown className="h-3.5 w-3.5" />
-              </>
-            ) : (
-              <>
-                접기 <ChevronUp className="h-3.5 w-3.5" />
-              </>
-            )}
-          </button>
-        </div>
+      <div className="mb-3 flex items-baseline gap-2">
+        <span className="text-3xl font-black leading-none bg-gradient-to-r from-orange-300 via-orange-400 to-pink-500 bg-clip-text text-transparent tabular-nums">
+          {value || "미선택"}
+        </span>
+        {locked ? (
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-300 shrink-0">
+            <Lock className="h-3 w-3" /> 고정
+          </span>
+        ) : null}
       </div>
-      {collapsed ? null : (
-        <>
       <label className="block text-xs text-gray-400 mb-1.5">구간 선택</label>
       <div className="flex items-center gap-2">
         <Popover
@@ -1025,8 +1053,6 @@ function SegmentPicker({
           )}
         </button>
       </div>
-        </>
-      )}
     </div>
   );
 }

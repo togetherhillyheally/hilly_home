@@ -9,7 +9,7 @@
  *
  * 배포마다 SW_VERSION 을 올리면 이전 캐시는 activate 시점에 정리됨.
  */
-const SW_VERSION = "dongseo-2026-09-15-01";
+const SW_VERSION = "dongseo-2026-09-15-02";
 const STATIC_CACHE = `hh-static-${SW_VERSION}`;
 const HTML_CACHE = `hh-html-${SW_VERSION}`;
 
