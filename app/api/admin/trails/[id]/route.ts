@@ -14,7 +14,10 @@ const SCALAR_FIELDS = new Set([
   "name",
   "series_name",
   "course_summary",
+  "visibility",
 ]);
+
+const VISIBILITY_VALUES = new Set(["public", "unlisted", "private"]);
 
 const COORD_FIELDS = new Set([
   "start_lat",
@@ -69,6 +72,14 @@ export async function PATCH(
       update[k] = typeof v === "string" && v.trim() ? v.trim() : null;
     } else if (k === "course_summary") {
       update[k] = typeof v === "string" && v.trim() ? v.trim() : null;
+    } else if (k === "visibility") {
+      if (typeof v !== "string" || !VISIBILITY_VALUES.has(v)) {
+        return NextResponse.json(
+          { error: "공개 범위는 public / unlisted / private 중 하나여야 해요." },
+          { status: 400 }
+        );
+      }
+      update[k] = v;
     } else {
       update[k] = v;
     }

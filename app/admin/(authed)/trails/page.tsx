@@ -3,6 +3,7 @@ import { Puzzle, Search, UploadCloud, Tags } from "lucide-react";
 import { adminList, escapeIlike } from "@/lib/admin-rest";
 import Pagination from "../Pagination";
 import TrailActiveToggle from "./TrailActiveToggle";
+import VisibilitySelect, { type Visibility } from "./VisibilitySelect";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +40,7 @@ type Trail = {
   activity_types: string[] | null;
   sort_order: number | null;
   is_active: boolean;
+  visibility: "public" | "unlisted" | "private" | null;
   created_at: string;
   created_by: string | null;
 };
@@ -98,7 +100,7 @@ export default async function TrailsPage({
 
   const params = new URLSearchParams({
     select:
-      "id,name,series_name,map_type,distance_km,total_ascent_m,activity_types,sort_order,is_active,created_at,created_by",
+      "id,name,series_name,map_type,distance_km,total_ascent_m,activity_types,sort_order,is_active,visibility,created_at,created_by",
     order: "created_at.desc",
   });
   if (q) {
@@ -267,6 +269,7 @@ export default async function TrailsPage({
                   <th className="text-left px-4 py-3 font-medium">활동</th>
                   <th className="text-left px-4 py-3 font-medium">생성자</th>
                   <th className="text-left px-4 py-3 font-medium">생성일</th>
+                  <th className="text-left px-3 py-3 font-medium">공개</th>
                   <th className="text-center px-3 py-3 font-medium">활성</th>
                 </tr>
               </thead>
@@ -337,6 +340,12 @@ export default async function TrailsPage({
                     </td>
                     <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">
                       {formatDate(t.created_at)}
+                    </td>
+                    <td className="px-3 py-3">
+                      <VisibilitySelect
+                        trailId={t.id}
+                        initial={(t.visibility ?? "public") as Visibility}
+                      />
                     </td>
                     <td className="px-3 py-3 text-center">
                       <TrailActiveToggle

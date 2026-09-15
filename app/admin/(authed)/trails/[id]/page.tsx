@@ -10,6 +10,10 @@ import {
 } from "lucide-react";
 import { adminList } from "@/lib/admin-rest";
 import EditForm from "./EditForm";
+import VisibilitySelect, {
+  VisibilityBadge,
+  type Visibility,
+} from "../VisibilitySelect";
 import StartEndEditor from "./StartEndEditor";
 import ReplaceGpxForm from "./ReplaceGpxForm";
 import ShareImageButton from "./ShareImageButton";
@@ -33,6 +37,7 @@ type Trail = {
   activity_types: string[] | null;
   sort_order: number | null;
   is_active: boolean;
+  visibility: "public" | "unlisted" | "private" | null;
   created_at: string;
   created_by: string | null;
   source: string | null;
@@ -81,7 +86,7 @@ export default async function TrailDetailPage({
   const { id } = await params;
 
   const { rows } = await adminList<Trail>(
-    `trails?select=id,name,series_name,course_summary,map_type,distance_km,total_ascent_m,activity_types,sort_order,is_active,created_at,created_by,source,gpx_storage_bucket,gpx_storage_path,start_lat,start_lng,end_lat,end_lng,bounds,coordinates&id=eq.${id}`
+    `trails?select=id,name,series_name,course_summary,map_type,distance_km,total_ascent_m,activity_types,sort_order,is_active,visibility,created_at,created_by,source,gpx_storage_bucket,gpx_storage_path,start_lat,start_lng,end_lat,end_lng,bounds,coordinates&id=eq.${id}`
   );
   const trail = rows[0];
   if (!trail) notFound();
@@ -173,6 +178,9 @@ export default async function TrailDetailPage({
                 비활성
               </span>
             )}
+            <VisibilityBadge
+              value={(trail.visibility ?? "public") as Visibility}
+            />
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {checkpoints.length > 0 && (
@@ -344,8 +352,23 @@ export default async function TrailDetailPage({
           />
         </div>
 
-        {/* Right: 메타 편집 + GPX 교체 + 위험 구역 */}
-        <EditForm
+        {/* Right: 공개 범위 + 메타 편집 + GPX 교체 + 위험 구역 */}
+        <div className="flex flex-col gap-5">
+          <section className="rounded-xl border border-white/10 bg-white/[0.02] p-5">
+            <h2 className="text-sm font-semibold text-gray-200 mb-1">
+              공개 범위
+            </h2>
+            <p className="text-xs text-gray-500 mb-3 leading-relaxed">
+              전체 공개 = 목록·검색 노출 · 링크 공유 = 링크 아는 사람만 열람 ·
+              나만 = 소유자만
+            </p>
+            <VisibilitySelect
+              trailId={trail.id}
+              initial={(trail.visibility ?? "public") as Visibility}
+              size="md"
+            />
+          </section>
+          <EditForm
           trailId={trail.id}
           initialName={trail.name}
           initialSeriesName={trail.series_name}
@@ -364,6 +387,7 @@ export default async function TrailDetailPage({
             currentTotalAscentM={trail.total_ascent_m}
           />
         </EditForm>
+        </div>
       </div>
     </main>
   );

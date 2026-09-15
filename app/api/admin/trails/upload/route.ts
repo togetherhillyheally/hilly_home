@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { hasMenuAccess, readAdminSession } from "@/lib/admin-session";
 import {
-  prepareTrailFromGpxText,
+  prepareTrailFromText,
   displayNameFromFileName,
   type PreparedTrailGeometry,
 } from "@/lib/gpx-prep";
@@ -33,7 +33,8 @@ function isMultiCoords(coords: PreparedTrailGeometry["coordinates"]): coords is 
 
 async function uploadGpxToStorage(
   storagePath: string,
-  gpxText: string
+  fileText: string,
+  contentType: string = "application/gpx+xml"
 ): Promise<void> {
   const res = await fetch(
     `${SUPABASE_URL}/storage/v1/object/${TRAIL_GPX_STORAGE_BUCKET}/${storagePath}`,
@@ -42,10 +43,10 @@ async function uploadGpxToStorage(
       headers: {
         Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
         apikey: SERVICE_ROLE_KEY,
-        "Content-Type": "application/gpx+xml",
+        "Content-Type": contentType,
         "x-upsert": "true",
       },
-      body: gpxText,
+      body: fileText,
     }
   );
   if (!res.ok) {
@@ -184,18 +185,18 @@ export async function POST(req: Request) {
       s === "walking" || s === "running" || s === "cycling"
     );
 
-  // 1) 파싱
+  // 1) 파싱 (GPX / KML 자동 판별)
   let preps: { fileName: string; gpxText: string; prep: PreparedTrailGeometry }[];
   try {
     preps = await Promise.all(
       files.map(async (f) => {
         const gpxText = await f.text();
-        const prep = prepareTrailFromGpxText(gpxText);
+        const prep = prepareTrailFromText(gpxText);
         return { fileName: f.name, gpxText, prep };
       })
     );
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : "GPX 파싱 실패";
+    const msg = e instanceof Error ? e.message : "파일 파싱 실패";
     return NextResponse.json({ error: msg }, { status: 400 });
   }
 
@@ -217,11 +218,17 @@ export async function POST(req: Request) {
         totalAscentM: preps[0].prep.totalAscentM,
       };
 
-  // 4) Storage 업로드 (다중일 때 첫 파일만 보관 — hilly_rn 패턴)
+  // 4) Storage 업로드 (다중일 때 첫 파일만 보관 — hilly_rn 패턴).
+  //    원본 확장자 유지 (.gpx 또는 .kml) 로 downstream 파싱 시 형식 판별 가능.
   const trailId = randomUUID();
-  const storagePath = `${ADMIN_UPLOADER_PROFILE_ID}/${trailId}.gpx`;
+  const firstExt = preps[0].fileName.toLowerCase().endsWith(".kml")
+    ? "kml"
+    : "gpx";
+  const storagePath = `${ADMIN_UPLOADER_PROFILE_ID}/${trailId}.${firstExt}`;
+  const contentType =
+    firstExt === "kml" ? "application/vnd.google-earth.kml+xml" : "application/gpx+xml";
   try {
-    await uploadGpxToStorage(storagePath, preps[0].gpxText);
+    await uploadGpxToStorage(storagePath, preps[0].gpxText, contentType);
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Storage 업로드 실패";
     return NextResponse.json({ error: msg }, { status: 500 });

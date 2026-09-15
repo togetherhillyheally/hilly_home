@@ -16,11 +16,11 @@ export default function TrailUploadPage() {
           코스 지도 목록
         </Link>
         <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
-          GPX 업로드
+          GPX / KML 업로드
         </h1>
         <p className="text-sm text-gray-400 mt-1">
-          GPX 파일을 올려 새 코스 지도를 등록합니다. 여러 파일을 동시에 올리면
-          하나의 멀티 경로 코스로 합쳐 저장됩니다.
+          GPX 또는 KML 파일을 올려 새 코스 지도를 등록합니다. 여러 파일을 동시에
+          올리면 하나의 멀티 경로 코스로 합쳐 저장됩니다.
         </p>
       </header>
 

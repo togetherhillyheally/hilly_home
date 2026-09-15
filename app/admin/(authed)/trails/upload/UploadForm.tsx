@@ -11,7 +11,7 @@ import {
   X,
 } from "lucide-react";
 import {
-  prepareTrailFromGpxText,
+  prepareTrailFromText,
   displayNameFromFileName,
   type PreparedTrailGeometry,
 } from "@/lib/gpx-prep";
@@ -104,9 +104,10 @@ export default function UploadForm() {
   const finalName = name.trim() || merged?.defaultName || "";
 
   const ingestFiles = useCallback(async (files: FileList | File[]) => {
-    const arr = Array.from(files).filter((f) =>
-      f.name.toLowerCase().endsWith(".gpx")
-    );
+    const arr = Array.from(files).filter((f) => {
+      const n = f.name.toLowerCase();
+      return n.endsWith(".gpx") || n.endsWith(".kml");
+    });
     if (arr.length === 0) return;
 
     setAnalyzing({ done: 0, total: arr.length, currentFileName: arr[0].name });
@@ -118,10 +119,10 @@ export default function UploadForm() {
       await new Promise((r) => setTimeout(r, 0));
       try {
         const text = await file.text();
-        const prep = prepareTrailFromGpxText(text);
+        const prep = prepareTrailFromText(text);
         ingested.push({ file, prep });
       } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : "GPX 파싱 실패";
+        const msg = e instanceof Error ? e.message : "파일 파싱 실패";
         ingested.push({ file, parseError: msg });
       }
     }
@@ -157,7 +158,7 @@ export default function UploadForm() {
 
   const submit = () => {
     if (validEntries.length === 0) {
-      setError("GPX 파일을 1개 이상 첨부해주세요.");
+      setError("GPX 또는 KML 파일을 1개 이상 첨부해주세요.");
       return;
     }
     if (activityTypes.length === 0) {
@@ -276,7 +277,7 @@ export default function UploadForm() {
         >
           <UploadCloud className="h-10 w-10 text-gray-500 mx-auto mb-3" />
           <p className="text-white font-medium mb-1">
-            GPX 파일을 끌어다 놓거나 클릭해서 선택
+            GPX / KML 파일을 끌어다 놓거나 클릭해서 선택
           </p>
           <p className="text-xs text-gray-500 mb-4">
             여러 파일을 함께 올리면 하나의 멀티 경로로 합쳐집니다.
@@ -290,7 +291,7 @@ export default function UploadForm() {
             파일 선택
             <input
               type="file"
-              accept=".gpx"
+              accept=".gpx,.kml"
               multiple
               disabled={busy}
               className="hidden"
