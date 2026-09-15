@@ -102,9 +102,9 @@ export default function LoginForm({ nextPath }: { nextPath: string }) {
   const expired = step === "code" && timer === 0;
 
   return (
-    <div className="min-h-screen bg-[#08080f] text-gray-100 flex flex-col">
+    <div className="min-h-screen bg-[#0D1117] text-gray-100 flex flex-col">
       <header
-        className="sticky top-0 z-50 bg-[#08080f]/80 backdrop-blur-md border-b border-white/5"
+        className="sticky top-0 z-50 bg-[#0D1117]/80 backdrop-blur-md border-b border-white/5"
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <div
@@ -129,7 +129,7 @@ export default function LoginForm({ nextPath }: { nextPath: string }) {
         <div className="w-full max-w-sm">
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold mb-2">
-              <span className="bg-gradient-to-r from-orange-300 via-orange-400 to-pink-500 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-rose-300 via-rose-400 to-pink-500 bg-clip-text text-transparent">
                 조사 도구 로그인
               </span>
             </h1>
@@ -141,8 +141,8 @@ export default function LoginForm({ nextPath }: { nextPath: string }) {
           {step === "phone" ? (
             <div className="rounded-2xl p-6 bg-white/[0.03] border border-white/[0.06]">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-orange-400/10 flex items-center justify-center">
-                  <ShieldCheck className="h-5 w-5 text-orange-400" />
+                <div className="w-10 h-10 rounded-xl bg-rose-400/10 flex items-center justify-center">
+                  <ShieldCheck className="h-5 w-5 text-rose-400" />
                 </div>
                 <span className="text-sm text-gray-400">휴대폰 인증</span>
               </div>
@@ -172,7 +172,7 @@ export default function LoginForm({ nextPath }: { nextPath: string }) {
                 type="button"
                 onClick={() => sendOtp(false)}
                 disabled={phoneDigits.length < 10 || isSending}
-                className="mt-5 w-full h-12 rounded-lg bg-gradient-to-r from-orange-500 to-pink-500 text-white font-semibold disabled:opacity-40"
+                className="mt-5 w-full h-12 rounded-lg bg-gradient-to-r from-rose-500 to-pink-500 text-white font-semibold disabled:opacity-40"
               >
                 {isSending ? (
                   <span className="inline-flex items-center gap-2">
@@ -196,8 +196,8 @@ export default function LoginForm({ nextPath }: { nextPath: string }) {
           ) : (
             <div className="rounded-2xl p-6 bg-white/[0.03] border border-white/[0.06]">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-orange-400/10 flex items-center justify-center">
-                  <ShieldCheck className="h-5 w-5 text-orange-400" />
+                <div className="w-10 h-10 rounded-xl bg-rose-400/10 flex items-center justify-center">
+                  <ShieldCheck className="h-5 w-5 text-rose-400" />
                 </div>
                 <span className="text-sm text-gray-400">
                   {maskPhone(phoneDigits)} 인증번호
@@ -219,7 +219,7 @@ export default function LoginForm({ nextPath }: { nextPath: string }) {
                   className="w-full h-12 px-3 pr-16 rounded-lg bg-white/[0.04] border border-white/10 text-white placeholder:text-gray-600 tracking-[0.3em]"
                 />
                 {!expired && (
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono text-orange-300">
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono text-rose-300">
                     {formatTimer(timer)}
                   </span>
                 )}
@@ -235,7 +235,7 @@ export default function LoginForm({ nextPath }: { nextPath: string }) {
                 type="button"
                 onClick={verify}
                 disabled={code.length !== 6 || isVerifying || expired}
-                className="mt-5 w-full h-12 rounded-lg bg-gradient-to-r from-orange-500 to-pink-500 text-white font-semibold disabled:opacity-40"
+                className="mt-5 w-full h-12 rounded-lg bg-gradient-to-r from-rose-500 to-pink-500 text-white font-semibold disabled:opacity-40"
               >
                 {isVerifying ? (
                   <span className="inline-flex items-center gap-2">
@@ -262,7 +262,7 @@ export default function LoginForm({ nextPath }: { nextPath: string }) {
                   type="button"
                   disabled={resendCooldown > 0 || isSending}
                   onClick={() => sendOtp(true)}
-                  className="text-orange-300 disabled:text-gray-600"
+                  className="text-rose-300 disabled:text-gray-600"
                 >
                   {isSending
                     ? "전송 중..."

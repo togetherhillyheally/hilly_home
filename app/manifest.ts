@@ -10,8 +10,8 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/tools/dongseo-survey",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#08080f",
-    theme_color: "#08080f",
+    background_color: "#0D1117",
+    theme_color: "#0D1117",
     lang: "ko-KR",
     icons: [
       {

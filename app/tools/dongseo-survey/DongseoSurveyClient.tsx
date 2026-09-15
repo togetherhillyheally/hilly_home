@@ -10,10 +10,8 @@ import {
   Copy,
   Info,
   Loader2,
-  Lock,
   RotateCcw,
   Undo2,
-  Unlock,
 } from "lucide-react";
 import {
   Popover,
@@ -74,7 +72,6 @@ type SegmentState = {
 const LS_PREFIX = "dongseo-survey/v1/";
 const LS_LAST_SEGMENT = "dongseo-survey/v1/last-segment";
 const LS_LAST_INVESTIGATOR = "dongseo-survey/v1/last-investigator";
-const LS_SEGMENT_LOCKED = "dongseo-survey/v1/segment-locked";
 
 function loadSegment(segment: string): SegmentState {
   if (typeof window === "undefined") {
@@ -180,8 +177,9 @@ export default function DongseoSurveyClient({
 }) {
   const router = useRouter();
   const [segment, setSegment] = useState<string>("");
-  const [segmentLocked, setSegmentLocked] = useState(false);
   const [investigator, setInvestigator] = useState<string>("");
+  const [draftSegment, setDraftSegment] = useState<string>("");
+  const [draftInvestigator, setDraftInvestigator] = useState<string>("");
   const [state, setState] = useState<SegmentState>({
     investigator: "",
     items: {},
@@ -245,43 +243,40 @@ export default function DongseoSurveyClient({
     return () => window.removeEventListener("load", onLoad);
   }, []);
 
-  // 최초 로드 — localStorage 에서 마지막 구간·조사자·잠금 상태 복원
+  // 최초 로드 — localStorage 에서 마지막 구간·조사자 상태 복원
   useEffect(() => {
     const lastSeg =
       window.localStorage.getItem(LS_LAST_SEGMENT) || SEGMENT_OPTIONS[0];
     const lastInv = window.localStorage.getItem(LS_LAST_INVESTIGATOR) || "";
-    const locked = window.localStorage.getItem(LS_SEGMENT_LOCKED) === "1";
     setSegment(lastSeg);
     setInvestigator(lastInv);
-    setSegmentLocked(locked);
     const loaded = loadSegment(lastSeg);
     setState({
       ...loaded,
       investigator: loaded.investigator || lastInv,
     });
-    // 조사자 이름이 비어 있으면 자동으로 설정 시트를 띄워 입력 유도
-    if (!lastInv.trim()) {
+    // 로그인된 상태에서 조사자 이름이 비어 있으면 자동으로 설정 시트 열어 입력 유도
+    if (!lastInv.trim() && loggedInNickname) {
       setSettingsOpen(true);
     }
     setReady(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const toggleSegmentLock = () => {
-    setSegmentLocked((prev) => {
-      const next = !prev;
-      try {
-        window.localStorage.setItem(LS_SEGMENT_LOCKED, next ? "1" : "0");
-      } catch {
-        /* ignore */
-      }
-      return next;
-    });
-  };
+  // 시트 열릴 때마다 현재값으로 draft 초기화
+  useEffect(() => {
+    if (settingsOpen) {
+      setDraftSegment(segment);
+      setDraftInvestigator(investigator);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settingsOpen]);
 
-  const changeSegment = (next: string) => {
-    if (next === segment) return;
-    if (segmentLocked) return;
-    setSegment(next);
+  const saveSettings = () => {
+    if (!draftInvestigator.trim()) return;
+    if (draftSegment && draftSegment !== segment) setSegment(draftSegment);
+    if (draftInvestigator !== investigator) setInvestigator(draftInvestigator);
+    setSettingsOpen(false);
   };
 
   // 구간 변경 시 그 구간 상태 로드
@@ -539,15 +534,14 @@ export default function DongseoSurveyClient({
 
   if (!ready) {
     return (
-      <div className="min-h-screen bg-[#08080f] text-gray-100 flex flex-col items-center justify-center gap-3">
-        <Loader2 className="h-8 w-8 animate-spin text-orange-400" />
-        <p className="text-sm text-gray-400">로딩중...</p>
+      <div className="min-h-screen bg-[#0D1117] text-gray-100 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-rose-400" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#08080f] text-gray-100">
+    <div className="min-h-screen bg-[#0D1117] text-gray-100">
       <Toaster
         theme="dark"
         position="top-center"
@@ -567,7 +561,7 @@ export default function DongseoSurveyClient({
       </div>
 
       <header
-        className="sticky top-0 z-40 bg-[#08080f]/90 backdrop-blur-md border-b border-white/10"
+        className="sticky top-0 z-40 bg-[#0D1117]/90 backdrop-blur-md border-b border-white/10"
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <div
@@ -592,21 +586,18 @@ export default function DongseoSurveyClient({
             onClick={() => setSettingsOpen(true)}
             className="flex-1 min-w-0 h-10 px-3 rounded-lg bg-white/[0.05] hover:bg-white/[0.08] active:bg-white/[0.1] border border-white/10 flex items-center gap-2"
           >
-            <span className="text-sm font-bold bg-gradient-to-r from-orange-300 via-orange-400 to-pink-500 bg-clip-text text-transparent tabular-nums truncate">
+            <span className="text-sm font-bold bg-gradient-to-r from-rose-300 via-rose-400 to-pink-500 bg-clip-text text-transparent tabular-nums truncate">
               {segment || "구간 미선택"}
             </span>
             {investigator.trim() ? (
-              <span className="text-xs text-gray-300 truncate min-w-0">
-                · {investigator}
+              <span className="text-sm font-bold bg-gradient-to-r from-rose-300 via-rose-400 to-pink-500 bg-clip-text text-transparent truncate min-w-0">
+                {investigator}
               </span>
             ) : (
-              <span className="text-xs text-red-400 truncate">
-                · 조사자 입력
+              <span className="text-sm font-bold text-red-400 truncate">
+                조사자 입력
               </span>
             )}
-            {segmentLocked ? (
-              <Lock className="h-3 w-3 text-amber-300 shrink-0" />
-            ) : null}
             <Settings className="h-4 w-4 text-gray-400 shrink-0 ml-auto" />
           </button>
 
@@ -622,7 +613,7 @@ export default function DongseoSurveyClient({
           ) : (
             <Link
               href={`/tools/login?next=${encodeURIComponent("/tools/dongseo-survey")}`}
-              className="text-xs text-orange-300 hover:text-orange-200 font-semibold shrink-0"
+              className="text-xs text-rose-300 hover:text-rose-200 font-semibold shrink-0"
             >
               로그인
             </Link>
@@ -665,7 +656,7 @@ export default function DongseoSurveyClient({
           </div>
 
           <div
-            className="sticky z-30 -mx-4 px-4 py-2 mb-3 bg-[#08080f]/95 backdrop-blur-md border-b border-white/5"
+            className="sticky z-30 -mx-4 px-4 py-2 mb-3 bg-[#0D1117]/95 backdrop-blur-md border-b border-white/5"
             style={{ top: "calc(env(safe-area-inset-top) + 64px)" }}
           >
             <div className="flex items-center gap-1 rounded-lg bg-white/[0.03] border border-white/10 p-1 overflow-x-auto">
@@ -755,28 +746,24 @@ export default function DongseoSurveyClient({
           </SheetDescription>
           <div className="pt-2">
             <SegmentPicker
-              value={segment}
-              onChange={changeSegment}
-              locked={segmentLocked}
-              onToggleLock={toggleSegmentLock}
+              value={draftSegment}
+              onChange={setDraftSegment}
             />
             <div className="mt-5">
               <label className="block text-xs text-gray-400 mb-1.5">
                 조사자 <span className="text-red-400">*</span>
               </label>
               <input
-                value={investigator}
-                onChange={(e) => setInvestigator(e.target.value)}
-                readOnly={segmentLocked}
-                disabled={segmentLocked}
+                value={draftInvestigator}
+                onChange={(e) => setDraftInvestigator(e.target.value)}
                 placeholder="예: 홍길동"
-                className={`w-full h-11 px-3 rounded-lg bg-white/[0.05] border text-white text-base placeholder:text-gray-600 focus:outline-none focus:border-orange-400/50 disabled:opacity-70 disabled:cursor-not-allowed ${
-                  !investigator.trim()
+                className={`w-full h-11 px-3 rounded-lg bg-white/[0.05] border text-white text-base placeholder:text-gray-600 focus:outline-none focus:border-rose-400/50 ${
+                  !draftInvestigator.trim()
                     ? "border-red-500/40"
                     : "border-white/10"
                 }`}
               />
-              {!investigator.trim() ? (
+              {!draftInvestigator.trim() ? (
                 <p className="mt-1.5 text-[11px] text-red-400">
                   조사자 이름을 먼저 입력해주세요. 카운터 기록은 이름 입력 후 활성화됩니다.
                 </p>
@@ -788,11 +775,11 @@ export default function DongseoSurveyClient({
             </p>
             <button
               type="button"
-              onClick={() => setSettingsOpen(false)}
-              disabled={!investigator.trim()}
-              className="mt-5 w-full h-11 rounded-lg bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+              onClick={saveSettings}
+              disabled={!draftInvestigator.trim()}
+              className="mt-5 w-full h-11 rounded-lg bg-rose-500 hover:bg-rose-600 active:bg-rose-700 text-white font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              닫기
+              저장
             </button>
           </div>
         </SheetContent>
@@ -822,7 +809,7 @@ export default function DongseoSurveyClient({
                     setConfirmState(null);
                     goToLogin();
                   }}
-                  className="bg-orange-500 hover:bg-orange-600 text-white"
+                  className="bg-rose-500 hover:bg-rose-600 text-white"
                 >
                   로그인하러 가기
                 </AlertDialogAction>
@@ -835,7 +822,7 @@ export default function DongseoSurveyClient({
                   마지막 기록을 되돌릴까요?
                 </AlertDialogTitle>
                 <AlertDialogDescription className="text-gray-400">
-                  <span className="text-orange-300 font-semibold">{confirmState.label}</span>
+                  <span className="text-rose-300 font-semibold">{confirmState.label}</span>
                   {" 항목의 마지막 카운트를 취소해요."}
                 </AlertDialogDescription>
               </AlertDialogHeader>
@@ -853,7 +840,7 @@ export default function DongseoSurveyClient({
                       icon: "↶",
                     });
                   }}
-                  className="bg-orange-500 hover:bg-orange-600 text-white"
+                  className="bg-rose-500 hover:bg-rose-600 text-white"
                 >
                   되돌리기
                 </AlertDialogAction>
@@ -898,13 +885,9 @@ export default function DongseoSurveyClient({
 function SegmentPicker({
   value,
   onChange,
-  locked,
-  onToggleLock,
 }: {
   value: string;
   onChange: (v: string) => void;
-  locked: boolean;
-  onToggleLock: () => void;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -934,60 +917,47 @@ function SegmentPicker({
 
   return (
     <div>
-      <div className="mb-3 flex items-baseline gap-2">
-        <span className="text-3xl font-black leading-none bg-gradient-to-r from-orange-300 via-orange-400 to-pink-500 bg-clip-text text-transparent tabular-nums">
+      <div className="mb-3">
+        <span className="text-3xl font-black leading-none bg-gradient-to-r from-rose-300 via-rose-400 to-pink-500 bg-clip-text text-transparent tabular-nums">
           {value || "미선택"}
         </span>
-        {locked ? (
-          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-300 shrink-0">
-            <Lock className="h-3 w-3" /> 고정
-          </span>
-        ) : null}
       </div>
       <label className="block text-xs text-gray-400 mb-1.5">구간 선택</label>
-      <div className="flex items-center gap-2">
-        <Popover
-          open={locked ? false : open}
-          onOpenChange={(next) => {
-            if (locked) return;
-            setOpen(next);
-          }}
-        >
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              disabled={locked}
-              aria-disabled={locked}
-              className="flex-1 min-w-0 h-11 px-3 rounded-lg bg-white/[0.05] border border-white/10 text-white text-base font-semibold flex items-center justify-between gap-2 focus:outline-none focus:border-orange-400/50 active:bg-white/[0.08] disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              <span className="flex items-center gap-2 min-w-0">
-                {locked ? (
-                  <Lock className="h-3.5 w-3.5 text-amber-300 shrink-0" />
-                ) : null}
-                <span className="truncate">{value || "구간 선택"}</span>
-              </span>
-              <ChevronDown className="h-4 w-4 text-gray-400 shrink-0" />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent
-            className="p-0 bg-[#111116] border-white/10 text-gray-100 w-[--radix-popover-trigger-width]"
-            align="start"
-            sideOffset={6}
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            className="w-full h-11 px-3 rounded-lg bg-white/[0.05] border border-white/10 text-white text-base font-semibold flex items-center justify-between gap-2 focus:outline-none focus:border-rose-400/50 active:bg-white/[0.08]"
           >
+            <span className="truncate">{value || "구간 선택"}</span>
+            <ChevronDown className="h-4 w-4 text-gray-400 shrink-0" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent
+          className="p-0 bg-[#111116] border-white/10 text-gray-100 w-[var(--radix-popover-trigger-width)]"
+          align="start"
+          sideOffset={6}
+        >
             <Command
-              className="bg-transparent"
+              className="!bg-[#111116] !text-gray-100 [&_[cmdk-input-wrapper]]:!border-white/10 [&_[cmdk-group-heading]]:!text-gray-500"
               filter={(val, search) => {
                 if (!search) return 1;
-                const s = search.trim().toLowerCase();
-                return val.toLowerCase().includes(s) ? 1 : 0;
+                // 공백 무시 매칭 — "복선1" 도 "복선 1" 항목 매칭
+                const norm = (s: string) =>
+                  s.toLowerCase().replace(/\s+/g, "");
+                return norm(val).includes(norm(search)) ? 1 : 0;
               }}
             >
               <CommandInput
                 placeholder="번호 또는 이름 검색"
-                className="text-white placeholder:text-gray-500"
+                className="!text-white placeholder:!text-gray-500 !bg-transparent"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
               />
-              <CommandList className="max-h-[280px]">
-                <CommandEmpty className="text-gray-500">
+              <CommandList className="h-[320px]">
+                <CommandEmpty className="!text-gray-500 flex items-center justify-center min-h-[320px] !py-0">
                   일치하는 구간이 없어요.
                 </CommandEmpty>
                 <CommandGroup heading="본선 (1~55)">
@@ -996,14 +966,13 @@ function SegmentPicker({
                       key={opt.key}
                       value={`${opt.key} 본선 ${opt.n}`}
                       onSelect={() => handleSelect(opt.key)}
-                      className="text-gray-200 aria-selected:bg-white/[0.08] aria-selected:text-white cursor-pointer"
+                      className="text-gray-200 cursor-pointer !bg-transparent data-[selected=true]:!bg-white/[0.08] data-[selected=true]:!text-white !py-3 !px-3"
                     >
-                      <span className="tabular-nums font-semibold w-8">
-                        {opt.n}
+                      <span className="tabular-nums font-semibold">
+                        {opt.n}구간
                       </span>
-                      <span className="text-gray-400 text-xs">구간</span>
                       {value === opt.key ? (
-                        <Check className="ml-auto h-4 w-4 text-orange-400" />
+                        <Check className="ml-auto h-4 w-4 text-rose-400" />
                       ) : null}
                     </CommandItem>
                   ))}
@@ -1014,45 +983,21 @@ function SegmentPicker({
                       key={opt.key}
                       value={`${opt.key} 복선 ${opt.n}`}
                       onSelect={() => handleSelect(opt.key)}
-                      className="text-gray-200 aria-selected:bg-white/[0.08] aria-selected:text-white cursor-pointer"
+                      className="text-gray-200 cursor-pointer !bg-transparent data-[selected=true]:!bg-white/[0.08] data-[selected=true]:!text-white !py-3 !px-3"
                     >
-                      <span className="text-gray-400 text-xs w-8">복선</span>
                       <span className="tabular-nums font-semibold">
-                        {opt.n}
+                        복선 {opt.n}
                       </span>
                       {value === opt.key ? (
-                        <Check className="ml-auto h-4 w-4 text-orange-400" />
+                        <Check className="ml-auto h-4 w-4 text-rose-400" />
                       ) : null}
                     </CommandItem>
                   ))}
                 </CommandGroup>
               </CommandList>
             </Command>
-          </PopoverContent>
-        </Popover>
-
-        <button
-          type="button"
-          onClick={onToggleLock}
-          aria-pressed={locked}
-          title={locked ? "잠금 해제" : "실수 방지를 위해 잠금"}
-          className={`inline-flex items-center gap-1 h-11 px-3 rounded-lg border text-xs font-semibold transition shrink-0 ${
-            locked
-              ? "bg-amber-500/15 border-amber-500/40 text-amber-300"
-              : "bg-white/[0.04] border-white/10 text-gray-400 hover:text-white"
-          }`}
-        >
-          {locked ? (
-            <>
-              <Unlock className="h-3.5 w-3.5" /> 해제
-            </>
-          ) : (
-            <>
-              <Lock className="h-3.5 w-3.5" /> 잠금
-            </>
-          )}
-        </button>
-      </div>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
@@ -1182,7 +1127,7 @@ function ItemCard({
               ? "bg-emerald-600 active:bg-emerald-700 shadow-emerald-500/30 ring-2 ring-emerald-400/40"
               : isTypo
                 ? "bg-gray-600 active:bg-gray-700 shadow-none"
-                : "bg-orange-500 active:bg-orange-600 shadow-orange-500/30"
+                : "bg-rose-500 active:bg-rose-600 shadow-rose-500/30"
           }`}
         >
           {copied === previewLabel ? (
@@ -1223,7 +1168,7 @@ function ItemCard({
               <button
                 type="button"
                 onClick={() => setShowAll((v) => !v)}
-                className="text-[11px] text-orange-300 hover:text-orange-200 font-semibold"
+                className="text-[11px] text-rose-300 hover:text-rose-200 font-semibold"
               >
                 {showAll ? "접기" : `더보기 (+${entries.length - 3})`}
               </button>
@@ -1313,7 +1258,7 @@ function ItemCard({
                     <div className="space-y-1 text-base text-gray-200">
                       <div className="font-mono">
                         시작:{" "}
-                        <span className="text-orange-300 font-bold">
+                        <span className="text-rose-300 font-bold">
                           {
                             (item as Extract<ItemDef, { type: "range" }>)
                               .startLabel
@@ -1333,7 +1278,7 @@ function ItemCard({
                       </div>
                     </div>
                   ) : (
-                    <div className="font-mono text-base text-orange-300 font-bold">
+                    <div className="font-mono text-base text-rose-300 font-bold">
                       {(item as Extract<ItemDef, { type: "point" }>)
                         .pointLabel ?? item.label}
                       NN
@@ -1354,7 +1299,7 @@ function ItemCard({
           <AlertDialogFooter>
             <AlertDialogAction
               onClick={() => setInfoOpen(false)}
-              className="bg-orange-500 hover:bg-orange-600 text-white"
+              className="bg-rose-500 hover:bg-rose-600 text-white"
             >
               닫기
             </AlertDialogAction>

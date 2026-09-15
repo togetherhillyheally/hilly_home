@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { ASSIGNMENTS } from "./items";
 
-type Accent = "sky" | "violet" | "amber" | "orange" | "emerald" | "pink";
+type Accent = "sky" | "violet" | "amber" | "rose" | "emerald" | "pink";
 
 const ACCENT_CLASSES: Record<
   Accent,
@@ -33,10 +33,10 @@ const ACCENT_CLASSES: Record<
     ring: "ring-amber-500/20",
     chip: "bg-amber-500/15 text-amber-300",
   },
-  orange: {
-    icon: "text-orange-300 bg-orange-500/15 border-orange-500/30",
-    ring: "ring-orange-500/20",
-    chip: "bg-orange-500/15 text-orange-300",
+  rose: {
+    icon: "text-rose-300 bg-rose-500/15 border-rose-500/30",
+    ring: "ring-rose-500/20",
+    chip: "bg-rose-500/15 text-rose-300",
   },
   emerald: {
     icon: "text-emerald-300 bg-emerald-500/15 border-emerald-500/30",
@@ -82,25 +82,25 @@ export default function Reference() {
             <li className="flex gap-2">
               <span className="text-sky-400">·</span>
               <span>
-                <span className="font-mono text-orange-300">포장 01 시작</span>{" "}
+                <span className="font-mono text-rose-300">포장 01 시작</span>{" "}
                 → 사진
               </span>
             </li>
             <li className="flex gap-2">
               <span className="text-sky-400">·</span>
               <span>
-                <span className="font-mono text-orange-300">포장 01 종료</span>{" "}
+                <span className="font-mono text-rose-300">포장 01 종료</span>{" "}
                 →{" "}
-                <span className="font-mono text-orange-300">비포장 01 시작</span>{" "}
+                <span className="font-mono text-rose-300">비포장 01 시작</span>{" "}
                 → 사진
               </span>
             </li>
             <li className="flex gap-2">
               <span className="text-sky-400">·</span>
               <span>
-                <span className="font-mono text-orange-300">비포장 01 시작</span>{" "}
+                <span className="font-mono text-rose-300">비포장 01 시작</span>{" "}
                 →{" "}
-                <span className="font-mono text-orange-300">비포장 01 종료</span>{" "}
+                <span className="font-mono text-rose-300">비포장 01 종료</span>{" "}
                 → 사진
               </span>
             </li>
@@ -252,7 +252,7 @@ export default function Reference() {
         icon={<Users className="h-4 w-4" />}
         title="구역별 조사자 배정"
         subtitle={`${ASSIGNMENTS.length}개 구역`}
-        accent="orange"
+        accent="rose"
       >
         {/* 모바일: 카드 리스트 / 데스크탑: 표 */}
         <div className="md:hidden space-y-2.5">
@@ -263,7 +263,7 @@ export default function Reference() {
             >
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-orange-500/15 text-orange-300 text-xs font-bold flex items-center justify-center">
+                  <span className="w-6 h-6 rounded-full bg-rose-500/15 text-rose-300 text-xs font-bold flex items-center justify-center">
                     {a.zone}
                   </span>
                   <span className="text-sm font-semibold text-white">
@@ -300,7 +300,7 @@ export default function Reference() {
               </div>
               <div className="mt-2 pt-2 border-t border-white/5">
                 <div className="text-xs text-gray-400 mb-0.5">조사자</div>
-                <div className="text-sm text-orange-300 leading-snug">
+                <div className="text-sm text-rose-300 leading-snug">
                   {a.investigators}
                 </div>
               </div>
@@ -338,7 +338,7 @@ export default function Reference() {
                   <td className="px-2 py-2 text-right text-white font-semibold tabular-nums">
                     {a.totalCount}
                   </td>
-                  <td className="px-2 py-2 text-orange-300">
+                  <td className="px-2 py-2 text-rose-300">
                     {a.investigators}
                   </td>
                   <td className="px-2 py-2 text-right text-gray-300 tabular-nums">
