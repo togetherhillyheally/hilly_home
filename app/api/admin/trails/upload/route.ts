@@ -4,6 +4,7 @@ import { hasMenuAccess, readAdminSession } from "@/lib/admin-session";
 import {
   prepareTrailFromText,
   displayNameFromFileName,
+  mergeMultiGeometry,
   type PreparedTrailGeometry,
 } from "@/lib/gpx-prep";
 import {
@@ -19,17 +20,6 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 type ActivityType = "walking" | "running" | "cycling";
-
-type Coord = [number, number] | [number, number, number];
-
-function isMultiCoords(coords: PreparedTrailGeometry["coordinates"]): coords is Coord[][] {
-  return (
-    coords.length > 0 &&
-    Array.isArray(coords[0]) &&
-    (coords[0] as unknown[]).length > 0 &&
-    Array.isArray((coords[0] as unknown[])[0])
-  );
-}
 
 async function uploadGpxToStorage(
   storagePath: string,
@@ -110,41 +100,6 @@ async function insertTrailRow(row: Record<string, unknown>): Promise<{
   return arr[0];
 }
 
-function mergeMulti(
-  preps: PreparedTrailGeometry[]
-): {
-  bounds: PreparedTrailGeometry["bounds"];
-  center: [number, number];
-  coordinates: Coord[][];
-  distanceKm: number;
-  totalAscentM: number;
-} {
-  const bounds = preps.reduce(
-    (acc, p) => ({
-      minLat: Math.min(acc.minLat, p.bounds.minLat),
-      maxLat: Math.max(acc.maxLat, p.bounds.maxLat),
-      minLon: Math.min(acc.minLon, p.bounds.minLon),
-      maxLon: Math.max(acc.maxLon, p.bounds.maxLon),
-    }),
-    preps[0].bounds
-  );
-  const center: [number, number] = [
-    (bounds.minLon + bounds.maxLon) / 2,
-    (bounds.minLat + bounds.maxLat) / 2,
-  ];
-  const distanceKm =
-    Math.round(preps.reduce((s, p) => s + p.distanceKm, 0) * 10) / 10;
-  const totalAscentM = Math.round(
-    preps.reduce((s, p) => s + p.totalAscentM, 0)
-  );
-  // 각 prep 의 coordinates 가 LineString or MultiLineString. 모두 평탄화해서
-  // 최종 결과는 항상 LineString[][] (MultiLineString)
-  const coordinates: Coord[][] = preps.flatMap((p) =>
-    isMultiCoords(p.coordinates) ? p.coordinates : [p.coordinates as Coord[]]
-  );
-  return { bounds, center, coordinates, distanceKm, totalAscentM };
-}
-
 export async function POST(req: Request) {
   const session = await readAdminSession();
   if (!session) {
@@ -209,7 +164,7 @@ export async function POST(req: Request) {
   // 3) 단일/다중 분기
   const isMultiUpload = preps.length > 1;
   const merged = isMultiUpload
-    ? mergeMulti(preps.map((p) => p.prep))
+    ? mergeMultiGeometry(preps.map((p) => p.prep))
     : {
         bounds: preps[0].prep.bounds,
         center: preps[0].prep.center,

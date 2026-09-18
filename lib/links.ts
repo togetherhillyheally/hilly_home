@@ -3,8 +3,14 @@
 // (hilly_rn/lib/links.ts 와 동일 형식 유지)
 
 export const WEB_BASE_URL = "https://hillyheally.com";
+export const MAP_BASE_URL = "https://map.hillyheally.com";
 
 /** 지도(트레일) 공유 링크 — /t/{trailId} 웹 랜딩(앱 미설치 폴백) + 앱 딥링크 */
 export function buildTrailShareUrl(trailId: string): string {
   return `${WEB_BASE_URL}/t/${trailId}`;
+}
+
+/** 웹 지도 뷰어 링크 — map.hillyheally.com/m/{trailId} (PO 공개 지도) */
+export function buildTrailMapUrl(trailId: string): string {
+  return `${MAP_BASE_URL}/m/${trailId}`;
 }

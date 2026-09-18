@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { hasMenuAccess, readAdminSession } from "@/lib/admin-session";
 import { adminFetch } from "@/lib/admin-rest";
 import {
-  prepareTrailFromGpxText,
+  prepareTrailFromText,
+  mergeMultiGeometry,
   type PreparedTrailGeometry,
 } from "@/lib/gpx-prep";
 import {
@@ -19,7 +20,8 @@ const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 async function uploadGpxToStorage(
   storagePath: string,
-  gpxText: string
+  fileText: string,
+  contentType: string
 ): Promise<void> {
   const res = await fetch(
     `${SUPABASE_URL}/storage/v1/object/${TRAIL_GPX_STORAGE_BUCKET}/${storagePath}`,
@@ -28,16 +30,29 @@ async function uploadGpxToStorage(
       headers: {
         Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
         apikey: SERVICE_ROLE_KEY,
-        "Content-Type": "application/gpx+xml",
+        "Content-Type": contentType,
         "x-upsert": "true",
       },
-      body: gpxText,
+      body: fileText,
     }
   );
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     throw new Error(`Storage upload failed (${res.status}): ${text}`);
   }
+}
+
+async function deleteFromStorage(storagePath: string): Promise<void> {
+  await fetch(
+    `${SUPABASE_URL}/storage/v1/object/${TRAIL_GPX_STORAGE_BUCKET}/${storagePath}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+        apikey: SERVICE_ROLE_KEY,
+      },
+    }
+  ).catch(() => undefined);
 }
 
 export async function POST(
@@ -64,13 +79,31 @@ export async function POST(
     );
   }
 
-  const file = form.get("file");
-  if (!(file instanceof File) || file.size === 0) {
+  // 다중 files 우선 지원, 하위호환으로 단일 file 도 허용
+  const rawFiles: File[] = [];
+  for (const v of form.getAll("files")) {
+    if (v instanceof File && v.size > 0) rawFiles.push(v);
+  }
+  if (rawFiles.length === 0) {
+    const single = form.get("file");
+    if (single instanceof File && single.size > 0) rawFiles.push(single);
+  }
+  if (rawFiles.length === 0) {
     return NextResponse.json(
-      { error: "GPX 파일을 첨부해주세요." },
+      { error: "GPX 또는 KML 파일을 첨부해주세요." },
       { status: 400 }
     );
   }
+  for (const f of rawFiles) {
+    const n = f.name.toLowerCase();
+    if (!n.endsWith(".gpx") && !n.endsWith(".kml")) {
+      return NextResponse.json(
+        { error: `지원하지 않는 형식: ${f.name}` },
+        { status: 400 }
+      );
+    }
+  }
+  const isKml = rawFiles[0].name.toLowerCase().endsWith(".kml");
   const resetStartEnd = String(form.get("reset_start_end") ?? "") === "true";
 
   // 2) 기존 trail 조회 — 기존 storage path 활용
@@ -96,35 +129,65 @@ export async function POST(
     );
   }
 
-  // 3) GPX 파싱
-  let prep: PreparedTrailGeometry;
-  let gpxText: string;
+  // 3) 파싱 (GPX/KML 자동 판별) — 여러 파일이면 병합
+  let preps: { fileName: string; text: string; prep: PreparedTrailGeometry }[];
   try {
-    gpxText = await file.text();
-    prep = prepareTrailFromGpxText(gpxText);
+    preps = await Promise.all(
+      rawFiles.map(async (f) => {
+        const text = await f.text();
+        return { fileName: f.name, text, prep: prepareTrailFromText(text) };
+      })
+    );
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : "GPX 파싱 실패";
+    const msg = e instanceof Error ? e.message : "파일 파싱 실패";
     return NextResponse.json({ error: msg }, { status: 400 });
   }
+  const merged =
+    preps.length > 1
+      ? mergeMultiGeometry(preps.map((p) => p.prep))
+      : {
+          bounds: preps[0].prep.bounds,
+          center: preps[0].prep.center,
+          coordinates: preps[0].prep.coordinates,
+          distanceKm: preps[0].prep.distanceKm,
+          totalAscentM: preps[0].prep.totalAscentM,
+        };
+  const primaryText = preps[0].text;
 
-  // 4) Storage 업로드 — 기존 path 가 있으면 그대로 덮어쓰기,
-  //    없으면 표준 경로(adminId/trailId.gpx)로 신규 저장.
-  const storagePath =
-    trail.gpx_storage_path ?? `${ADMIN_UPLOADER_PROFILE_ID}/${id}.gpx`;
+  // 4) Storage 업로드 — 새 파일 확장자에 맞춰 저장 경로 재구성.
+  //    이전 파일이 다른 확장자였다면 잔여물 정리.
+  const newExt = isKml ? "kml" : "gpx";
+  const oldPath = trail.gpx_storage_path;
+  const oldExt = oldPath?.toLowerCase().endsWith(".kml")
+    ? "kml"
+    : oldPath?.toLowerCase().endsWith(".gpx")
+      ? "gpx"
+      : null;
+  const baseNoExt = oldPath?.replace(/\.(gpx|kml)$/i, "");
+  const storagePath = baseNoExt
+    ? `${baseNoExt}.${newExt}`
+    : `${ADMIN_UPLOADER_PROFILE_ID}/${id}.${newExt}`;
+  const contentType = isKml
+    ? "application/vnd.google-earth.kml+xml"
+    : "application/gpx+xml";
   try {
-    await uploadGpxToStorage(storagePath, gpxText);
+    await uploadGpxToStorage(storagePath, primaryText, contentType);
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Storage 업로드 실패";
     return NextResponse.json({ error: msg }, { status: 500 });
   }
+  // 확장자가 바뀌었으면 이전 파일 정리 (best-effort)
+  if (oldPath && oldExt && oldExt !== newExt && oldPath !== storagePath) {
+    await deleteFromStorage(oldPath);
+  }
 
   // 5) trails 업데이트
   const update: Record<string, unknown> = {
-    distance_km: prep.distanceKm,
-    total_ascent_m: prep.totalAscentM,
-    bounds: prep.bounds,
-    center: prep.center,
-    coordinates: prep.coordinates,
+    distance_km: merged.distanceKm,
+    total_ascent_m: merged.totalAscentM,
+    bounds: merged.bounds,
+    center: merged.center,
+    coordinates: merged.coordinates,
     gpx_storage_bucket: TRAIL_GPX_STORAGE_BUCKET,
     gpx_storage_path: storagePath,
     updated_at: new Date().toISOString(),
@@ -158,8 +221,9 @@ export async function POST(
   return NextResponse.json({
     success: true,
     trail: {
-      distance_km: prep.distanceKm,
-      total_ascent_m: prep.totalAscentM,
+      distance_km: merged.distanceKm,
+      total_ascent_m: merged.totalAscentM,
     },
+    files: preps.length,
   });
 }

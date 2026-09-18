@@ -155,6 +155,54 @@ export type PreparedTrailGeometry = {
   totalAscentM: number;
 };
 
+type MergedCoord = [number, number] | [number, number, number];
+
+function isMultiCoords(
+  coords: PreparedTrailGeometry["coordinates"]
+): coords is MergedCoord[][] {
+  return Array.isArray(coords[0]) && Array.isArray((coords[0] as unknown[])[0]);
+}
+
+/**
+ * 여러 GPX/KML 파일에서 뽑은 geometry 를 하나로 합침.
+ * bounds/거리/누적상승은 union·합산, 좌표는 MultiLineString 로 평탄화.
+ */
+export function mergeMultiGeometry(preps: PreparedTrailGeometry[]): {
+  bounds: PreparedTrailGeometry["bounds"];
+  center: [number, number];
+  coordinates: MergedCoord[][];
+  distanceKm: number;
+  totalAscentM: number;
+} {
+  if (preps.length === 0) {
+    throw new Error("병합할 파일이 없습니다.");
+  }
+  const bounds = preps.reduce(
+    (acc, p) => ({
+      minLat: Math.min(acc.minLat, p.bounds.minLat),
+      maxLat: Math.max(acc.maxLat, p.bounds.maxLat),
+      minLon: Math.min(acc.minLon, p.bounds.minLon),
+      maxLon: Math.max(acc.maxLon, p.bounds.maxLon),
+    }),
+    preps[0].bounds
+  );
+  const center: [number, number] = [
+    (bounds.minLon + bounds.maxLon) / 2,
+    (bounds.minLat + bounds.maxLat) / 2,
+  ];
+  const distanceKm =
+    Math.round(preps.reduce((s, p) => s + p.distanceKm, 0) * 10) / 10;
+  const totalAscentM = Math.round(
+    preps.reduce((s, p) => s + p.totalAscentM, 0)
+  );
+  const coordinates: MergedCoord[][] = preps.flatMap((p) =>
+    isMultiCoords(p.coordinates)
+      ? (p.coordinates as MergedCoord[][])
+      : [p.coordinates as MergedCoord[]]
+  );
+  return { bounds, center, coordinates, distanceKm, totalAscentM };
+}
+
 function extractGpxName(gpxText: string): string | undefined {
   const nameMatch = gpxText.match(/<name>([^<]+)<\/name>/);
   return nameMatch?.[1]?.trim();

@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Copy, Globe, Link as LinkIcon, Lock, Loader2 } from "lucide-react";
-import { buildTrailShareUrl } from "@/lib/links";
+import { buildTrailMapUrl } from "@/lib/links";
 
 export type Visibility = "public" | "unlisted" | "private";
 
@@ -93,7 +93,7 @@ export default function VisibilitySelect({
 
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(buildTrailShareUrl(trailId));
+      await navigator.clipboard.writeText(buildTrailMapUrl(trailId));
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
