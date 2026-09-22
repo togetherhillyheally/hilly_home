@@ -25,6 +25,7 @@ import CheckpointMap, {
   type Checkpoint,
   type LatLng,
 } from "@/components/admin/CheckpointMap";
+import { CHECKPOINT_MARKER_ICONS } from "@/lib/checkpoint-marker-icons";
 import QuizEditor, {
   isQuizComplete,
   type QuizDraft,
@@ -56,6 +57,7 @@ type CheckpointPatch = {
   note?: string | null;
   lat?: number;
   lng?: number;
+  marker_icon?: string | null;
   radius_m?: number | null;
   quiz_question?: string | null;
   quiz_choices?: string[] | null;
@@ -155,7 +157,15 @@ export default function CheckpointsEditor({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const checkpointsForMap: Checkpoint[] = useMemo(
-    () => cps.map((c) => ({ id: c.id, lng: c.lng, lat: c.lat, title: c.title, sort_order: c.sort_order })),
+    () =>
+      cps.map((c) => ({
+        id: c.id,
+        lng: c.lng,
+        lat: c.lat,
+        title: c.title,
+        sort_order: c.sort_order,
+        marker_icon: c.marker_icon,
+      })),
     [cps]
   );
 
@@ -848,6 +858,7 @@ function CheckpointDetail({
   const [note, setNote] = useState(cp.note ?? "");
   const [lat, setLat] = useState(String(cp.lat));
   const [lng, setLng] = useState(String(cp.lng));
+  const [markerIcon, setMarkerIcon] = useState<string | null>(cp.marker_icon);
   const [quizValue, setQuizValue] = useState<QuizEditorValue>(() =>
     initialCpQuizValue(cp)
   );
@@ -858,6 +869,7 @@ function CheckpointDetail({
     setNote(cp.note ?? "");
     setLat(String(cp.lat));
     setLng(String(cp.lng));
+    setMarkerIcon(cp.marker_icon);
     setQuizValue(initialCpQuizValue(cp));
   }, [cp]);
 
@@ -869,6 +881,7 @@ function CheckpointDetail({
     note !== (cp.note ?? "") ||
     Number(lat) !== cp.lat ||
     Number(lng) !== cp.lng ||
+    markerIcon !== cp.marker_icon ||
     quizDirty;
 
   const save = () => {
@@ -879,6 +892,9 @@ function CheckpointDetail({
     const lngN = Number(lng);
     if (Number.isFinite(latN) && latN !== cp.lat) patch.lat = latN;
     if (Number.isFinite(lngN) && lngN !== cp.lng) patch.lng = lngN;
+    if (markerIcon !== cp.marker_icon) {
+      patch.marker_icon = markerIcon;
+    }
 
     // radius
     if ((quizValue.radiusM ?? null) !== (cp.radius_m ?? null)) {
@@ -967,6 +983,59 @@ function CheckpointDetail({
             className="w-full h-9 px-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-xs font-mono focus:outline-none focus:border-orange-500/50"
           />
         </div>
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between mb-1">
+          <label className="block text-[10px] text-gray-500">아이콘</label>
+          {markerIcon ? (
+            <button
+              type="button"
+              onClick={() => setMarkerIcon(null)}
+              className="text-[10px] text-gray-400 hover:text-white"
+            >
+              초기화
+            </button>
+          ) : null}
+        </div>
+        <div className="grid grid-cols-9 gap-1">
+          {Object.entries(CHECKPOINT_MARKER_ICONS).map(([name, icon]) => {
+            const selected = markerIcon === name;
+            return (
+              <button
+                key={name}
+                type="button"
+                title={name}
+                onClick={() => setMarkerIcon(name)}
+                className={`aspect-square rounded-md flex items-center justify-center border transition ${
+                  selected
+                    ? "border-orange-400 bg-orange-500/15"
+                    : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"
+                }`}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width={18}
+                  height={18}
+                  fill="none"
+                  stroke={icon.color}
+                  strokeWidth={2.2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  {icon.paths.map((d, i) => (
+                    <path key={i} d={d} />
+                  ))}
+                </svg>
+              </button>
+            );
+          })}
+        </div>
+        {!markerIcon ? (
+          <p className="text-[10px] text-gray-500 mt-1">
+            미선택 시 기본 마커(빨간 깃발) 사용
+          </p>
+        ) : null}
       </div>
 
       <div className="pt-2 border-t border-white/10">
