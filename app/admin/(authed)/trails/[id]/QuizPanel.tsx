@@ -41,6 +41,7 @@ type Props = {
   bounds:
     | { minLat: number; maxLat: number; minLon: number; maxLon: number }
     | null;
+  segmentsColored?: boolean;
 };
 
 type Draft = {
@@ -87,7 +88,12 @@ function toDraft(q: Quiz): Draft {
   };
 }
 
-export default function QuizPanel({ trailId, coordinates, bounds }: Props) {
+export default function QuizPanel({
+  trailId,
+  coordinates,
+  bounds,
+  segmentsColored = false,
+}: Props) {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -411,6 +417,7 @@ export default function QuizPanel({ trailId, coordinates, bounds }: Props) {
               <TrailMapPreview
                 coordinates={coordinates as Coordinates}
                 bounds={bounds ?? undefined}
+                segmentsColored={segmentsColored}
                 editMode="start"
                 onMapClick={onMapClick}
                 pendingPoint={

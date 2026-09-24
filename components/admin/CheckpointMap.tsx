@@ -8,6 +8,7 @@ import {
   CHECKPOINT_MARKER_ICONS,
   type MarkerIcon,
 } from "@/lib/checkpoint-marker-icons";
+import { TRAIL_SEGMENT_PALETTE } from "@/lib/trail-palette";
 
 const TRAIL_COLOR = "#DC2F55";
 const CP_COLOR = "#fb923c";
@@ -48,6 +49,8 @@ export type LatLng = { lat: number; lng: number };
 export type CheckpointMapProps = {
   coordinates: Coordinates;
   bounds?: { minLat: number; maxLat: number; minLon: number; maxLon: number };
+  /** true 면 각 세그먼트를 팔레트 색으로 순환 표시. false/undefined 면 단일 색. */
+  segmentsColored?: boolean;
   checkpoints: Checkpoint[];
   selectedId?: string | null;
   /** 지도 클릭으로 새 체크포인트 추가 모드. activate 시 onMapClick 호출. */
@@ -56,6 +59,8 @@ export type CheckpointMapProps = {
   pendingPoint?: LatLng | null;
   onMapClick?: (point: LatLng) => void;
   onMarkerClick?: (cpId: string) => void;
+  /** 마커 드래그 종료 시 새 좌표. 정의되어 있으면 마커가 draggable 로 활성화됨. */
+  onMarkerDragEnd?: (cpId: string, point: LatLng) => void;
   className?: string;
   height?: number | string;
 };
@@ -149,12 +154,14 @@ function makePendingEl(): HTMLDivElement {
 export default function CheckpointMap({
   coordinates,
   bounds,
+  segmentsColored = false,
   checkpoints,
   selectedId,
   addMode,
   pendingPoint,
   onMapClick,
   onMarkerClick,
+  onMarkerDragEnd,
   className,
   height = 480,
 }: CheckpointMapProps) {
@@ -167,12 +174,16 @@ export default function CheckpointMap({
   coordinatesRef.current = coordinates;
   const boundsRef = useRef(bounds);
   boundsRef.current = bounds;
+  const segmentsColoredRef = useRef(segmentsColored);
+  segmentsColoredRef.current = segmentsColored;
 
   // 콜백을 ref 로 보관
   const onMapClickRef = useRef(onMapClick);
   onMapClickRef.current = onMapClick;
   const onMarkerClickRef = useRef(onMarkerClick);
   onMarkerClickRef.current = onMarkerClick;
+  const onMarkerDragEndRef = useRef(onMarkerDragEnd);
+  onMarkerDragEndRef.current = onMarkerDragEnd;
   const addModeRef = useRef(addMode);
   addModeRef.current = addMode;
 
@@ -182,37 +193,75 @@ export default function CheckpointMap({
     applyKoreanLabels(map);
     const coords = coordinatesRef.current;
     const bnd = boundsRef.current;
+    const colored = segmentsColoredRef.current;
     const routes = toRoutes(coords);
     if (routes.length === 0) return;
-    const geometry =
-      routes.length === 1
-        ? {
-            type: "LineString" as const,
-            coordinates: routes[0].map(([lng, lat]) => [lng, lat]),
-          }
-        : {
-            type: "MultiLineString" as const,
-            coordinates: routes.map((seg) =>
-              seg.map(([lng, lat]) => [lng, lat])
-            ),
-          };
+
     if (map.getLayer("trail-line")) map.removeLayer("trail-line");
     if (map.getSource("trail")) map.removeSource("trail");
-    map.addSource("trail", {
-      type: "geojson",
-      data: { type: "Feature", properties: {}, geometry },
-    });
-    map.addLayer({
-      id: "trail-line",
-      type: "line",
-      source: "trail",
-      layout: { "line-join": "round", "line-cap": "round" },
-      paint: {
-        "line-color": TRAIL_COLOR,
-        "line-width": 3,
-        "line-opacity": 0.85,
-      },
-    });
+
+    if (colored && routes.length > 1) {
+      // 세그먼트별 색 — FeatureCollection 으로 각 세그먼트를 개별 feature 로.
+      const features = routes.map((seg, i) => ({
+        type: "Feature" as const,
+        properties: { i },
+        geometry: {
+          type: "LineString" as const,
+          coordinates: seg.map(([lng, lat]) => [lng, lat]),
+        },
+      }));
+      map.addSource("trail", {
+        type: "geojson",
+        data: { type: "FeatureCollection", features },
+      });
+      // 팔레트 순환 매칭 식 — 인덱스 % palette.length
+      const colorExpr: mapboxgl.ExpressionSpecification = [
+        "match",
+        ["%", ["get", "i"], TRAIL_SEGMENT_PALETTE.length],
+        ...TRAIL_SEGMENT_PALETTE.flatMap((c, idx) => [idx, c]),
+        TRAIL_SEGMENT_PALETTE[0],
+      ] as unknown as mapboxgl.ExpressionSpecification;
+      map.addLayer({
+        id: "trail-line",
+        type: "line",
+        source: "trail",
+        layout: { "line-join": "round", "line-cap": "round" },
+        paint: {
+          "line-color": colorExpr,
+          "line-width": 3,
+          "line-opacity": 0.9,
+        },
+      });
+    } else {
+      // 단일 색
+      const geometry =
+        routes.length === 1
+          ? {
+              type: "LineString" as const,
+              coordinates: routes[0].map(([lng, lat]) => [lng, lat]),
+            }
+          : {
+              type: "MultiLineString" as const,
+              coordinates: routes.map((seg) =>
+                seg.map(([lng, lat]) => [lng, lat])
+              ),
+            };
+      map.addSource("trail", {
+        type: "geojson",
+        data: { type: "Feature", properties: {}, geometry },
+      });
+      map.addLayer({
+        id: "trail-line",
+        type: "line",
+        source: "trail",
+        layout: { "line-join": "round", "line-cap": "round" },
+        paint: {
+          "line-color": TRAIL_COLOR,
+          "line-width": 3,
+          "line-opacity": 0.85,
+        },
+      });
+    }
 
     if (!fitInitial) return;
     let fb: LngLatBoundsLike;
@@ -256,6 +305,19 @@ export default function CheckpointMap({
     map.setStyle(target);
     map.once("style.load", () => applyOverlay(map, false));
   }, [styleKey]);
+
+  // segmentsColored 옵션 변경 시 trail 소스/레이어만 재적용
+  const initialColorMount = useRef(true);
+  useEffect(() => {
+    if (initialColorMount.current) {
+      initialColorMount.current = false;
+      return;
+    }
+    const map = mapRef.current;
+    if (!map) return;
+    if (map.loaded()) applyOverlay(map, false);
+    else map.once("load", () => applyOverlay(map, false));
+  }, [segmentsColored]);
 
   // 지도 초기화 — coordinates/bounds 가 바뀌면 새로 그림
   useEffect(() => {
@@ -324,9 +386,22 @@ export default function CheckpointMap({
           ev.stopPropagation();
           onMarkerClickRef.current?.(cp.id);
         });
-        const m = new mapboxgl.Marker(el)
+        const draggable = !!onMarkerDragEndRef.current;
+        const m = new mapboxgl.Marker({ element: el, draggable })
           .setLngLat([cp.lng, cp.lat])
           .addTo(map);
+        if (draggable) {
+          // 드래그 중엔 커서 변화
+          el.style.cursor = "grab";
+          m.on("dragstart", () => {
+            el.style.cursor = "grabbing";
+          });
+          m.on("dragend", () => {
+            el.style.cursor = "grab";
+            const ll = m.getLngLat();
+            onMarkerDragEndRef.current?.(cp.id, { lat: ll.lat, lng: ll.lng });
+          });
+        }
         markersRef.current.set(cp.id, m);
       }
     };

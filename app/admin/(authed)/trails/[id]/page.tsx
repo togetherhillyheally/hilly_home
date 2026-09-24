@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { adminList } from "@/lib/admin-rest";
 import EditForm from "./EditForm";
+import SegmentColorToggle from "./SegmentColorToggle";
 import VisibilitySelect, {
   VisibilityBadge,
   type Visibility,
@@ -38,6 +39,7 @@ type Trail = {
   sort_order: number | null;
   is_active: boolean;
   visibility: "public" | "unlisted" | "private" | null;
+  segments_colored: boolean;
   created_at: string;
   created_by: string | null;
   source: string | null;
@@ -86,7 +88,7 @@ export default async function TrailDetailPage({
   const { id } = await params;
 
   const { rows } = await adminList<Trail>(
-    `trails?select=id,name,series_name,course_summary,map_type,distance_km,total_ascent_m,activity_types,sort_order,is_active,visibility,created_at,created_by,source,gpx_storage_bucket,gpx_storage_path,start_lat,start_lng,end_lat,end_lng,bounds,coordinates&id=eq.${id}`
+    `trails?select=id,name,series_name,course_summary,map_type,distance_km,total_ascent_m,activity_types,sort_order,is_active,visibility,segments_colored,created_at,created_by,source,gpx_storage_bucket,gpx_storage_path,start_lat,start_lng,end_lat,end_lng,bounds,coordinates&id=eq.${id}`
   );
   const trail = rows[0];
   if (!trail) notFound();
@@ -280,6 +282,7 @@ export default async function TrailDetailPage({
               trailId={trail.id}
               coordinates={trail.coordinates}
               bounds={trail.bounds}
+              segmentsColored={!!trail.segments_colored}
               initialStart={
                 trail.start_lat != null && trail.start_lng != null
                   ? { lat: trail.start_lat, lng: trail.start_lng }
@@ -349,6 +352,7 @@ export default async function TrailDetailPage({
             trailId={trail.id}
             coordinates={trail.coordinates}
             bounds={trail.bounds}
+            segmentsColored={!!trail.segments_colored}
           />
         </div>
 
@@ -366,6 +370,19 @@ export default async function TrailDetailPage({
               trailId={trail.id}
               initial={(trail.visibility ?? "public") as Visibility}
               size="md"
+            />
+          </section>
+          <section className="rounded-xl border border-white/10 bg-white/[0.02] p-5">
+            <h2 className="text-sm font-semibold text-gray-200 mb-1">
+              세그먼트 색상
+            </h2>
+            <p className="text-xs text-gray-500 mb-3 leading-relaxed">
+              여러 세그먼트(코스)로 구성된 지도에서 각 세그먼트를 다른 색으로
+              구분해서 표시할 수 있어요. 어드민 지도·공유 링크 모두에 적용됩니다.
+            </p>
+            <SegmentColorToggle
+              trailId={trail.id}
+              initial={!!trail.segments_colored}
             />
           </section>
           <EditForm

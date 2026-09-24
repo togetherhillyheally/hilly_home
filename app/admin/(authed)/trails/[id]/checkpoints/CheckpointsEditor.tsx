@@ -83,11 +83,16 @@ type Props = {
     minLon: number;
     maxLon: number;
   } | null;
+  segmentsColored?: boolean;
   initialCheckpoints: CheckpointRow[];
   initialPhotos: Record<string, PhotoRow[]>;
 };
 
-type PendingMapClick = LatLng & { title: string; note: string };
+type PendingMapClick = LatLng & {
+  title: string;
+  note: string;
+  markerIcon: string | null;
+};
 type PendingPhoto = {
   file: File;
   preview: string;
@@ -96,6 +101,7 @@ type PendingPhoto = {
   takenAt: string | null;
   title: string;
   note: string;
+  markerIcon: string | null;
 };
 
 function photoPublicUrl(bucket: string, path: string): string {
@@ -135,6 +141,7 @@ export default function CheckpointsEditor({
   trailId,
   coordinates,
   bounds,
+  segmentsColored = false,
   initialCheckpoints,
   initialPhotos,
 }: Props) {
@@ -204,7 +211,7 @@ export default function CheckpointsEditor({
   // === 지도 클릭 모드 ===
   const onMapClick = useCallback((p: LatLng) => {
     if (!addMode) return;
-    setPendingMapClick({ ...p, title: "", note: "" });
+    setPendingMapClick({ ...p, title: "", note: "", markerIcon: null });
     setAddMode(false);
   }, [addMode]);
 
@@ -222,6 +229,7 @@ export default function CheckpointsEditor({
               lat: pendingMapClick.lat,
               title: pendingMapClick.title.trim() || undefined,
               note: pendingMapClick.note.trim() || null,
+              marker_icon: pendingMapClick.markerIcon || undefined,
             }),
           }
         );
@@ -262,6 +270,7 @@ export default function CheckpointsEditor({
       takenAt: exif.takenAt,
       title: "",
       note: "",
+      markerIcon: "camera-outline",
     });
   };
 
@@ -284,6 +293,7 @@ export default function CheckpointsEditor({
               lat: pendingPhoto.lat,
               title: pendingPhoto.title.trim() || undefined,
               note: pendingPhoto.note.trim() || null,
+              marker_icon: pendingPhoto.markerIcon || undefined,
             }),
           }
         );
@@ -503,12 +513,22 @@ export default function CheckpointsEditor({
         <CheckpointMap
           coordinates={coordinates}
           bounds={bounds ?? undefined}
+          segmentsColored={segmentsColored}
           checkpoints={checkpointsForMap}
           selectedId={selectedId}
           addMode={addMode}
           pendingPoint={mapPending}
           onMapClick={onMapClick}
           onMarkerClick={(id) => setSelectedId(id)}
+          onMarkerDragEnd={(id, p) => {
+            // 낙관적 UI: 즉시 위치 반영 + PATCH
+            setCps((prev) =>
+              prev.map((c) =>
+                c.id === id ? { ...c, lat: p.lat, lng: p.lng } : c
+              )
+            );
+            updateCp(id, { lat: p.lat, lng: p.lng });
+          }}
           height={560}
         />
 
@@ -614,6 +634,65 @@ export default function CheckpointsEditor({
               rows={2}
               className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white placeholder:text-gray-600 text-sm focus:outline-none focus:border-orange-500/50 resize-none"
             />
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[10px] text-gray-500">
+                  아이콘 (선택)
+                </label>
+                {pendingMapClick.markerIcon ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPendingMapClick({
+                        ...pendingMapClick,
+                        markerIcon: null,
+                      })
+                    }
+                    className="text-[10px] text-gray-400 hover:text-white"
+                  >
+                    초기화
+                  </button>
+                ) : null}
+              </div>
+              <div className="grid grid-cols-9 gap-1">
+                {Object.entries(CHECKPOINT_MARKER_ICONS).map(([name, icon]) => {
+                  const selected = pendingMapClick.markerIcon === name;
+                  return (
+                    <button
+                      key={name}
+                      type="button"
+                      title={name}
+                      onClick={() =>
+                        setPendingMapClick({
+                          ...pendingMapClick,
+                          markerIcon: name,
+                        })
+                      }
+                      className={`aspect-square rounded-md flex items-center justify-center border transition ${
+                        selected
+                          ? "border-orange-400 bg-orange-500/15"
+                          : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"
+                      }`}
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        width={16}
+                        height={16}
+                        fill="none"
+                        stroke={icon.color}
+                        strokeWidth={2.2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        {icon.paths.map((d, i) => (
+                          <path key={i} d={d} />
+                        ))}
+                      </svg>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             <div className="flex gap-2">
               <button
                 type="button"

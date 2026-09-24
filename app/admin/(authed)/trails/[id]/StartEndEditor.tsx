@@ -24,6 +24,7 @@ type Props = {
   bounds:
     | { minLat: number; maxLat: number; minLon: number; maxLon: number }
     | null;
+  segmentsColored?: boolean;
   initialStart: LatLng | null;
   initialEnd: LatLng | null;
 };
@@ -38,6 +39,7 @@ export default function StartEndEditor({
   trailId,
   coordinates,
   bounds,
+  segmentsColored = false,
   initialStart,
   initialEnd,
 }: Props) {
@@ -132,6 +134,7 @@ export default function StartEndEditor({
       <TrailMapPreview
         coordinates={coordinates}
         bounds={bounds ?? undefined}
+        segmentsColored={segmentsColored}
         start={start}
         end={end}
         editMode={editMode}

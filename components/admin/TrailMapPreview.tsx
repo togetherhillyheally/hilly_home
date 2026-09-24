@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import mapboxgl, { type LngLatBoundsLike } from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { applyKoreanLabels } from "@/lib/mapbox-locale";
+import { TRAIL_SEGMENT_PALETTE } from "@/lib/trail-palette";
 
 const TRAIL_COLOR = "#DC2F55";
 const START_COLOR = "#22c55e";
@@ -22,6 +23,8 @@ export type TrailMapPreviewProps = {
   /** GeoJSON 순서 [lng, lat, ele?]. 단일 segment(LineString) 또는 multi(MultiLineString). */
   coordinates: Coordinates;
   bounds?: { minLat: number; maxLat: number; minLon: number; maxLon: number };
+  /** true 면 각 세그먼트를 팔레트 순환 색으로 표시. */
+  segmentsColored?: boolean;
   /** trail.start_lat/lng 가 있으면 전달. null/undefined 이면 coordinates 첫 점 사용. */
   start?: LatLng | null;
   /** trail.end_lat/lng 가 있으면 전달. null/undefined 이면 coordinates 마지막 점 사용. */
@@ -77,6 +80,7 @@ function makeMarkerEl(
 export default function TrailMapPreview({
   coordinates,
   bounds,
+  segmentsColored = false,
   start,
   end,
   editMode,
@@ -97,6 +101,94 @@ export default function TrailMapPreview({
   onClickRef.current = onMapClick;
   const editModeRef = useRef(editMode);
   editModeRef.current = editMode;
+  const coordinatesRef = useRef(coordinates);
+  coordinatesRef.current = coordinates;
+  const segmentsColoredRef = useRef(segmentsColored);
+  segmentsColoredRef.current = segmentsColored;
+
+  // trail source/layer 재적용 헬퍼 — segmentsColored 에 따라 단일색 vs 세그먼트별 팔레트
+  const addTrailSource = (map: mapboxgl.Map) => {
+    const coords = coordinatesRef.current;
+    const colored = segmentsColoredRef.current;
+    const routes = toRoutes(coords);
+    if (routes.length === 0) return;
+    if (map.getLayer("trail-line")) map.removeLayer("trail-line");
+    if (map.getSource("trail")) map.removeSource("trail");
+
+    if (colored && routes.length > 1) {
+      const features = routes.map((seg, i) => ({
+        type: "Feature" as const,
+        properties: { i },
+        geometry: {
+          type: "LineString" as const,
+          coordinates: seg.map(([lng, lat]) => [lng, lat]),
+        },
+      }));
+      map.addSource("trail", {
+        type: "geojson",
+        data: { type: "FeatureCollection", features },
+      });
+      const colorExpr = [
+        "match",
+        ["%", ["get", "i"], TRAIL_SEGMENT_PALETTE.length],
+        ...TRAIL_SEGMENT_PALETTE.flatMap((c, idx) => [idx, c]),
+        TRAIL_SEGMENT_PALETTE[0],
+      ] as unknown as mapboxgl.ExpressionSpecification;
+      map.addLayer({
+        id: "trail-line",
+        type: "line",
+        source: "trail",
+        layout: { "line-join": "round", "line-cap": "round" },
+        paint: {
+          "line-color": colorExpr,
+          "line-width": 3,
+          "line-opacity": 0.9,
+        },
+      });
+    } else {
+      const geometry =
+        routes.length === 1
+          ? {
+              type: "LineString" as const,
+              coordinates: routes[0].map(([lng, lat]) => [lng, lat]),
+            }
+          : {
+              type: "MultiLineString" as const,
+              coordinates: routes.map((seg) =>
+                seg.map(([lng, lat]) => [lng, lat])
+              ),
+            };
+      map.addSource("trail", {
+        type: "geojson",
+        data: { type: "Feature", properties: {}, geometry },
+      });
+      map.addLayer({
+        id: "trail-line",
+        type: "line",
+        source: "trail",
+        layout: { "line-join": "round", "line-cap": "round" },
+        paint: {
+          "line-color": TRAIL_COLOR,
+          "line-width": 3,
+          "line-opacity": 0.9,
+        },
+      });
+    }
+  };
+
+  // segmentsColored 변경 시 trail 만 재렌더
+  const initialColorMount = useRef(true);
+  useEffect(() => {
+    if (initialColorMount.current) {
+      initialColorMount.current = false;
+      return;
+    }
+    const map = mapRef.current;
+    if (!map) return;
+    if (map.loaded()) addTrailSource(map);
+    else map.once("load", () => addTrailSource(map));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [segmentsColored]);
 
   // 지도 초기화 (coordinates/bounds 변경 시 재초기화)
   useEffect(() => {
@@ -135,34 +227,7 @@ export default function TrailMapPreview({
 
     map.on("load", () => {
       applyKoreanLabels(map);
-      const routes = toRoutes(coordinates);
-      const geometry =
-        routes.length === 1
-          ? {
-              type: "LineString" as const,
-              coordinates: routes[0].map(([lng, lat]) => [lng, lat]),
-            }
-          : {
-              type: "MultiLineString" as const,
-              coordinates: routes.map((seg) =>
-                seg.map(([lng, lat]) => [lng, lat])
-              ),
-            };
-      map.addSource("trail", {
-        type: "geojson",
-        data: { type: "Feature", properties: {}, geometry },
-      });
-      map.addLayer({
-        id: "trail-line",
-        type: "line",
-        source: "trail",
-        layout: { "line-join": "round", "line-cap": "round" },
-        paint: {
-          "line-color": TRAIL_COLOR,
-          "line-width": 3,
-          "line-opacity": 0.9,
-        },
-      });
+      addTrailSource(map);
 
       // fitBounds
       let fb: LngLatBoundsLike;

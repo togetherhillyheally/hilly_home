@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 type TrailLite = {
   id: string;
   name: string;
+  segments_colored: boolean | null;
   bounds: {
     minLat: number;
     maxLat: number;
@@ -29,7 +30,7 @@ export default async function CheckpointsPage({
   const { id } = await params;
 
   const { rows: trailRows } = await adminList<TrailLite>(
-    `trails?select=id,name,bounds,coordinates&id=eq.${id}`
+    `trails?select=id,name,segments_colored,bounds,coordinates&id=eq.${id}`
   );
   const trail = trailRows[0];
   if (!trail) notFound();
@@ -65,6 +66,7 @@ export default async function CheckpointsPage({
           trailId={trail.id}
           coordinates={trail.coordinates}
           bounds={trail.bounds}
+          segmentsColored={!!trail.segments_colored}
           initialCheckpoints={cps}
           initialPhotos={initialPhotos}
         />

@@ -15,6 +15,7 @@ const SCALAR_FIELDS = new Set([
   "series_name",
   "course_summary",
   "visibility",
+  "segments_colored",
 ]);
 
 const VISIBILITY_VALUES = new Set(["public", "unlisted", "private"]);
@@ -80,6 +81,8 @@ export async function PATCH(
         );
       }
       update[k] = v;
+    } else if (k === "segments_colored") {
+      update[k] = Boolean(v);
     } else {
       update[k] = v;
     }
