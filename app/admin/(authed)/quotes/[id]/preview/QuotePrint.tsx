@@ -169,10 +169,10 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
         <table className="w-full text-[11px] border-collapse">
           <thead>
             <tr className="bg-neutral-200 text-neutral-800">
-              <th className="w-[70px] border border-neutral-400 px-2 py-2 text-center">
+              <th className="w-[60px] border border-neutral-400 px-2 py-2 text-center">
                 구분
               </th>
-              <th className="w-[180px] border border-neutral-400 px-2 py-2 text-center">
+              <th className="w-[80px] border border-neutral-400 px-2 py-2 text-center">
                 담당자
               </th>
               <th className="border border-neutral-400 px-2 py-2 text-center">
