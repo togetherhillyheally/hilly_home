@@ -51,29 +51,68 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
           .page-break {
             page-break-before: always;
           }
+          /* 컬러 배경/그라디언트를 인쇄에도 그대로 */
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
         }
       `}</style>
 
       {/* ===== 페이지 1: 표지 ===== */}
-      <section className="mx-auto max-w-[210mm] bg-white shadow-sm p-8 mb-4 print:mb-0 print:shadow-none">
-        <div className="bg-[#4A9CB0] text-white p-10 rounded-md min-h-[520px] flex flex-col">
-          <div className="flex-1">
-            <div className="text-4xl font-bold tracking-wider opacity-95 mb-1">
+      <section className="mx-auto max-w-[210mm] bg-white shadow-sm mb-4 print:mb-0 print:shadow-none overflow-hidden">
+        <div
+          className="relative text-white p-12 min-h-[720px] flex flex-col"
+          style={{
+            background:
+              "linear-gradient(135deg, #0D1117 0%, #1a1420 55%, #2a1618 100%)",
+          }}
+        >
+          {/* 브랜드 orange→pink 글로우 */}
+          <div
+            className="pointer-events-none absolute -top-32 -right-32 w-[520px] h-[520px] rounded-full"
+            style={{
+              background:
+                "radial-gradient(circle, rgba(249,115,22,0.35) 0%, rgba(236,72,153,0.18) 45%, transparent 70%)",
+              filter: "blur(20px)",
+            }}
+          />
+          {/* 상단 좌: 로고 + 회사명 */}
+          <div className="relative flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/home_logo.png"
+              alt="Hillyheally"
+              className="h-9 w-auto opacity-95"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).style.display = "none";
+              }}
+            />
+            <div className="text-sm tracking-[0.24em] font-semibold text-white/70 uppercase">
               {COMPANY_INFO.name}
             </div>
-            <div className="mt-16">
-              <h1 className="text-5xl md:text-6xl font-black leading-tight whitespace-pre-line">
-                {quote.project_name}
-                {"\n견적서"}
-              </h1>
-            </div>
           </div>
-        </div>
-        <div className="mt-6 space-y-2 text-[15px] font-semibold text-neutral-800">
-          <div>대표자명: {COMPANY_INFO.ownerName}</div>
-          <div>사업자번호: {COMPANY_INFO.bizNumber}</div>
-          <div>연락처: {COMPANY_INFO.contact}</div>
-          <div>견적일자: {formatDateKo(quote.quote_date)}</div>
+
+          {/* 중앙: 타이틀 */}
+          <div className="relative flex-1 flex flex-col justify-center">
+            <div className="text-[11px] tracking-[0.28em] font-semibold text-orange-300 mb-4 uppercase">
+              Quotation · 견적서
+            </div>
+            <h1 className="text-5xl md:text-6xl font-black leading-[1.15] tracking-tight text-white">
+              {quote.project_name}
+            </h1>
+            <div className="mt-8 h-[3px] w-24 bg-gradient-to-r from-orange-400 to-pink-500 rounded-full" />
+          </div>
+
+          {/* 하단: 발주 정보 */}
+          <div className="relative grid grid-cols-2 gap-x-8 gap-y-3 text-[13px] pt-6 border-t border-white/10">
+            <InfoCell label="공급자" value={COMPANY_INFO.name} />
+            <InfoCell label="견적일자" value={formatDateKo(quote.quote_date)} />
+            <InfoCell label="대표자" value={COMPANY_INFO.ownerName} />
+            <InfoCell label="사업자번호" value={COMPANY_INFO.bizNumber} mono />
+            <InfoCell label="연락처" value={COMPANY_INFO.contact} mono />
+            <InfoCell label="견적번호" value={quote.quote_no ?? "-"} mono />
+          </div>
         </div>
       </section>
 
@@ -307,6 +346,31 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
           </div>
         </div>
       </section>
+    </div>
+  );
+}
+
+function InfoCell({
+  label,
+  value,
+  mono,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+}) {
+  return (
+    <div>
+      <div className="text-[10px] tracking-[0.15em] uppercase text-white/50 font-semibold mb-0.5">
+        {label}
+      </div>
+      <div
+        className={`text-white font-semibold ${
+          mono ? "font-mono tracking-wide" : ""
+        }`}
+      >
+        {value}
+      </div>
     </div>
   );
 }
