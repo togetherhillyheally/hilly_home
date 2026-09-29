@@ -286,22 +286,24 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
               <li key={i}>* {m}</li>
             ))}
           </ul>
-          <div className="text-right">
+          <div className="text-right relative">
             <div className="text-[11px] font-semibold mb-1">Authorized by,</div>
-            <div className="h-16 flex items-end justify-end">
-              {/* 도장 이미지 자리 — 없으면 이름만 */}
+            <div className="inline-block relative pr-2">
+              <div className="text-[12px] font-bold">
+                {COMPANY_INFO.name}{" "}
+                <span className="ml-1">대표이사 {COMPANY_INFO.ownerName}</span>
+                <span className="inline-block align-middle w-[70px]"></span>
+              </div>
+              {/* 도장 — 대표이사 이름 위에 살짝 겹치게 (전통 인감 배치) */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={COMPANY_INFO.sealPath}
                 alt=""
-                className="h-14 w-auto object-contain opacity-90"
+                className="absolute right-[-8px] top-1/2 -translate-y-1/2 h-[70px] w-[70px] object-contain pointer-events-none"
                 onError={(e) => {
                   (e.currentTarget as HTMLImageElement).style.display = "none";
                 }}
               />
-            </div>
-            <div className="text-[11px] font-bold mt-1">
-              {COMPANY_INFO.name} {COMPANY_INFO.ownerName}
             </div>
           </div>
         </div>
