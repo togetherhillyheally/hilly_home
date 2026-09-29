@@ -118,46 +118,6 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
 
       {/* ===== 페이지 2: 상세 ===== */}
       <section className="page-break mx-auto max-w-[210mm] bg-white shadow-sm p-8 print:shadow-none">
-        {/* 헤더 표 */}
-        <table className="w-full text-[12px] border-collapse mb-4">
-          <tbody>
-            <tr>
-              <th className="w-[80px] bg-neutral-100 border border-neutral-300 px-2 py-1.5 text-left align-middle">
-                수신인
-              </th>
-              <td className="border border-neutral-300 px-2 py-1.5">
-                {quote.recipient}
-              </td>
-              <th className="w-[80px] bg-neutral-100 border border-neutral-300 px-2 py-1.5 text-left align-middle">
-                견적일
-              </th>
-              <td className="w-[140px] border border-neutral-300 px-2 py-1.5">
-                {formatDateKo(quote.quote_date)}
-              </td>
-            </tr>
-            <tr>
-              <th className="bg-neutral-100 border border-neutral-300 px-2 py-1.5 text-left align-middle">
-                발신인
-              </th>
-              <td className="border border-neutral-300 px-2 py-1.5">
-                {COMPANY_INFO.name}
-              </td>
-              <th className="bg-neutral-100 border border-neutral-300 px-2 py-1.5 text-left align-middle">
-                페이지
-              </th>
-              <td className="border border-neutral-300 px-2 py-1.5">2 / 2</td>
-            </tr>
-            <tr>
-              <th className="bg-neutral-100 border border-neutral-300 px-2 py-1.5 text-left align-middle">
-                견적명
-              </th>
-              <td colSpan={3} className="border border-neutral-300 px-2 py-1.5">
-                {quote.project_name}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
         {quote.preface ? (
           <p className="text-[12px] text-neutral-700 mb-1">{quote.preface}</p>
         ) : null}
@@ -244,9 +204,7 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
                             {it.tech_level || "-"}
                           </td>
                           <td className="border border-neutral-400 px-2 py-1.5 text-right tabular-nums">
-                            {it.man_month
-                              ? Number(it.man_month).toFixed(2)
-                              : "-"}
+                            {it.man_month ? formatMm(it.man_month) : "-"}
                           </td>
                           <td className="border border-neutral-400 px-2 py-1.5 text-right tabular-nums">
                             {it.unit_price ? formatKRW(it.unit_price) : "-"}
@@ -258,8 +216,8 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
                       );
                     })
                   )}
-                  {/* 섹션 소계 */}
-                  {sec.items.length > 0 ? (
+                  {/* 섹션 소계 — 섹션이 2개 이상일 때만 (하나면 아래 '합계' 와 중복) */}
+                  {sec.items.length > 0 && (quote.sections?.length ?? 0) > 1 ? (
                     <tr className="bg-neutral-100">
                       <td
                         colSpan={4}
@@ -268,7 +226,7 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
                         섹션 합계
                       </td>
                       <td className="border border-neutral-400 px-2 py-1.5 text-right tabular-nums font-semibold">
-                        {sumSection(sec).manMonth.toFixed(2)}
+                        {formatMm(sumSection(sec).manMonth)}
                       </td>
                       <td className="border border-neutral-400 px-2 py-1.5"></td>
                       <td className="border border-neutral-400 px-2 py-1.5 text-right tabular-nums font-semibold">
@@ -280,34 +238,36 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
               );
             })}
 
-            {/* 전체 합계 */}
-            <tr className="bg-neutral-200">
-              <td
-                colSpan={4}
-                className="border border-neutral-500 px-2 py-2 text-center font-bold text-[12px]"
-              >
-                합계
-              </td>
-              <td className="border border-neutral-500 px-2 py-2 text-right tabular-nums font-bold">
-                {totalMM.toFixed(2)}
-              </td>
-              <td className="border border-neutral-500 px-2 py-2"></td>
-              <td className="border border-neutral-500 px-2 py-2 text-right tabular-nums font-bold">
-                {formatKRW(raw)}
-              </td>
-            </tr>
+            {/* 전체 합계 — 세부 소계와 최종 합계 사이 원값 (부가세 별도·절사 전) */}
+            {gt !== raw ? (
+              <tr className="bg-neutral-200">
+                <td
+                  colSpan={4}
+                  className="border border-neutral-500 px-2 py-2 text-center font-bold text-[12px]"
+                >
+                  소계
+                </td>
+                <td className="border border-neutral-500 px-2 py-2 text-right tabular-nums font-bold">
+                  {formatMm(totalMM)}
+                </td>
+                <td className="border border-neutral-500 px-2 py-2"></td>
+                <td className="border border-neutral-500 px-2 py-2 text-right tabular-nums font-bold">
+                  {formatKRW(raw)}
+                </td>
+              </tr>
+            ) : null}
 
-            {/* 턴키 개발 합계 */}
+            {/* 최종 합계 */}
             <tr className="bg-sky-100">
               <td
                 colSpan={6}
                 className="border border-neutral-500 px-2 py-2.5 text-center font-bold text-[13px]"
               >
-                턴키 개발 합계
+                총 합계
                 {quote.round_to_10k
                   ? quote.vat_included
-                    ? " (부가세 포함/만단위 절사)"
-                    : " (부가세 별도/만단위 절사)"
+                    ? " (부가세 포함 · 만단위 절사)"
+                    : " (부가세 별도 · 만단위 절사)"
                   : quote.vat_included
                     ? " (부가세 포함)"
                     : " (부가세 별도)"}
@@ -348,6 +308,12 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
       </section>
     </div>
   );
+}
+
+/** 투입공수 표시: 정수면 정수, 소수면 최대 2자리 (7 vs 7.5). */
+function formatMm(n: number): string {
+  const v = Number(n) || 0;
+  return Number.isInteger(v) ? String(v) : v.toFixed(2).replace(/\.?0+$/, "");
 }
 
 function InfoCell({
