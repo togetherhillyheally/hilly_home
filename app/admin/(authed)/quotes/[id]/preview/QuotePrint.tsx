@@ -131,8 +131,8 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
 
           {/* 중앙: 타이틀 */}
           <div className="relative flex-1 flex flex-col justify-center">
-            <div className="text-[11px] tracking-[0.28em] font-semibold text-orange-300 mb-4 uppercase">
-              Quotation · 견적서
+            <div className="text-[11px] tracking-[0.28em] font-semibold text-orange-300 mb-4">
+              견적서
             </div>
             <h1 className="text-5xl md:text-6xl font-black leading-[1.15] tracking-tight text-white">
               {quote.project_name}
@@ -202,7 +202,7 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
                   ) : null}
                   {sec.items.length === 0 ? (
                     <tr>
-                      <td className="border border-neutral-400 px-2 py-6 text-center align-middle bg-neutral-50 font-semibold">
+                      <td className="border border-neutral-400 px-2 py-6 text-center align-middle bg-neutral-50 font-semibold whitespace-pre-line leading-tight">
                         {sec.category}
                       </td>
                       <td
@@ -222,7 +222,7 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
                           {iIdx === 0 ? (
                             <td
                               rowSpan={rowspan}
-                              className="border border-neutral-400 px-2 py-2 text-center align-middle bg-neutral-50 font-semibold"
+                              className="border border-neutral-400 px-2 py-2 text-center align-middle bg-neutral-50 font-semibold whitespace-pre-line leading-tight"
                             >
                               {sec.category}
                             </td>
