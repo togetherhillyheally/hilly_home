@@ -70,10 +70,9 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
           </div>
         </div>
         <div className="mt-6 space-y-2 text-[15px] font-semibold text-neutral-800">
-          <div>발주자명: {COMPANY_INFO.ownerName}</div>
+          <div>대표자명: {COMPANY_INFO.ownerName}</div>
           <div>사업자번호: {COMPANY_INFO.bizNumber}</div>
           <div>연락처: {COMPANY_INFO.contact}</div>
-          <div>주소: {COMPANY_INFO.address}</div>
           <div>견적일자: {formatDateKo(quote.quote_date)}</div>
         </div>
       </section>
@@ -144,7 +143,7 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
                 기술등급
               </th>
               <th className="w-[80px] border border-neutral-400 px-2 py-2 text-center">
-                투입공수(M/M)
+                투입공수({quote.unit_label || "M/M"})
               </th>
               <th className="w-[110px] border border-neutral-400 px-2 py-2 text-center">
                 금액

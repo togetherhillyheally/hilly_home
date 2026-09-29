@@ -4,13 +4,13 @@
  */
 
 export const COMPANY_INFO = {
-  name: "섭섭산중",
+  name: "주식회사 힐리힐리",
   ownerName: "박준섭",
-  bizNumber: "274-10-01948",
+  bizNumber: "720-86-03798",
   contact: "010-8313-8230",
-  address: "하남시 미사강변중앙로 200 B동 1206호",
-  logoPath: "/images/company/seopseop-logo.png", // 없어도 텍스트로 대체
-  sealPath: "/images/company/seopseop-seal.png", // 없어도 도장 생략
+  address: "서울특별시 서초구 서초중앙로 123, 지하 1층 1003호(서초동)",
+  logoPath: "/images/company/hillyheally-logo.png", // 없어도 텍스트로 대체
+  sealPath: "/images/company/hillyheally-seal.png", // 없어도 도장 생략
 } as const;
 
 export type TechLevel = "" | "초급" | "중급" | "고급" | "특급";
@@ -50,6 +50,8 @@ export type QuoteRow = {
   memo: string | null;
   vat_included: boolean;
   round_to_10k: boolean;
+  /** 투입공수 컬럼 라벨. 개발=M/M, 스태프 일당="일", 시간제="시간" */
+  unit_label: string;
   sections: QuoteSection[];
   status: QuoteStatus;
   created_by: string | null;
@@ -116,6 +118,7 @@ export function emptyQuoteDraft(): {
   recipient: string;
   project_name: string;
   quote_date: string;
+  unit_label: string;
   preface: string;
   memo: string;
   vat_included: boolean;
@@ -131,6 +134,7 @@ export function emptyQuoteDraft(): {
     recipient: "(수신인 미입력)",
     project_name: "새 견적서",
     quote_date: iso,
+    unit_label: "M/M",
     preface: "본 프로젝트의 내역에 따른 견적서입니다.",
     memo: [
       "결제수단은 현금이며, 지급방법은 계약서의 내용에 준합니다.",

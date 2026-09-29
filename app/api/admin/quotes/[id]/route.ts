@@ -10,6 +10,7 @@ const UPDATABLE = new Set([
   "recipient",
   "project_name",
   "quote_date",
+  "unit_label",
   "preface",
   "memo",
   "vat_included",

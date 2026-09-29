@@ -57,6 +57,7 @@ export default function QuoteEditor({ initial }: { initial: QuoteRow }) {
   const [recipient, setRecipient] = useState(initial.recipient);
   const [projectName, setProjectName] = useState(initial.project_name);
   const [quoteDate, setQuoteDate] = useState(initial.quote_date);
+  const [unitLabel, setUnitLabel] = useState(initial.unit_label || "M/M");
   const [preface, setPreface] = useState(initial.preface ?? "");
   const [memo, setMemo] = useState(initial.memo ?? "");
   const [vatIncluded, setVatIncluded] = useState(initial.vat_included);
@@ -103,6 +104,7 @@ export default function QuoteEditor({ initial }: { initial: QuoteRow }) {
             recipient: recipient.trim(),
             project_name: projectName.trim(),
             quote_date: quoteDate,
+            unit_label: unitLabel.trim() || "M/M",
             preface: preface || null,
             memo: memo || null,
             vat_included: vatIncluded,
@@ -242,6 +244,18 @@ export default function QuoteEditor({ initial }: { initial: QuoteRow }) {
               ))}
             </select>
           </Field>
+          <Field label="투입공수 단위">
+            <select
+              value={unitLabel}
+              onChange={(e) => setUnitLabel(e.target.value)}
+              className="w-full h-9 px-3 rounded-md bg-white/[0.04] border border-white/10 text-white text-sm focus:outline-none focus:border-orange-400/50"
+            >
+              <option value="M/M" className="bg-[#0c0c14]">M/M (Man-Month · 월 단위)</option>
+              <option value="일" className="bg-[#0c0c14]">일 (일당)</option>
+              <option value="시간" className="bg-[#0c0c14]">시간 (시급)</option>
+              <option value="건" className="bg-[#0c0c14]">건 (건당)</option>
+            </select>
+          </Field>
           <Field label="서두 안내문" className="md:col-span-2">
             <input
               value={preface}
@@ -358,7 +372,7 @@ export default function QuoteEditor({ initial }: { initial: QuoteRow }) {
                       <th className="px-2 py-1.5 text-left w-[180px]">담당자</th>
                       <th className="px-2 py-1.5 text-left">담당업무</th>
                       <th className="px-2 py-1.5 text-left w-[80px]">기술등급</th>
-                      <th className="px-2 py-1.5 text-right w-[90px]">M/M</th>
+                      <th className="px-2 py-1.5 text-right w-[90px]">{unitLabel || "M/M"}</th>
                       <th className="px-2 py-1.5 text-right w-[130px]">
                         단가(원)
                       </th>
@@ -497,7 +511,7 @@ export default function QuoteEditor({ initial }: { initial: QuoteRow }) {
                 {formatKRW(totals.raw.amount)}
               </span>{" "}
               <span className="text-xs text-gray-500">
-                (총 {totals.raw.manMonth.toFixed(2)} M/M)
+                (총 {totals.raw.manMonth.toFixed(2)} {unitLabel || "M/M"})
               </span>
             </div>
             {roundTo10K ? (
