@@ -95,10 +95,10 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
         }
       `}</style>
 
-      {/* ===== 페이지 1: 표지 ===== */}
+      {/* ===== 페이지 1: 표지 — A4 한 장 꽉 채움 ===== */}
       <section className="mx-auto max-w-[210mm] bg-white shadow-sm mb-4 print:mb-0 print:shadow-none overflow-hidden">
         <div
-          className="relative text-white p-12 min-h-[720px] flex flex-col"
+          className="relative text-white p-12 flex flex-col min-h-[calc(100vh-52px)] print:min-h-[273mm]"
           style={{
             background:
               "linear-gradient(135deg, #0D1117 0%, #1a1420 55%, #2a1618 100%)",
