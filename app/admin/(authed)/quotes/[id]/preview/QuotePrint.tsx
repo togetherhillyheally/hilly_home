@@ -22,7 +22,7 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
     .filter(Boolean);
 
   return (
-    <div className="fixed inset-0 z-[100] overflow-y-auto bg-neutral-100 text-black print:static print:overflow-visible">
+    <div className="quote-print-root fixed inset-0 z-[100] overflow-y-auto bg-neutral-100 text-black print:static print:overflow-visible">
       {/* 툴바 — 인쇄 시 숨김 */}
       <div className="print:hidden sticky top-0 z-10 bg-white border-b border-neutral-200 px-4 py-2 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -55,6 +55,24 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
           }
           html,
           body {
+            background: #fff !important;
+          }
+          /* 인쇄 시 어드민 사이드바·헤더 등 견적서 외 모든 요소 숨김.
+             visibility 기반이라 부모 컨테이너 문서구조는 유지 → position 만 리셋. */
+          body * {
+            visibility: hidden !important;
+          }
+          .quote-print-root,
+          .quote-print-root * {
+            visibility: visible !important;
+          }
+          .quote-print-root {
+            position: absolute !important;
+            inset: 0 !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            overflow: visible !important;
             background: #fff !important;
           }
           .page-break {
