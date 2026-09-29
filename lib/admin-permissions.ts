@@ -27,6 +27,7 @@ export const MENU_KEYS = [
   "surveys",
   "content-reset",
   "nickname-denylist",
+  "quotes",
 ] as const;
 
 export type MenuKey = (typeof MENU_KEYS)[number];
