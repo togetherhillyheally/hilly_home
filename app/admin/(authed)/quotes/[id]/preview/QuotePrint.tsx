@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment } from "react";
-import { Printer } from "lucide-react";
+import { ArrowLeft, Printer } from "lucide-react";
 import {
   COMPANY_INFO,
   formatDateKo,
@@ -22,11 +22,20 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
     .filter(Boolean);
 
   return (
-    <div className="min-h-screen bg-neutral-100 text-black">
+    <div className="fixed inset-0 z-[100] overflow-y-auto bg-neutral-100 text-black print:static print:overflow-visible">
       {/* 툴바 — 인쇄 시 숨김 */}
       <div className="print:hidden sticky top-0 z-10 bg-white border-b border-neutral-200 px-4 py-2 flex items-center justify-between">
-        <div className="text-xs text-neutral-500 font-mono">
-          {quote.quote_no ?? "-"} · 미리보기
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => window.close() || history.back()}
+            className="inline-flex items-center gap-1 h-9 px-3 rounded-md text-neutral-600 hover:bg-neutral-100 text-sm"
+          >
+            <ArrowLeft className="h-4 w-4" /> 닫기
+          </button>
+          <div className="text-xs text-neutral-500 font-mono">
+            {quote.quote_no ?? "-"} · 미리보기
+          </div>
         </div>
         <button
           type="button"
