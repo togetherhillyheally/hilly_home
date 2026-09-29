@@ -56,6 +56,15 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
+          /* 서명 블록·표 행이 페이지 사이 잘리지 않도록 */
+          .keep-together {
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+          tr {
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
         }
       `}</style>
 
@@ -279,8 +288,8 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
           </tbody>
         </table>
 
-        {/* 하단 안내 */}
-        <div className="mt-4 grid grid-cols-[1fr_180px] gap-4">
+        {/* 하단 안내 — 서명·도장은 페이지 넘어가지 않게 keep-together */}
+        <div className="mt-4 grid grid-cols-[1fr_240px] gap-4 keep-together">
           <ul className="text-[11px] text-neutral-700 space-y-1">
             {memoLines.map((m, i) => (
               <li key={i}>* {m}</li>
