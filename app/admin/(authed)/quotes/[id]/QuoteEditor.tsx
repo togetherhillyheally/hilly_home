@@ -21,7 +21,6 @@ import {
   type QuoteRow,
   type QuoteSection,
   type QuoteStatus,
-  type TechLevel,
 } from "@/lib/quotes";
 
 const STATUS_OPTIONS: { value: QuoteStatus; label: string }[] = [
@@ -32,7 +31,6 @@ const STATUS_OPTIONS: { value: QuoteStatus; label: string }[] = [
   { value: "archived", label: "보관" },
 ];
 
-const TECH_LEVELS: TechLevel[] = ["", "초급", "중급", "고급", "특급"];
 
 function newSection(): QuoteSection {
   return {
@@ -371,7 +369,6 @@ export default function QuoteEditor({ initial }: { initial: QuoteRow }) {
                     <tr className="text-gray-500">
                       <th className="px-2 py-1.5 text-left w-[180px]">담당자</th>
                       <th className="px-2 py-1.5 text-left">담당업무</th>
-                      <th className="px-2 py-1.5 text-left w-[80px]">기술등급</th>
                       <th className="px-2 py-1.5 text-right w-[90px]">{unitLabel || "M/M"}</th>
                       <th className="px-2 py-1.5 text-right w-[130px]">
                         단가(원)
@@ -407,27 +404,6 @@ export default function QuoteEditor({ initial }: { initial: QuoteRow }) {
                             placeholder="기능/DB/API설계, 인프라세팅…"
                             className="w-full h-8 px-2 rounded bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-orange-400/50"
                           />
-                        </td>
-                        <td className="px-2 py-1">
-                          <select
-                            value={it.tech_level}
-                            onChange={(e) =>
-                              patchItem(sIdx, iIdx, {
-                                tech_level: e.target.value as TechLevel,
-                              })
-                            }
-                            className="w-full h-8 px-1 rounded bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-orange-400/50"
-                          >
-                            {TECH_LEVELS.map((v) => (
-                              <option
-                                key={v}
-                                value={v}
-                                className="bg-[#0c0c14]"
-                              >
-                                {v || "-"}
-                              </option>
-                            ))}
-                          </select>
                         </td>
                         <td className="px-2 py-1">
                           <input
@@ -473,7 +449,7 @@ export default function QuoteEditor({ initial }: { initial: QuoteRow }) {
                   </tbody>
                   <tfoot>
                     <tr className="border-t border-white/10 bg-white/[0.02]">
-                      <td colSpan={3} className="px-2 py-1.5">
+                      <td colSpan={2} className="px-2 py-1.5">
                         <button
                           type="button"
                           onClick={() => addItem(sIdx)}

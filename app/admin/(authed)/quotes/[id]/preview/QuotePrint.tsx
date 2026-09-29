@@ -147,9 +147,6 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
               <th className="border border-neutral-400 px-2 py-2 text-center">
                 담당업무
               </th>
-              <th className="w-[60px] border border-neutral-400 px-2 py-2 text-center">
-                기술등급
-              </th>
               <th className="w-[80px] border border-neutral-400 px-2 py-2 text-center">
                 투입공수({quote.unit_label || "M/M"})
               </th>
@@ -169,7 +166,7 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
                   {sec.group_label ? (
                     <tr>
                       <td
-                        colSpan={7}
+                        colSpan={6}
                         className="border border-neutral-400 bg-neutral-50 px-2 py-1.5 font-semibold text-[12px]"
                       >
                         {sec.group_label}
@@ -182,7 +179,7 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
                         {sec.category}
                       </td>
                       <td
-                        colSpan={6}
+                        colSpan={5}
                         className="border border-neutral-400 px-2 py-6 text-center text-neutral-400 text-xs"
                       >
                         항목이 없어요
@@ -209,9 +206,6 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
                           <td className="border border-neutral-400 px-2 py-1.5">
                             {it.task}
                           </td>
-                          <td className="border border-neutral-400 px-2 py-1.5 text-center">
-                            {it.tech_level || "-"}
-                          </td>
                           <td className="border border-neutral-400 px-2 py-1.5 text-right tabular-nums">
                             {it.man_month ? formatMm(it.man_month) : "-"}
                           </td>
@@ -229,7 +223,7 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
                   {sec.items.length > 0 && (quote.sections?.length ?? 0) > 1 ? (
                     <tr className="bg-neutral-100">
                       <td
-                        colSpan={4}
+                        colSpan={3}
                         className="border border-neutral-400 px-2 py-1.5 text-center font-semibold"
                       >
                         섹션 합계
@@ -251,7 +245,7 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
             {gt !== raw ? (
               <tr className="bg-neutral-200">
                 <td
-                  colSpan={4}
+                  colSpan={3}
                   className="border border-neutral-500 px-2 py-2 text-center font-bold text-[12px]"
                 >
                   소계
@@ -269,7 +263,7 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
             {/* 최종 합계 */}
             <tr className="bg-sky-100">
               <td
-                colSpan={6}
+                colSpan={5}
                 className="border border-neutral-500 px-2 py-2.5 text-center font-bold text-[13px]"
               >
                 총 합계
