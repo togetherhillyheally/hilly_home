@@ -128,8 +128,8 @@ export function emptyQuoteDraft(): {
     "0"
   )}-${String(today.getDate()).padStart(2, "0")}`;
   return {
-    recipient: "",
-    project_name: "",
+    recipient: "(수신인 미입력)",
+    project_name: "새 견적서",
     quote_date: iso,
     preface: "본 프로젝트의 내역에 따른 견적서입니다.",
     memo: [
