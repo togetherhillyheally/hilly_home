@@ -13,8 +13,15 @@ const nextConfig = {
   devIndicators: false,
   async rewrites() {
     return [
-      // 런트립 스태프 브리핑 정적 페이지 (public/runtrip/index.html)
-      { source: "/runtrip", destination: "/runtrip/index.html" },
+      // 소노캄180K 스태프 브리핑 정적 페이지 (public/sono180k/index.html)
+      { source: "/sono180k", destination: "/sono180k/index.html" },
+    ]
+  },
+  async redirects() {
+    return [
+      // 구 주소 → 새 주소
+      { source: "/runtrip", destination: "/sono180k", permanent: false },
+      { source: "/runtrip/:path*", destination: "/sono180k/:path*", permanent: false },
     ]
   },
 }
