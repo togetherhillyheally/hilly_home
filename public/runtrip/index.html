@@ -1,0 +1,685 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>런트립 180K 스태프 브리핑</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+  :root {
+    --bg: #0e1218;
+    --bg-soft: #151b23;
+    --surface: #1a212b;
+    --surface-raised: #222b37;
+    --border: #2b3542;
+    --border-strong: #3b4756;
+    --text: #eef2f6;
+    --text-2: #a7b2bf;
+    --text-3: #6e7a88;
+    --main9k: #f5c518;
+    --main9k-soft: rgba(245,197,24,.12);
+    --pet7k: #56a8e8;
+    --pet7k-soft: rgba(86,168,232,.12);
+    --danger: #ff6b6b;
+    --danger-soft: rgba(255,107,107,.12);
+    --ok: #52c98b;
+    --ok-soft: rgba(82,201,139,.12);
+    --accent: var(--main9k);
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f6f7f9; --bg-soft: #eef0f4; --surface: #ffffff; --surface-raised: #f2f4f7;
+      --border: #dde2e9; --border-strong: #c4ccd6;
+      --text: #171d26; --text-2: #4b5563; --text-3: #7b8694;
+      --main9k: #b8860b; --main9k-soft: rgba(184,134,11,.10);
+      --pet7k: #1f6fb5; --pet7k-soft: rgba(31,111,181,.10);
+      --danger: #d64545; --danger-soft: rgba(214,69,69,.09);
+      --ok: #1f8f5f; --ok-soft: rgba(31,143,95,.10);
+      --accent: var(--main9k);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f6f7f9; --bg-soft: #eef0f4; --surface: #ffffff; --surface-raised: #f2f4f7;
+    --border: #dde2e9; --border-strong: #c4ccd6;
+    --text: #171d26; --text-2: #4b5563; --text-3: #7b8694;
+    --main9k: #b8860b; --main9k-soft: rgba(184,134,11,.10);
+    --pet7k: #1f6fb5; --pet7k-soft: rgba(31,111,181,.10);
+    --danger: #d64545; --danger-soft: rgba(214,69,69,.09);
+    --ok: #1f8f5f; --ok-soft: rgba(31,143,95,.10);
+    --accent: var(--main9k);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: "IBM Plex Sans KR", "Pretendard Variable", "Apple SD Gothic Neo", sans-serif;
+    line-height: 1.65; font-size: 15.5px; margin: 0;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 20px 90px; }
+
+  header.hero { padding: 46px 0 26px; border-bottom: 1px solid var(--border); }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; color: var(--accent); text-transform: uppercase; margin-bottom: 12px; }
+  h1 { font-size: clamp(26px, 6vw, 36px); font-weight: 700; line-height: 1.28; margin: 0 0 8px; text-wrap: balance; }
+  .hero-sub { color: var(--text-2); margin: 0; }
+  .facts { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 20px; }
+  .fact { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 9px 13px; flex: 1 1 130px; min-width: 130px; }
+  .fact .k { font-size: 11.5px; color: var(--text-3); letter-spacing: .05em; }
+  .fact .v { font-weight: 600; font-size: 14px; margin-top: 2px; }
+  .fact .v.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
+  .dot.y { background: var(--main9k); } .dot.b { background: var(--pet7k); }
+
+  nav.toc {
+    position: sticky; top: 0; z-index: 20;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    margin: 0 -20px; padding: 8px 20px;
+    display: flex; gap: 4px; overflow-x: auto; white-space: nowrap; scrollbar-width: none;
+  }
+  nav.toc::-webkit-scrollbar { display: none; }
+  nav.toc a { color: var(--text-2); text-decoration: none; font-size: 13px; padding: 5px 10px; border-radius: 6px; }
+  nav.toc a:hover { background: var(--surface-raised); color: var(--text); }
+
+  section { padding-top: 44px; }
+  .sec-label { font-family: var(--mono); font-size: 12px; color: var(--text-3); letter-spacing: .1em; margin-bottom: 6px; }
+  h2 { font-size: 21px; font-weight: 700; margin: 0 0 6px; line-height: 1.35; text-wrap: balance; }
+  h3 { font-size: 16px; font-weight: 600; margin: 24px 0 8px; }
+  .lede { color: var(--text-2); margin: 0 0 16px; }
+  p { margin: 0 0 12px; }
+  strong { font-weight: 600; }
+
+  .callout {
+    border: 1px solid var(--border); border-left: 3px solid var(--accent);
+    background: var(--surface); border-radius: 8px;
+    padding: 13px 15px; margin: 14px 0; font-size: 14.5px;
+  }
+  .callout.danger { border-left-color: var(--danger); }
+  .callout.danger .co-title { color: var(--danger); }
+  .callout .co-title { font-weight: 700; font-size: 13px; letter-spacing: .04em; color: var(--accent); margin-bottom: 4px; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  .tbl-wrap { overflow-x: auto; margin: 14px 0; border: 1px solid var(--border); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th { text-align: left; font-size: 12px; letter-spacing: .05em; color: var(--text-3); font-weight: 600; background: var(--bg-soft); padding: 8px 13px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 8px 13px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  td:first-child { white-space: nowrap; }
+  td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tr.tbd-row td { color: var(--text-3); }
+
+  .code { font-family: var(--mono); font-size: 12.5px; font-weight: 600; background: var(--surface-raised); border: 1px solid var(--border); border-radius: 5px; padding: 1px 7px; white-space: nowrap; }
+  .code.y { color: var(--main9k); border-color: color-mix(in srgb, var(--main9k) 40%, transparent); background: var(--main9k-soft); }
+  .code.b { color: var(--pet7k); border-color: color-mix(in srgb, var(--pet7k) 40%, transparent); background: var(--pet7k-soft); }
+  .code.r { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 40%, transparent); background: var(--danger-soft); }
+  .code.g { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, transparent); background: var(--ok-soft); }
+
+  .pill { display: inline-block; font-size: 12px; font-weight: 600; border-radius: 99px; padding: 2px 10px; white-space: nowrap; }
+  .pill.js { background: var(--main9k-soft); color: var(--main9k); }
+  .pill.sh { background: var(--pet7k-soft); color: var(--pet7k); }
+  .pill.tbd { background: var(--danger-soft); color: var(--danger); }
+
+  button.call {
+    font-family: var(--mono); font-size: 12px; font-weight: 600;
+    color: var(--ok); background: var(--ok-soft);
+    border: 1px solid color-mix(in srgb, var(--ok) 40%, transparent);
+    border-radius: 6px; padding: 3px 11px; cursor: pointer; white-space: nowrap;
+  }
+  button.call:hover { filter: brightness(1.12); }
+  button.call:focus-visible { outline: 2px solid var(--ok); outline-offset: 2px; }
+  button.sms {
+    font-family: var(--mono); font-size: 12px; font-weight: 600;
+    color: var(--pet7k); background: var(--pet7k-soft);
+    border: 1px solid color-mix(in srgb, var(--pet7k) 40%, transparent);
+    border-radius: 6px; padding: 3px 11px; cursor: pointer; white-space: nowrap;
+    margin-left: 6px;
+  }
+  button.sms:hover { filter: brightness(1.12); }
+  button.sms:focus-visible { outline: 2px solid var(--pet7k); outline-offset: 2px; }
+  td.contact { white-space: nowrap; }
+
+  /* org */
+  .org { margin: 18px 0; }
+  .org-row { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+  .org-box { background: var(--surface); border: 1px solid var(--border); border-radius: 9px; padding: 10px 16px; text-align: center; flex: 1 1 240px; max-width: 330px; }
+  .org-box.top { border-color: var(--accent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent); max-width: 400px; flex-basis: 300px; }
+  .org-box .role { font-weight: 700; font-size: 14.5px; }
+  .org-box .sub { font-size: 12.5px; color: var(--text-3); margin-top: 3px; line-height: 1.5; }
+  .org-line { width: 1px; height: 16px; background: var(--border-strong); margin: 0 auto; }
+  .org-box.side { text-align: left; max-width: none; }
+  .org-box.side .tag { font-size: 12px; color: var(--text-3); margin-top: 1px; }
+  ul.org-roles { list-style: none; padding: 0; margin: 10px 0 0; display: grid; grid-template-columns: 1fr 1fr; gap: 7px 12px; font-size: 13.5px; }
+  ul.org-roles li { display: flex; align-items: baseline; gap: 7px; }
+  ul.org-roles li.extra { grid-column: 1 / -1; color: var(--text-3); font-size: 12.5px; }
+  .org-box.js { border-top: 3px solid var(--main9k); }
+  .org-box.sh { border-top: 3px solid var(--pet7k); }
+
+  /* role cards */
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+  @media (max-width: 620px) { .cards { grid-template-columns: 1fr; } }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 11px; padding: 15px 16px; }
+  .card .head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+  .card .head .nm { font-weight: 700; font-size: 15.5px; }
+  .card ul { margin: 8px 0 0; padding-left: 18px; font-size: 14px; }
+  .card li { margin-bottom: 5px; }
+  .card li::marker { color: var(--text-3); }
+  .card ul.tl-list { list-style: none; padding-left: 0; }
+  .card ul.tl-list li { display: flex; gap: 8px; align-items: baseline; }
+  .card ul.tl-list li > .code { flex-shrink: 0; min-width: 52px; text-align: center; }
+  .card ul.tl-list li > .tx { flex: 1; min-width: 0; }
+  .card .done { margin-top: 10px; padding-top: 9px; border-top: 1px dashed var(--border); font-size: 13px; color: var(--text-2); }
+  .card .done b { color: var(--ok); font-weight: 600; }
+
+  .radio-line { font-family: var(--mono); font-size: 13px; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 8px; padding: 11px 14px; margin: 10px 0; overflow-x: auto; white-space: nowrap; }
+
+  ul.plain { padding-left: 20px; margin: 10px 0; }
+  ul.plain li { margin-bottom: 6px; }
+  ul.plain li::marker { color: var(--text-3); }
+
+  .big4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 14px 0; }
+  @media (max-width: 620px) { .big4 { grid-template-columns: repeat(2, 1fr); } }
+  .big4 .b { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 10px; text-align: center; }
+  .big4 .n { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 600; }
+  .big4 .t { font-weight: 700; margin-top: 3px; font-size: 14.5px; }
+  .big4 .d { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+
+  footer { margin-top: 60px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-3); }
+  @media print { nav.toc { display: none; } body { font-size: 12.5px; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">Staff Briefing · Sono RunTrip 180K in Gyeongju</div>
+  <h1>보문호 별빛 레이스<br>러닝 운영 스태프 브리핑</h1>
+  <p class="hero-sub">소노 런트립 180K in 경주 — 러닝 운영팀에 오신 것을 환영해요. 이 페이지 하나로 내 역할, 내 위치, 당일 동선을 확인할 수 있어요.</p>
+  <div class="facts">
+    <div class="fact"><div class="k">일시</div><div class="v mono">10.04 (일) 18:30 출발</div></div>
+    <div class="fact"><div class="k">장소</div><div class="v">소노캄 경주 일원 (보문호)</div></div>
+    <div class="fact"><div class="k">규모</div><div class="v">모집 1,500명 · 현재 약 1,000명</div></div>
+    <div class="fact"><div class="k">MAIN RUN</div><div class="v"><span class="dot y"></span>9.66km · A~D그룹</div></div>
+    <div class="fact"><div class="k">PET RUN</div><div class="v"><span class="dot b"></span>7.12km · E그룹</div></div>
+  </div>
+</header>
+
+<nav class="toc">
+  <a href="#overview">개요</a>
+  <a href="#roster">배정표</a>
+  <a href="#codes">호칭 코드</a>
+  <a href="#org">지휘 체계</a>
+  <a href="#waves">출발 시간</a>
+  <a href="#dday">당일 동선</a>
+  <a href="#roles">역할 카드</a>
+  <a href="#safety">안전 수칙</a>
+  <a href="#teardown">철수</a>
+  <a href="#gear">준비물</a>
+  <a href="#map">지도</a>
+</nav>
+
+<!-- ========== 레이스 개요 ========== -->
+<section id="overview">
+  <div class="sec-label">RACE OVERVIEW</div>
+  <h2>레이스 개요</h2>
+  <p class="lede">소노캄 경주 1주년 기념 <strong>나이트런</strong>이에요. 참가자 전원이 LED 액세서리를 착용하고 보문호반길을 달리고, 우리 팀은 이 레이스의 <strong>러닝 코스 운영</strong>을 맡아요.</p>
+  <div class="tbl-wrap"><table>
+    <tr><th>코스</th><th>경로</th><th>대상</th></tr>
+    <tr><td><span class="code y">MAIN 9.66K</span></td><td>소노캄 → 물너울교 → 호반교 → 신라교 왕복 → 소노캄</td><td>A~D그룹 (러너 전용)</td></tr>
+    <tr><td><span class="code b">PET 7.12K</span></td><td>MAIN에서 신라교 왕복 구간 제외</td><td>E그룹 (반려견 동반 · 2m 고정 리드줄)</td></tr>
+  </table></div>
+</section>
+
+<!-- ========== 배정표 ========== -->
+<section id="roster">
+  <div class="sec-label">ROSTER</div>
+  <h2>인원 배정표</h2>
+  <p class="lede">전화번호는 화면에 표시하지 않아요 — <strong>통화·문자 버튼을 누르면 바로 연결돼요.</strong> 본인 이름과 코드를 지금 확인하고, 잘못됐으면 바로 알려 주세요.</p>
+  <div class="tbl-wrap"><table>
+    <tr><th>이름</th><th>코드</th><th>역할</th><th>비고</th><th>연락</th></tr>
+    <tr><td><strong>박준섭</strong></td><td class="num"><span class="code y">조장</span></td><td>코스 운영 총괄 (준섭조)</td><td>베이스캠프 · 이동조 지휘</td><td class="contact"><button class="call" data-n="03283138010" aria-label="박준섭에게 전화">통화</button><button class="sms" data-n="03283138010" aria-label="박준섭에게 문자">문자</button></td></tr>
+    <tr><td><strong>공성훈</strong></td><td class="num"><span class="code b">조장</span></td><td>응급 총괄 (성훈조)</td><td>코스 고정·차량 지휘 · 철수 시 시피1~2 구간 회수(자전거)</td><td class="contact"><button class="call" data-n="21492246010" aria-label="공성훈에게 전화">통화</button><button class="sms" data-n="21492246010" aria-label="공성훈에게 문자">문자</button></td></tr>
+    <tr><td>곽현주</td><td class="num"><span class="code b">C1</span></td><td>시피1 팀장</td><td>시피 구성 및 진행</td><td class="contact"><button class="call" data-n="57598203010" aria-label="곽현주에게 전화">통화</button><button class="sms" data-n="57598203010" aria-label="곽현주에게 문자">문자</button></td></tr>
+    <tr><td>강은영</td><td class="num"><span class="code b">C1</span></td><td>시피1 팀원</td><td></td><td class="contact"><button class="call" data-n="10918204010" aria-label="강은영에게 전화">통화</button><button class="sms" data-n="10918204010" aria-label="강은영에게 문자">문자</button></td></tr>
+    <tr><td>이관우</td><td class="num"><span class="code b">C1</span></td><td>시피1 팀원</td><td></td><td class="contact"><button class="call" data-n="04441024010" aria-label="이관우에게 전화">통화</button><button class="sms" data-n="04441024010" aria-label="이관우에게 문자">문자</button></td></tr>
+    <tr><td>한선경</td><td class="num"><span class="code b">C1</span></td><td>시피1 팀원</td><td></td><td class="contact"><button class="call" data-n="48036098010" aria-label="한선경에게 전화">통화</button><button class="sms" data-n="48036098010" aria-label="한선경에게 문자">문자</button></td></tr>
+    <tr><td>백미옥</td><td class="num"><span class="code b">C2</span></td><td>시피2 팀장</td><td>시피 구성 및 진행</td><td class="contact"><button class="call" data-n="48502998010" aria-label="백미옥에게 전화">통화</button><button class="sms" data-n="48502998010" aria-label="백미옥에게 문자">문자</button></td></tr>
+    <tr><td>김민지</td><td class="num"><span class="code b">C2</span></td><td>시피2 팀원</td><td></td><td class="contact"><button class="call" data-n="48501468010" aria-label="김민지에게 전화">통화</button><button class="sms" data-n="48501468010" aria-label="김민지에게 문자">문자</button></td></tr>
+    <tr><td>한기쁨</td><td class="num"><span class="code b">C2</span></td><td>시피2 팀원</td><td></td><td class="contact"><button class="call" data-n="84104477010" aria-label="한기쁨에게 전화">통화</button><button class="sms" data-n="84104477010" aria-label="한기쁨에게 문자">문자</button></td></tr>
+    <tr><td>김준규</td><td class="num"><span class="code b">C2</span></td><td>시피2 팀원</td><td></td><td class="contact"><button class="call" data-n="84370703010" aria-label="김준규에게 전화">통화</button><button class="sms" data-n="84370703010" aria-label="김준규에게 문자">문자</button></td></tr>
+    <tr><td>신석균</td><td class="num"><span class="code b">G1</span></td><td>코스안내</td><td>다리 진입로</td><td class="contact"><button class="call" data-n="86872326010" aria-label="신석균에게 전화">통화</button><button class="sms" data-n="86872326010" aria-label="신석균에게 문자">문자</button></td></tr>
+    <tr><td>이선호</td><td class="num"><span class="code b">G2</span></td><td>코스안내</td><td>다리 진출로</td><td class="contact"><button class="call" data-n="52262559010" aria-label="이선호에게 전화">통화</button><button class="sms" data-n="52262559010" aria-label="이선호에게 문자">문자</button></td></tr>
+    <tr><td>이희웅</td><td class="num"><span class="code y">M1</span></td><td>5:00 페이서</td><td>A그룹 동반 출발 · 코스마킹</td><td class="contact"><button class="call" data-n="91946137010" aria-label="이희웅에게 전화">통화</button><button class="sms" data-n="91946137010" aria-label="이희웅에게 문자">문자</button></td></tr>
+    <tr><td>손효진</td><td class="num"><span class="code y">M2</span></td><td>5:30 페이서</td><td>B그룹 동반 출발 · 코스마킹</td><td class="contact"><button class="call" data-n="14455819010" aria-label="손효진에게 전화">통화</button><button class="sms" data-n="14455819010" aria-label="손효진에게 문자">문자</button></td></tr>
+    <tr><td>손강희</td><td class="num"><span class="code y">M3</span></td><td>6:00 페이서</td><td>C그룹 동반 출발 · 코스마킹</td><td class="contact"><button class="call" data-n="67330037010" aria-label="손강희에게 전화">통화</button><button class="sms" data-n="67330037010" aria-label="손강희에게 문자">문자</button></td></tr>
+    <tr><td>김진희</td><td class="num"><span class="code y">M4</span></td><td>6:00 페이서</td><td>D그룹 동반 출발 · 대회장 웜업</td><td class="contact"><button class="call" data-n="17957239010" aria-label="김진희에게 전화">통화</button><button class="sms" data-n="17957239010" aria-label="김진희에게 문자">문자</button></td></tr>
+    <tr><td>송현정</td><td class="num"><span class="code y">M5</span></td><td>6:00 페이서</td><td>E그룹(펫) 동반 출발 · 코스마킹</td><td class="contact"><button class="call" data-n="98558929010" aria-label="송현정에게 전화">통화</button><button class="sms" data-n="98558929010" aria-label="송현정에게 문자">문자</button></td></tr>
+    <tr><td>김정훈</td><td class="num"><span class="code y">L1</span></td><td>자전거 리딩</td><td>선두 안내 · 철수 회수 라이딩</td><td class="contact"><button class="call" data-n="82153263010" aria-label="김정훈에게 전화">통화</button><button class="sms" data-n="82153263010" aria-label="김정훈에게 문자">문자</button></td></tr>
+    <tr><td>김정호</td><td class="num"><span class="code y">P1</span></td><td>패트롤</td><td>6~9km 구간 · 대회장 웜업</td><td class="contact"><button class="call" data-n="82150089010" aria-label="김정호에게 전화">통화</button><button class="sms" data-n="82150089010" aria-label="김정호에게 문자">문자</button></td></tr>
+    <tr><td>황인정</td><td class="num"><span class="code y">P2</span></td><td>패트롤</td><td>3~6km 구간</td><td class="contact"><button class="call" data-n="10987444010" aria-label="황인정에게 전화">통화</button><button class="sms" data-n="10987444010" aria-label="황인정에게 문자">문자</button></td></tr>
+    <tr><td>김민정</td><td class="num"><span class="code y">P3</span></td><td>패트롤</td><td>1~3km 구간</td><td class="contact"><button class="call" data-n="48504504010" aria-label="김민정에게 전화">통화</button><button class="sms" data-n="48504504010" aria-label="김민정에게 문자">문자</button></td></tr>
+    <tr><td>박준규</td><td class="num"><span class="code y">S1</span></td><td>러닝코스 스위퍼</td><td>MAIN 9K 최후미</td><td class="contact"><button class="call" data-n="68117917010" aria-label="박준규에게 전화">통화</button><button class="sms" data-n="68117917010" aria-label="박준규에게 문자">문자</button></td></tr>
+    <tr><td>김아영</td><td class="num"><span class="code y">S2</span></td><td>펫런코스 스위퍼</td><td>PET 7K 최후미</td><td class="contact"><button class="call" data-n="32838874010" aria-label="김아영에게 전화">통화</button><button class="sms" data-n="32838874010" aria-label="김아영에게 문자">문자</button></td></tr>
+  </table></div>
+</section>
+
+<!-- ========== 호칭 코드 ========== -->
+<section id="codes">
+  <div class="sec-label">CALL SIGNS</div>
+  <h2>호칭 코드 — 알아두면 보고가 빨라져요</h2>
+  <p class="lede">모든 스태프에게 코드가 있어요. 평소엔 이름으로 불러도 괜찮아요. 다만 위치 보고나 사고 보고처럼 빠르고 정확해야 할 때는 코드가 편해요 — "G2입니다, 다리 진출로 이상 없어요."</p>
+  <div class="tbl-wrap"><table>
+    <tr><th>코드</th><th>역할</th><th>소속</th><th>설명</th></tr>
+    <tr><td class="num"><span class="code b">C1 · C2</span></td><td>시피 (Check Point)</td><td><span class="pill sh">성훈조</span></td><td>C1 = 시피1 팀 전원 (팀장 곽현주) · C2 = 시피2 팀 전원 (팀장 백미옥). 급수·응원·구간 감시 거점</td></tr>
+    <tr><td class="num"><span class="code b">G1 · G2</span></td><td>코스안내 (Guide)</td><td><span class="pill sh">성훈조</span></td><td>위험 지점 고정 배치 — 방향 유도와 위험 안내</td></tr>
+    <tr><td class="num"><span class="code y">M1~M5</span></td><td>페이스메이커 (Maker)</td><td><span class="pill js">준섭조</span></td><td>그룹별 동반 출발 — 출발 웨이브 표 참고</td></tr>
+    <tr><td class="num"><span class="code y">L1</span></td><td>자전거 리딩 (Lead)</td><td><span class="pill js">준섭조</span></td><td>선두 러너 앞에서 코스 안내</td></tr>
+    <tr><td class="num"><span class="code y">P1~P3</span></td><td>패트롤 (Patrol)</td><td><span class="pill js">준섭조</span></td><td>코스를 이동하며 순찰 — 사고·공백·표지 훼손 대응</td></tr>
+    <tr><td class="num"><span class="code y">S1·S2</span></td><td>스위퍼 (Sweeper)</td><td><span class="pill js">준섭조</span></td><td>마지막 참가자 뒤를 따라감. S1=러닝, S2=펫런</td></tr>
+  </table></div>
+  <div class="callout">
+    <div class="co-title">외우는 법</div>
+    <p><strong>C</strong>heck point · <strong>G</strong>uide · pace <strong>M</strong>aker · <strong>L</strong>ead · <strong>P</strong>atrol · <strong>S</strong>weeper — 역할 영어 첫 글자 하나씩이에요.</p>
+  </div>
+</section>
+
+<!-- ========== 지휘 체계 ========== -->
+<section id="org">
+  <div class="sec-label">CHAIN OF COMMAND</div>
+  <h2>지휘 체계 — 보고할 사람은 한 명이에요</h2>
+
+  <div class="org">
+    <div class="org-row">
+      <div class="org-box js side">
+        <div class="role" style="color:var(--main9k)">준섭조 — 조장 박준섭</div>
+        <div class="tag">코스 위를 움직이는 사람들 + 베이스캠프</div>
+        <ul class="org-roles">
+          <li><span class="code y">M</span> 페이스메이커</li>
+          <li><span class="code y">L</span> 자전거 리딩</li>
+          <li><span class="code y">S</span> 스위퍼</li>
+          <li><span class="code y">P</span> 패트롤</li>
+          <li class="extra">+ 베이스캠프 (출발·피니시)</li>
+        </ul>
+      </div>
+      <div class="org-box sh side">
+        <div class="role" style="color:var(--pet7k)">성훈조 — 조장 공성훈</div>
+        <div class="tag">코스 위에 서 있는 사람들 + 차량</div>
+        <ul class="org-roles">
+          <li><span class="code b">C</span> 시피</li>
+          <li><span class="code b">G</span> 코스안내</li>
+          <li><span class="code r">E</span> 응급차량</li>
+          <li><span class="code">B</span><span class="tx">회송·셔틀버스</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ========== 출발 웨이브 ========== -->
+<section id="waves">
+  <div class="sec-label">RACE SCHEDULE</div>
+  <h2>출발 웨이브 — 이 시간표가 모든 배치의 기준이에요</h2>
+  <div class="tbl-wrap"><table>
+    <tr><th>시각</th><th>그룹</th><th>코스</th><th>인원 (정원 기준)</th><th>페이서</th></tr>
+    <tr><td class="num">18:30</td><td colspan="4">출발 카운트다운</td></tr>
+    <tr><td class="num">18:31</td><td>A그룹</td><td><span class="code y">MAIN 9.66K</span></td><td class="num">300</td><td>이희웅 <span class="code y">M1</span> · 5:00/km</td></tr>
+    <tr><td class="num">18:34</td><td>B그룹</td><td><span class="code y">MAIN 9.66K</span></td><td class="num">300</td><td>손효진 <span class="code y">M2</span> · 5:30/km</td></tr>
+    <tr><td class="num">18:38</td><td>C그룹</td><td><span class="code y">MAIN 9.66K</span></td><td class="num">300</td><td>손강희 <span class="code y">M3</span> · 6:00/km</td></tr>
+    <tr><td class="num">18:42</td><td>D그룹</td><td><span class="code y">MAIN 9.66K</span></td><td class="num">300</td><td>김진희 <span class="code y">M4</span> · 6:00/km</td></tr>
+    <tr><td class="num">18:45</td><td>E그룹 (펫 동반)</td><td><span class="code b">PET 7.12K</span></td><td class="num">300</td><td>송현정 <span class="code y">M5</span> · 6:00/km</td></tr>
+  </table></div>
+</section>
+
+<!-- ========== 당일 동선 ========== -->
+<section id="dday">
+  <div class="sec-label">D-DAY FLOW</div>
+  <h2>당일 스태프 동선 (안)</h2>
+  <p class="lede">10월 4일(일) <strong>오후 3시 집합</strong> — 세부 시간이 바뀌면 단톡방에 다시 공지할게요.</p>
+  <div class="tbl-wrap"><table>
+    <tr><th>시간</th><th>내용</th></tr>
+    <tr><td class="num">15:00~16:00</td><td><strong>스태프 집합 · 브리핑</strong> — 전원 참석, 역할·위치·보고 체계 최종 확인</td></tr>
+    <tr><td class="num">16:00~17:00</td><td>물자 분배 (조끼·라이트·급수·표지) · 시피팀 물자 선적</td></tr>
+    <tr><td class="num">17:00</td><td>시피·코스안내 인원 각자 위치로 이동 (차량 이용)</td></tr>
+    <tr><td class="num">17:30</td><td>전 포인트 위치 완료 보고 — "시피1 이상 없음" 순차 콜</td></tr>
+    <tr><td class="num">18:00</td><td>전 포인트 <span class="code g">GREEN</span> 확인 → 출발 준비 · 이동조 풍선 수령·부착 · M4·P1 대회장 웜업 · 18:20 페이서 무대 소개</td></tr>
+    <tr><td class="num">18:30~18:45</td><td>웨이브 출발 (A→B→C→D→E) · L1 자전거 선도 · 스위퍼 후미 출발</td></tr>
+    <tr><td class="num">~20:00</td><td>레이스 운영 — 각 위치 임무 수행</td></tr>
+    <tr><td class="num">20:00~</td><td>S1·S2 피니시 → 코스 상황 종료 → 구간별 순차 철수·물자 회수</td></tr>
+    <tr><td class="num">20:30~</td><td>물자 반납 (시상식·축하공연은 자유 관람)</td></tr>
+    <tr><td class="num">21:00</td><td><strong>베이스캠프 집합</strong> → 마무리 인사 → 해산</td></tr>
+  </table></div>
+</section>
+
+<!-- ========== 역할 카드 ========== -->
+<section id="roles">
+  <div class="sec-label">ROLE CARDS</div>
+  <h2>개인별 임무 카드</h2>
+  <p class="lede">자기 카드 하나만 읽으면 돼요 — 위에서 아래로 <strong>시간 순서</strong>예요.<br>
+  공통 원칙: <strong>내 위치를 비우지 않기 · 판단이 서지 않으면 조장에게 묻기.</strong><br>
+  15:00 집합·브리핑은 전원 공통이에요.</p>
+
+  <h3>시피1 <span class="code b">C1</span> <span class="pill sh">성훈조</span> <span style="font-weight:500;font-size:12.5px;color:var(--text-3)">3.0km 지점 · 물너울교 지나 공터</span></h3>
+  <div class="cards">
+    <div class="card">
+      <div class="head"><span class="nm">곽현주</span></div>
+      <ul class="tl-list">
+        <li><span class="code">16:00</span><span class="tx">물자 인수·선적 지휘 (텐트·급수·쓰레기통)</span></li>
+        <li><span class="code">17:00</span><span class="tx">시피1 이동·설치 지휘 → 17:30 “시피1 이상 없음” 보고</span></li>
+        <li><span class="code">18:30~</span><span class="tx">급수 운영 총괄 · 중도 포기자 시피 대기 → 성훈에게 회송 요청</span></li>
+        <li><span class="code">철수</span><span class="tx">스위퍼 통과 후 시피 정리 · 회수물 집결 관리 → 성훈 보고</span></li>
+      </ul>
+      <div class="done"><b>종료:</b> 21:00 베이스캠프 집합</div>
+    </div>
+    <div class="card">
+      <div class="head"><span class="code b">팀원</span><span class="nm">강은영 · 이관우 · 한선경</span></div>
+      <ul class="tl-list">
+        <li><span class="code">16:00</span><span class="tx">물자 분배·선적</span></li>
+        <li><span class="code">17:00</span><span class="tx">시피 설치 · 쓰레기통 배치</span></li>
+        <li><span class="code">17:30~</span><span class="tx">바나나 자르기 · 종이컵 식수 세팅</span></li>
+        <li><span class="code">18:30~</span><span class="tx">급수 테이블 운영 (물 채우기·건네기·컵 회수) · 쓰레기통 차면 교체</span></li>
+        <li><span class="code">철수</span><span class="tx">스위퍼 통과 후 시피 정리 · 김정훈·공성훈이 모아온 회수물 보관</span></li>
+      </ul>
+      <div class="done"><b>세부 분담:</b> 바나나·급수·쓰레기통 담당은 팀장이 현장에서 배분해요 — 정리 후 21:00 베이스캠프 집합</div>
+    </div>
+  </div>
+
+  <h3>시피2 <span class="code b">C2</span> <span class="pill sh">성훈조</span> <span style="font-weight:500;font-size:12.5px;color:var(--text-3)">5.1km 지점 · 경주월드 주차장 옆</span></h3>
+  <div class="cards">
+    <div class="card">
+      <div class="head"><span class="nm">백미옥</span></div>
+      <ul class="tl-list">
+        <li><span class="code">16:00</span><span class="tx">물자 인수·선적 지휘 (텐트·급수·쓰레기통)</span></li>
+        <li><span class="code">17:00</span><span class="tx">시피2 이동·설치 지휘 → 17:30 “시피2 이상 없음” 보고</span></li>
+        <li><span class="code">18:30~</span><span class="tx">급수 운영 총괄 · 중도 포기자 시피 대기 → 성훈에게 회송 요청</span></li>
+        <li><span class="code">철수</span><span class="tx">스위퍼 통과 후 시피 정리 · 회수물 집결 관리 → 성훈 보고</span></li>
+      </ul>
+      <div class="done"><b>종료:</b> 21:00 베이스캠프 집합</div>
+    </div>
+    <div class="card">
+      <div class="head"><span class="code b">팀원</span><span class="nm">김민지 · 한기쁨 · 김준규</span></div>
+      <ul class="tl-list">
+        <li><span class="code">16:00</span><span class="tx">물자 분배·선적</span></li>
+        <li><span class="code">17:00</span><span class="tx">시피 설치 · 쓰레기통 배치</span></li>
+        <li><span class="code">17:30~</span><span class="tx">바나나 자르기 · 종이컵 식수 세팅</span></li>
+        <li><span class="code">18:30~</span><span class="tx">급수 테이블 운영 (물 채우기·건네기·컵 회수) · 쓰레기통 차면 교체</span></li>
+        <li><span class="code">철수</span><span class="tx">스위퍼 통과 후 시피 정리 · 김정훈·공성훈이 모아온 회수물 보관</span></li>
+      </ul>
+      <div class="done"><b>세부 분담:</b> 바나나·급수·쓰레기통 담당은 팀장이 현장에서 배분해요 — 정리 후 21:00 베이스캠프 집합</div>
+    </div>
+  </div>
+
+  <h3>코스안내 <span class="code b">G1·G2</span> <span class="pill sh">성훈조</span></h3>
+  <div class="cards">
+    <div class="card">
+      <div class="head"><span class="code b">G1</span><span class="nm">신석균</span></div>
+      <ul class="tl-list">
+        <li><span class="code">16:00</span><span class="tx">물자·라이트 수령</span></li>
+        <li><span class="code">17:00</span><span class="tx">다리 진입로 위치 이동 → 17:30 위치 완료 보고</span></li>
+        <li><span class="code">18:30~</span><span class="tx">다리 진입로 고정 — 방향 유도, 몸짓 크게·목소리 크게 · 보행자 정중히 대기 안내</span></li>
+        <li><span class="code">철수</span><span class="tx">스위퍼 통과 후 위치 정리 → 성훈 보고</span></li>
+      </ul>
+      <div class="done"><b>종료:</b> 21:00 베이스캠프 집합</div>
+    </div>
+    <div class="card">
+      <div class="head"><span class="code b">G2</span><span class="nm">이선호</span></div>
+      <ul class="tl-list">
+        <li><span class="code">16:00</span><span class="tx">물자·라이트 수령</span></li>
+        <li><span class="code">17:00</span><span class="tx">다리 진출로 위치 이동 → 17:30 위치 완료 보고</span></li>
+        <li><span class="code">18:30~</span><span class="tx">다리 진출로 고정 — 방향 유도, 몸짓 크게·목소리 크게 · 보행자 정중히 대기 안내</span></li>
+        <li><span class="code">철수</span><span class="tx">스위퍼 통과 후 위치 정리 → 성훈 보고</span></li>
+      </ul>
+      <div class="done"><b>종료:</b> 21:00 베이스캠프 집합</div>
+    </div>
+  </div>
+
+  <h3>페이서 <span class="code y">M1~M5</span> <span class="pill js">준섭조</span></h3>
+  <div class="cards">
+    <div class="card">
+      <div class="head"><span class="code y">M1</span><span class="nm">이희웅</span></div>
+      <ul class="tl-list">
+        <li><span class="code">사전</span><span class="tx">코스마킹 작업 참여 (일정 별도 안내)</span></li>
+        <li><span class="code">18:00</span><span class="tx">노랑 풍선 수령·부착</span></li>
+        <li><span class="code">18:20</span><span class="tx">체조 종료 후 <strong>무대에서 페이서 소개</strong> — 무대 앞 대기</span></li>
+        <li><span class="code">18:31</span><span class="tx"><strong>A그룹과 함께 출발</strong> — 5:00 페이서 · 일정 페이스 유지</span></li>
+        <li><span class="code">피니시</span><span class="tx">준섭에게 복귀 보고</span></li>
+      </ul>
+      <div class="done"><b>종료:</b> 복귀 보고 후 대기 → 21:00 베이스캠프 집합</div>
+    </div>
+    <div class="card">
+      <div class="head"><span class="code y">M2</span><span class="nm">손효진</span></div>
+      <ul class="tl-list">
+        <li><span class="code">사전</span><span class="tx">코스마킹 작업 참여 (일정 별도 안내)</span></li>
+        <li><span class="code">18:00</span><span class="tx">노랑 풍선 수령·부착</span></li>
+        <li><span class="code">18:20</span><span class="tx">체조 종료 후 <strong>무대에서 페이서 소개</strong> — 무대 앞 대기</span></li>
+        <li><span class="code">18:34</span><span class="tx"><strong>B그룹과 함께 출발</strong> — 5:30 페이서 · 일정 페이스 유지</span></li>
+        <li><span class="code">피니시</span><span class="tx">준섭에게 복귀 보고</span></li>
+      </ul>
+      <div class="done"><b>종료:</b> 복귀 보고 후 대기 → 21:00 베이스캠프 집합</div>
+    </div>
+    <div class="card">
+      <div class="head"><span class="code y">M3</span><span class="nm">손강희</span></div>
+      <ul class="tl-list">
+        <li><span class="code">사전</span><span class="tx">코스마킹 작업 참여 (일정 별도 안내)</span></li>
+        <li><span class="code">18:00</span><span class="tx">노랑 풍선 수령·부착</span></li>
+        <li><span class="code">18:20</span><span class="tx">체조 종료 후 <strong>무대에서 페이서 소개</strong> — 무대 앞 대기</span></li>
+        <li><span class="code">18:38</span><span class="tx"><strong>C그룹과 함께 출발</strong> — 6:00 페이서 · 일정 페이스 유지</span></li>
+        <li><span class="code">피니시</span><span class="tx">준섭에게 복귀 보고</span></li>
+      </ul>
+      <div class="done"><b>종료:</b> 복귀 보고 후 대기 → 21:00 베이스캠프 집합</div>
+    </div>
+    <div class="card">
+      <div class="head"><span class="code y">M4</span><span class="nm">김진희</span></div>
+      <ul class="tl-list">
+        <li><span class="code">18:00</span><span class="tx">노랑 풍선 수령·부착</span></li>
+        <li><span class="code">18:00</span><span class="tx">대회장 웜업 진행</span></li>
+        <li><span class="code">18:20</span><span class="tx">체조 종료 후 <strong>무대에서 페이서 소개</strong> — 무대 앞 대기</span></li>
+        <li><span class="code">18:42</span><span class="tx"><strong>D그룹과 함께 출발</strong> — 6:00 페이서 · 일정 페이스 유지</span></li>
+        <li><span class="code">피니시</span><span class="tx">준섭에게 복귀 보고</span></li>
+      </ul>
+      <div class="done"><b>종료:</b> 복귀 보고 후 대기 → 21:00 베이스캠프 집합</div>
+    </div>
+    <div class="card">
+      <div class="head"><span class="code y">M5</span><span class="nm">송현정</span></div>
+      <ul class="tl-list">
+        <li><span class="code">사전</span><span class="tx">코스마킹 작업 참여 (일정 별도 안내)</span></li>
+        <li><span class="code">18:00</span><span class="tx">노랑 풍선 수령·부착</span></li>
+        <li><span class="code">18:20</span><span class="tx">체조 종료 후 <strong>무대에서 페이서 소개</strong> — 무대 앞 대기</span></li>
+        <li><span class="code">18:45</span><span class="tx"><strong>E그룹(펫)과 함께 출발</strong> — 6:00 페이서 · 일정 페이스 유지</span></li>
+        <li><span class="code">피니시</span><span class="tx">준섭에게 복귀 보고</span></li>
+      </ul>
+      <div class="done"><b>종료:</b> 복귀 보고 후 대기 → 21:00 베이스캠프 집합</div>
+    </div>
+  </div>
+
+  <h3>자전거 리딩 <span class="code y">L1</span> <span class="pill js">준섭조</span></h3>
+  <div class="cards">
+    <div class="card">
+      <div class="head"><span class="code y">L1</span><span class="nm">김정훈</span></div>
+      <ul class="tl-list">
+        <li><span class="code">18:00</span><span class="tx">노랑 풍선 수령 · 자전거 점검</span></li>
+        <li><span class="code">18:30</span><span class="tx">선두 러너 앞에서 자전거로 코스 안내 출발</span></li>
+        <li><span class="code">피니시</span><span class="tx">남/여 1~3위 확인 지원 (시상식 준비)</span></li>
+        <li><span class="code">철수 1차</span><span class="tx">스위퍼 통과한 <strong>시작지점~시피1</strong> 마킹·조명 회수 → 시피1 집결</span></li>
+        <li><span class="code">철수 2차</span><span class="tx"><strong>시피2~골인지점</strong> 회수 라이딩</span></li>
+      </ul>
+      <div class="done"><b>종료:</b> 2차 회수 완료 후 준섭 보고 → 21:00 베이스캠프 집합</div>
+    </div>
+  </div>
+
+  <h3>패트롤 <span class="code y">P1~P3</span> <span class="pill js">준섭조</span></h3>
+  <div class="cards">
+    <div class="card">
+      <div class="head"><span class="code y">P1</span><span class="nm">김정호</span></div>
+      <ul class="tl-list">
+        <li><span class="code">18:00</span><span class="tx">초록 풍선 수령·부착</span></li>
+        <li><span class="code">18:00</span><span class="tx">대회장 웜업 진행 후 코스 투입</span></li>
+        <li><span class="code">18:30~</span><span class="tx"><strong>6~9km 구간</strong> 이동 순찰 — 쓰러진 러너·표지 훼손·요원 공백·보행자 충돌 대응</span></li>
+        <li><span class="code">선두</span><span class="tx"><strong>선두 남자 · 선두 여자</strong> 통과 시 무전 보고 — “P1, 선두 남자 통과”</span></li>
+        <li><span class="code">사고 시</span><span class="tx">러너 곁에 머물며 4요소 보고</span></li>
+        <li><span class="code">철수</span><span class="tx">구간 스위퍼 통과 확인 → 빠뜨린 표지·조명 확인하며 피니시 복귀</span></li>
+      </ul>
+      <div class="done"><b>종료:</b> 피니시 복귀 보고 → 21:00 베이스캠프 집합</div>
+    </div>
+    <div class="card">
+      <div class="head"><span class="code y">P2</span><span class="nm">황인정</span></div>
+      <ul class="tl-list">
+        <li><span class="code">17:00</span><span class="tx">3~6km 구간으로 이동</span></li>
+        <li><span class="code">18:00</span><span class="tx">초록 풍선 수령·부착</span></li>
+        <li><span class="code">18:30~</span><span class="tx"><strong>3~6km 구간</strong> 이동 순찰 — 쓰러진 러너·표지 훼손·요원 공백·보행자 충돌 대응</span></li>
+        <li><span class="code">사고 시</span><span class="tx">러너 곁에 머물며 4요소 보고</span></li>
+        <li><span class="code">철수</span><span class="tx">구간 스위퍼 통과 확인 → 빠뜨린 표지·조명 확인하며 피니시 복귀</span></li>
+      </ul>
+      <div class="done"><b>종료:</b> 피니시 복귀 보고 → 21:00 베이스캠프 집합</div>
+    </div>
+    <div class="card">
+      <div class="head"><span class="code y">P3</span><span class="nm">김민정</span></div>
+      <ul class="tl-list">
+        <li><span class="code">17:00</span><span class="tx">1~3km 구간으로 이동</span></li>
+        <li><span class="code">18:00</span><span class="tx">초록 풍선 수령·부착</span></li>
+        <li><span class="code">18:30~</span><span class="tx"><strong>1~3km 구간</strong> 이동 순찰 — 쓰러진 러너·표지 훼손·요원 공백·보행자 충돌 대응</span></li>
+        <li><span class="code">사고 시</span><span class="tx">러너 곁에 머물며 4요소 보고</span></li>
+        <li><span class="code">철수</span><span class="tx">구간 스위퍼 통과 확인 → 빠뜨린 표지·조명 확인하며 피니시 복귀</span></li>
+      </ul>
+      <div class="done"><b>종료:</b> 피니시 복귀 보고 → 21:00 베이스캠프 집합</div>
+    </div>
+  </div>
+
+  <h3>스위퍼 <span class="code y">S1·S2</span> <span class="pill js">준섭조</span></h3>
+  <div class="cards">
+    <div class="card">
+      <div class="head"><span class="code y">S1</span><span class="nm">박준규</span></div>
+      <ul class="tl-list">
+        <li><span class="code">18:00</span><span class="tx">연보라 풍선 수령·부착</span></li>
+        <li><span class="code">18:42</span><span class="tx"><strong>D그룹 맨 뒤에서 출발</strong> — 마지막 참가자 절대 추월 금지</span></li>
+        <li><span class="code">이동 중</span><span class="tx">주요 지점마다 준섭에게 위치 보고 · 힘들어하는 참가자는 회송버스 안내</span></li>
+        <li><span class="code">피니시</span><span class="tx">S1 피니시 = MAIN 코스 상황 종료의 근거</span></li>
+      </ul>
+      <div class="done"><b>종료:</b> 피니시 보고 → 21:00 베이스캠프 집합</div>
+    </div>
+    <div class="card">
+      <div class="head"><span class="code y">S2</span><span class="nm">김아영</span></div>
+      <ul class="tl-list">
+        <li><span class="code">18:00</span><span class="tx">연보라 풍선 수령·부착</span></li>
+        <li><span class="code">18:45</span><span class="tx"><strong>E그룹(펫) 맨 뒤에서 출발</strong> — 마지막 참가자 절대 추월 금지</span></li>
+        <li><span class="code">이동 중</span><span class="tx">주요 지점마다 준섭에게 위치 보고 · 힘들어하는 참가자는 회송버스 안내</span></li>
+        <li><span class="code">피니시</span><span class="tx">S2 피니시 = PET 코스 상황 종료의 근거</span></li>
+      </ul>
+      <div class="done"><b>종료:</b> 피니시 보고 → 21:00 베이스캠프 집합</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 안전 수칙 ========== -->
+<section id="safety">
+  <div class="sec-label">SAFETY</div>
+  <h2>공통 안전 수칙</h2>
+
+  <h3>사고를 발견하면, 딱 4가지만 말해요</h3>
+  <div class="big4">
+    <div class="b"><div class="n">1</div><div class="t">어디</div><div class="d">내 코드 / 가까운 지형지물</div></div>
+    <div class="b"><div class="n">2</div><div class="t">무슨 사고</div><div class="d">넘어짐 · 탈진 · 충돌 …</div></div>
+    <div class="b"><div class="n">3</div><div class="t">의식 여부</div><div class="d">있음 / 없음</div></div>
+    <div class="b"><div class="n">4</div><div class="t">필요한 지원</div><div class="d">의료 · 회송 · 인력</div></div>
+  </div>
+  <div class="radio-line">"G2 부근, 남성 러너 1명 넘어짐, 의식 있음, 발목 보행 불가, 의료지원 요청."</div>
+
+  <div class="callout danger">
+    <div class="co-title">응급상황 보고 규칙 (조 무관)</div>
+    <p>사고·환자 발생 시에는 자기 조와 관계없이 <strong>준섭·성훈에게 즉시 전화</strong>해요. 의식이 없거나 심정지가 의심되면 <strong>119 먼저, 보고는 그다음.</strong> 발견자는 구조 인계 전까지 환자 곁을 떠나지 않아요.</p>
+  </div>
+
+  <h3>전원 공통</h3>
+  <ul class="plain">
+    <li><strong>위치 사수</strong> — 자기 위치를 비울 때는 반드시 조장 승인 후</li>
+    <li><strong>야간 행사</strong> — 지급되는 안전조끼·라이트 착용, 무전기 휴대 필수. 휴대폰 배터리 100%</li>
+    <li><strong>참가자에게는 항상 친절하게, 안전 안내는 단호하게</strong></li>
+    <li>일반 보행자·자전거와 실랑이 금지 — 정중히 안내하고 안 되면 보고</li>
+  </ul>
+</section>
+
+<!-- ========== 철수 · 회수 ========== -->
+<section id="teardown">
+  <div class="sec-label">TEARDOWN</div>
+  <h2>철수 · 회수 — 스위퍼가 지나가면 시작해요</h2>
+  <p class="lede">코스마킹·조명 회수는 <strong>김정훈·공성훈 두 사람이 자전거로 구간을 나눠</strong> 담당하고, 회수물은 시피1·시피2에 모아두면 더생각이 수거해요.</p>
+
+  <h3>마킹 · 조명 회수 (자전거)</h3>
+  <div class="tbl-wrap"><table>
+    <tr><th>구간</th><th>담당</th><th>회수물 집결</th></tr>
+    <tr><td class="num">시작지점 ~ 시피1</td><td><span class="code y">L1</span> 김정훈 — 선두 리딩 종료 후 1차 라이딩</td><td>시피1</td></tr>
+    <tr><td class="num">시피1 ~ 시피2</td><td>조장 공성훈 (자전거)</td><td>시피2</td></tr>
+    <tr><td class="num">시피2 ~ 골인지점</td><td><span class="code y">L1</span> 김정훈 — 2차 라이딩</td><td>피니시</td></tr>
+  </table></div>
+  <p style="font-size:14px;color:var(--text-2)">회수는 반드시 <strong>해당 구간 스위퍼 통과 후</strong>에 시작해요 — 러너가 남아 있는 구간의 마킹을 먼저 걷으면 안 돼요.</p>
+
+  <h3>역할별 철수 절차</h3>
+  <div class="tbl-wrap"><table>
+    <tr><th>담당</th><th>철수 절차</th></tr>
+    <tr><td><span class="code b">C1 · C2</span> 시피</td><td>스위퍼 통과 → 시피 물자 정리(급수 테이블·잔여 물·쓰레기통) → <strong>회수물 집결지 역할</strong> (김정훈·공성훈이 두고 간 마킹·조명 보관) → 성훈 보고 → 걸어서 출발지로 복귀</td></tr>
+    <tr><td><span class="code b">G</span> 코스안내</td><td>스위퍼 통과 → 위치 주변 정리 → 성훈 보고 → 철수</td></tr>
+    <tr><td><span class="code y">P</span> 패트롤</td><td>담당 구간 스위퍼 통과 확인 → 이동하며 빠뜨린 표지·조명 없는지 확인 → 피니시 복귀</td></tr>
+    <tr><td>수거</td><td>시피1·시피2·피니시에 모인 마킹·조명은 <strong>더생각이 수거</strong>해요 — 우리는 모아두기까지가 임무예요</td></tr>
+  </table></div>
+</section>
+
+<!-- ========== 준비물 ========== -->
+<section id="gear">
+  <div class="sec-label">CHECKLIST</div>
+  <h2>스태프 준비물</h2>
+  <ul class="plain">
+    <li>휴대폰 완충</li>
+    <li>편한 운동화 · 야간 기온 대비 겉옷 (10월 초 경주 밤은 쌀쌀해요)</li>
+    <li><strong>개인 텀블러(따뜻한 물 · 선택)</strong></li>
+    <li><strong>도시락 제공</strong> — 시간·배부 방법은 당일 안내</li>
+    <li>지급 예정: 스태프 조끼(또는 식별 복장) · 라이트 · <strong>무전기(전원 지급)</strong> · <strong>역할 색 풍선</strong> — 페이서·리딩 <strong>노랑</strong> · 패트롤 <strong>초록</strong> · 스위퍼 <strong>연보라</strong> · 역할별 물자</li>
+  </ul>
+  <div class="callout">
+    <div class="co-title">확인해 주세요</div>
+    <p>① 배정표에서 <strong>내 이름과 코드</strong> 확인 ② 궁금한 점은 단톡방에 편하게 남겨 주세요.</p>
+  </div>
+</section>
+
+<!-- ========== 코스 지도 ========== -->
+<section id="map">
+  <div class="sec-label">COURSE MAP</div>
+  <h2>코스 지도 · 시피 위치</h2>
+  <p class="lede">전체 코스와 시피1·시피2 조성 참고 자료예요. 사진을 길게 눌러 저장해두면 현장에서 편해요.</p>
+  <figure style="margin:0 0 20px">
+    <img src="/runtrip/assets/course-map.jpg" alt="전체 코스 지도 — 시피1 3.0km, 시피2 5.1km, 호반교·신라교 왕복 구간" style="width:100%;border-radius:10px;border:1px solid var(--border)">
+    <figcaption style="font-size:13px;color:var(--text-3);margin-top:6px">전체 코스 — 시피1(1급수대) 3.0km · 시피2(2급수대) 5.1km · 신라교 왕복은 MAIN 전용</figcaption>
+  </figure>
+  <figure style="margin:0 0 20px">
+    <img src="/runtrip/assets/cp1.jpg" alt="시피1 조성 계획 — 물너울교 빠져나온 후 공터" style="width:100%;border-radius:10px;border:1px solid var(--border)">
+    <figcaption style="font-size:13px;color:var(--text-3);margin-top:6px">시피1 조성 — 물너울교 빠져나온 후 공터 · 운영 18:30~21:00 · 화장실 인접</figcaption>
+  </figure>
+  <figure style="margin:0 0 20px">
+    <img src="/runtrip/assets/cp2.jpg" alt="시피2 조성 계획" style="width:100%;border-radius:10px;border:1px solid var(--border)">
+    <figcaption style="font-size:13px;color:var(--text-3);margin-top:6px">시피2 조성 — 5.1km 지점 · 운영 18:30~21:00 · 화장실 인접</figcaption>
+  </figure>
+  <figure style="margin:0">
+    <img src="/runtrip/assets/vehicles.jpg" alt="응급·회송차량 배치 — 구급차량과 회송차량 위치, 응급차 2대·회송 스타렉스 2대·4인승 카트 5대" style="width:100%;border-radius:10px;border:1px solid var(--border)">
+    <figcaption style="font-size:13px;color:var(--text-3);margin-top:6px">응급·회송차량 배치 — 응급차 2대(운전자 2·응급간호사 2) · 회송차량 2대(스타렉스) · 4인승 카트 5대(패트롤 이동용)</figcaption>
+  </figure>
+</section>
+
+<footer>
+  소노 런트립 180K in 경주 · 러닝 운영팀 브리핑 v2 · 세부 시간과 미배정 인원은 확정되는 대로 이 페이지를 갱신해요
+</footer>
+
+</div>
+
+<script>
+  document.querySelectorAll("button.call, button.sms").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var d = b.getAttribute("data-n").split("").reverse().join("");
+      location.href = (b.classList.contains("sms") ? "sms:" : "tel:") + d;
+    });
+  });
+</script>
+
+</body>
+</html>
