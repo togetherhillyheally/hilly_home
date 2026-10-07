@@ -6,7 +6,9 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /** 보물 비율 — 조각의 약 1/4 (나머지는 걸어서 번 씨앗으로 뽑음) */
-const TREASURE_RATIO = 0.25;
+// 2026-10-07: 보물(인증 지점)은 코스당 3개 고정 — 시작·중간·끝 (이전 조각 1/4 jitter 폐기).
+// 앱 인앱 셋업(hilly_rn lib/utils/treasurePlacement.ts)과 같은 규칙.
+const TREASURE_COUNT = 3;
 
 type LngLat = [number, number];
 
@@ -109,10 +111,7 @@ function computeEconomics(
   distanceKm: number,
   seedMultiplier: number
 ) {
-  const treasureCount = Math.max(
-    1,
-    Math.min(total - 1, Math.ceil(total * TREASURE_RATIO))
-  );
+  const treasureCount = Math.max(1, Math.min(total - 1, TREASURE_COUNT));
   const needed = Math.max(0, total - treasureCount - TREASURE_STARTER);
   const distPieces = Math.floor(distanceKm / 1.5);
   // 시간 보너스 — 통상 도보 ~15분/km 가정
@@ -304,22 +303,13 @@ export async function POST(
     );
   }
 
-  // 보물 개수 = ceil(1/4), 최소 1, 최대 total-1
-  const count = Math.max(1, Math.min(total - 1, Math.ceil(total * TREASURE_RATIO)));
+  // 보물 개수 = 3 고정(시작·중간·끝), 최대 total-1
+  const count = Math.max(1, Math.min(total - 1, TREASURE_COUNT));
 
-  // 구간별 jitter 위치 — 등간격 X, 시작/끝 X (보물다운 불규칙 배치)
-  const fractions: number[] = [];
-  for (let i = 0; i < count; i++) {
-    const segStart = i / count;
-    const segEnd = (i + 1) / count;
-    // 구간 내부 20~80% 사이 랜덤 → 경계/등간격 회피
-    const inner = 0.2 + Math.random() * 0.6;
-    let f = segStart + inner * (segEnd - segStart);
-    // 전체 시작/끝 3% 여백
-    f = Math.min(0.97, Math.max(0.03, f));
-    fractions.push(f);
-  }
-  fractions.sort((a, b) => a - b);
+  // 순환 코스(시작≈끝 50m 이내)는 시작·1/3·2/3, 아니면 시작·중간(거리 50%)·끝.
+  // 랜덤 jitter 없음 — 인증 지점은 예측 가능해야 한다.
+  const isLoop = haversineM(coords[0], coords[coords.length - 1]) <= 50;
+  const fractions: number[] = (isLoop ? [0, 1 / 3, 2 / 3] : [0, 0.5, 1]).slice(0, count);
 
   // 보물 셀 = 전체 셀에서 무작위 count 개
   const cells = shuffle(Array.from({ length: total }, (_, i) => i)).slice(0, count);

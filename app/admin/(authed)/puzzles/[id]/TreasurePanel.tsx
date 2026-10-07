@@ -49,7 +49,8 @@ export default function TreasurePanel({
   const [error, setError] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
-  const expected = Math.max(1, Math.min(totalPieces - 1, Math.ceil(totalPieces * 0.25)));
+  // 보물(인증 지점)은 코스당 3개 고정 — 시작·중간·끝 (2026-10-07)
+  const expected = Math.max(1, Math.min(totalPieces - 1, 3));
 
   const load = useCallback(async () => {
     try {
@@ -150,11 +151,10 @@ export default function TreasurePanel({
         <h2 className="text-sm font-bold text-white">보물 (완주 인증)</h2>
       </div>
       <p className="text-xs text-gray-400 leading-relaxed mb-4">
-        경로를 따라 보물을 배치하면, 모험자가 그 지점을 실제로 지나야만 얻는 조각이
-        돼요. 조각의 약 <span className="text-amber-300 font-semibold">1/4</span>{" "}
-        (이 퍼즐은 {totalPieces}개 중 약 {expected}개)이 보물 셀이 되고, 나머지는
-        걸어서 번 씨앗으로 뽑아요. 전 구간을 완주하면 보물 + 씨앗으로 퍼즐이 딱
-        맞춰집니다. 보물 셀은 씨앗 뽑기에서 제외돼 무결성이 지켜져요.
+        경로의 <span className="text-amber-300 font-semibold">시작·중간·끝 3곳</span>에
+        인증 지점(보물)을 둬요. 모험자가 세 곳을 실제로 지나야 조각 {expected}개를 얻고,
+        나머지 {Math.max(0, totalPieces - expected)}개는 걸어서 번 씨앗으로 뽑아요(퍼즐 4×4
+        권장). 보물 셀은 씨앗 뽑기에서 제외돼 무결성이 지켜져요.
       </p>
 
       {!canPlace && (
@@ -200,7 +200,7 @@ export default function TreasurePanel({
           ) : (
             <Gem className="h-4 w-4" />
           )}
-          {count && count > 0 ? "다시 배치" : "보물 자동 배치"}
+          {count && count > 0 ? "다시 배치" : "인증 지점 배치"}
         </button>
         {count !== null && count > 0 && (
           <button
@@ -240,8 +240,8 @@ export default function TreasurePanel({
           />
           {treasures.length === 0 && (
             <p className="text-[11px] text-gray-500 mt-2">
-              아직 배치된 보물이 없어요. 위 「보물 자동 배치」를 누르면 경로 위에
-              표시됩니다.
+              아직 배치된 인증 지점이 없어요. 위 「인증 지점 배치」를 누르면 경로의
+              시작·중간·끝에 표시됩니다.
             </p>
           )}
         </div>
