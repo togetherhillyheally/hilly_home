@@ -6,6 +6,7 @@ import {
   Coins,
   FileText,
   Flag,
+  Gem,
   GlassWater,
   HelpCircle,
   Home,
@@ -96,6 +97,12 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         label: "스탬프 지도",
         icon: Stamp,
         menuKey: "stamps",
+      },
+      {
+        href: "/admin/treasures",
+        label: "보물 지도",
+        icon: Gem,
+        menuKey: "treasures",
       },
       {
         href: "/admin/quiz-pool",

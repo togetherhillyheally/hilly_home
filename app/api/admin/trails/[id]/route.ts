@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { hasMenuAccess, readAdminSession } from "@/lib/admin-session";
 import { adminFetch } from "@/lib/admin-rest";
+import {
+  validateTreasureCount,
+  validateTreasureRewardPool,
+} from "@/lib/trail-treasure";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -86,6 +90,22 @@ export async function PATCH(
     } else {
       update[k] = v;
     }
+  }
+
+  // 보물지도 전용 필드 — SCALAR_FIELDS 바깥에서 별도 검증
+  if ("treasure_count" in body) {
+    const r = validateTreasureCount(body.treasure_count);
+    if (!r.ok) {
+      return NextResponse.json({ error: r.message }, { status: 400 });
+    }
+    update.treasure_count = r.value;
+  }
+  if ("treasure_reward_pool" in body) {
+    const r = validateTreasureRewardPool(body.treasure_reward_pool);
+    if (!r.ok) {
+      return NextResponse.json({ error: r.message }, { status: 400 });
+    }
+    update.treasure_reward_pool = r.value;
   }
 
   if ("activity_types" in body) {

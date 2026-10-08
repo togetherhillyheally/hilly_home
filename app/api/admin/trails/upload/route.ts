@@ -12,6 +12,12 @@ import {
   ADMIN_UPLOADER_PROFILE_ID,
 } from "@/lib/trail-upload-constants";
 import { requestTrailThumbnail } from "@/lib/trail-thumbnail";
+import {
+  DEFAULT_TREASURE_COUNT,
+  DEFAULT_TREASURE_REWARD_POOL,
+  validateTreasureCount,
+  validateTreasureRewardPool,
+} from "@/lib/trail-treasure";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -191,10 +197,16 @@ export async function POST(req: Request) {
 
   // 5) trails INSERT
   const sortOrder = await getNextSortOrder();
-  const row = {
+  const rawMapType = String(form.get("map_type") ?? "adventure");
+  const map_type =
+    rawMapType === "treasure" || rawMapType === "stamp" || rawMapType === "adventure"
+      ? rawMapType
+      : "adventure";
+  const row: Record<string, unknown> = {
     id: trailId,
     name: displayName,
     day: null,
+    map_type,
     gpx_storage_bucket: TRAIL_GPX_STORAGE_BUCKET,
     gpx_storage_path: storagePath,
     distance_km: merged.distanceKm,
@@ -209,6 +221,44 @@ export async function POST(req: Request) {
       activityTypes.length > 0 ? activityTypes : ["walking", "running"],
     series_name: seriesNameRaw || null,
   };
+
+  if (map_type === "treasure") {
+    const rawCount = form.get("treasure_count");
+    const rawPool = form.get("treasure_reward_pool");
+
+    let countValue: number = DEFAULT_TREASURE_COUNT;
+    if (rawCount != null && String(rawCount).length > 0) {
+      const cr = validateTreasureCount(Number(rawCount));
+      if (!cr.ok) {
+        await removeGpxFromStorage(storagePath);
+        return NextResponse.json({ error: cr.message }, { status: 400 });
+      }
+      countValue = cr.value;
+    }
+
+    let poolValue = DEFAULT_TREASURE_REWARD_POOL.map((r) => ({ ...r }));
+    if (rawPool != null && String(rawPool).length > 0) {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(String(rawPool));
+      } catch {
+        await removeGpxFromStorage(storagePath);
+        return NextResponse.json(
+          { error: "treasure_reward_pool JSON 파싱 실패" },
+          { status: 400 }
+        );
+      }
+      const pr = validateTreasureRewardPool(parsed);
+      if (!pr.ok) {
+        await removeGpxFromStorage(storagePath);
+        return NextResponse.json({ error: pr.message }, { status: 400 });
+      }
+      poolValue = pr.value;
+    }
+
+    row.treasure_count = countValue;
+    row.treasure_reward_pool = poolValue;
+  }
 
   let inserted: { id: string; name: string };
   try {

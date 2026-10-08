@@ -11,6 +11,12 @@ import {
 import { adminList } from "@/lib/admin-rest";
 import EditForm from "./EditForm";
 import SegmentColorToggle from "./SegmentColorToggle";
+import TreasureSettingsPanel from "./TreasureSettingsPanel";
+import {
+  DEFAULT_TREASURE_COUNT,
+  DEFAULT_TREASURE_REWARD_POOL,
+  type TreasureReward,
+} from "@/lib/trail-treasure";
 import VisibilitySelect, {
   VisibilityBadge,
   type Visibility,
@@ -40,6 +46,8 @@ type Trail = {
   is_active: boolean;
   visibility: "public" | "unlisted" | "private" | null;
   segments_colored: boolean;
+  treasure_count: number | null;
+  treasure_reward_pool: TreasureReward[] | null;
   created_at: string;
   created_by: string | null;
   source: string | null;
@@ -88,7 +96,7 @@ export default async function TrailDetailPage({
   const { id } = await params;
 
   const { rows } = await adminList<Trail>(
-    `trails?select=id,name,series_name,course_summary,map_type,distance_km,total_ascent_m,activity_types,sort_order,is_active,visibility,segments_colored,created_at,created_by,source,gpx_storage_bucket,gpx_storage_path,start_lat,start_lng,end_lat,end_lng,bounds,coordinates&id=eq.${id}`
+    `trails?select=id,name,series_name,course_summary,map_type,distance_km,total_ascent_m,activity_types,sort_order,is_active,visibility,segments_colored,treasure_count,treasure_reward_pool,created_at,created_by,source,gpx_storage_bucket,gpx_storage_path,start_lat,start_lng,end_lat,end_lng,bounds,coordinates&id=eq.${id}`
   );
   const trail = rows[0];
   if (!trail) notFound();
@@ -347,13 +355,27 @@ export default async function TrailDetailPage({
           {/* 코스 가이드 — 앱 미리보기 (진행방향 순서) */}
           <CheckpointGuide checkpoints={guideCheckpoints} />
 
-          {/* 코스 퀴즈 — 경로 위 교육 퀴즈 배치 */}
-          <QuizPanel
-            trailId={trail.id}
-            coordinates={trail.coordinates}
-            bounds={trail.bounds}
-            segmentsColored={!!trail.segments_colored}
-          />
+          {trail.map_type === "treasure" ? (
+            /* 보물지도 설정 — 코스 퀴즈 대신 넓은 좌측 영역에 배치 */
+            <TreasureSettingsPanel
+              trailId={trail.id}
+              initialCount={trail.treasure_count ?? DEFAULT_TREASURE_COUNT}
+              initialPool={
+                Array.isArray(trail.treasure_reward_pool) &&
+                trail.treasure_reward_pool.length > 0
+                  ? trail.treasure_reward_pool
+                  : DEFAULT_TREASURE_REWARD_POOL
+              }
+            />
+          ) : (
+            /* 코스 퀴즈 — 경로 위 교육 퀴즈 배치 (보물지도엔 불필요) */
+            <QuizPanel
+              trailId={trail.id}
+              coordinates={trail.coordinates}
+              bounds={trail.bounds}
+              segmentsColored={!!trail.segments_colored}
+            />
+          )}
         </div>
 
         {/* Right: 공개 범위 + 메타 편집 + GPX 교체 + 위험 구역 */}

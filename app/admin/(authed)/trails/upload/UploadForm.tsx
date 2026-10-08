@@ -19,6 +19,15 @@ import TrailMapPreview from "@/components/admin/TrailMapPreview";
 import SeriesNameInput, {
   invalidateSeriesNamesCache,
 } from "@/components/admin/SeriesNameInput";
+import {
+  DEFAULT_TREASURE_COUNT,
+  DEFAULT_TREASURE_REWARD_POOL,
+  validateTreasureCount,
+  validateTreasureRewardPool,
+  type TreasureReward,
+} from "@/lib/trail-treasure";
+import TreasureSettingsFields from "../[id]/TreasureSettingsFields";
+import { Gem } from "lucide-react";
 
 type ActivityType = "walking" | "running" | "cycling";
 
@@ -36,7 +45,9 @@ type FileEntry = {
 
 type AnalyzingState = { done: number; total: number; currentFileName: string };
 
-export default function UploadForm() {
+type MapKind = "adventure" | "treasure";
+
+export default function UploadForm({ mapType = "adventure" }: { mapType?: MapKind }) {
   const router = useRouter();
   const [entries, setEntries] = useState<FileEntry[]>([]);
   const [dragOver, setDragOver] = useState(false);
@@ -51,6 +62,12 @@ export default function UploadForm() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<{ id: string; name: string } | null>(
     null
+  );
+
+  // 보물지도 전용 설정 (mapType === 'treasure' 때만 전송)
+  const [treasureCount, setTreasureCount] = useState<number>(DEFAULT_TREASURE_COUNT);
+  const [treasurePool, setTreasurePool] = useState<TreasureReward[]>(() =>
+    DEFAULT_TREASURE_REWARD_POOL.map((r) => ({ ...r }))
   );
 
   const validEntries = useMemo(
@@ -165,6 +182,19 @@ export default function UploadForm() {
       setError("활동 유형을 1개 이상 선택해주세요.");
       return;
     }
+    // 보물지도일 때 설정 유효성 검사
+    if (mapType === "treasure") {
+      const cr = validateTreasureCount(treasureCount);
+      if (!cr.ok) {
+        setError(cr.message);
+        return;
+      }
+      const pr = validateTreasureRewardPool(treasurePool);
+      if (!pr.ok) {
+        setError(pr.message);
+        return;
+      }
+    }
     setError(null);
 
     const form = new FormData();
@@ -172,6 +202,11 @@ export default function UploadForm() {
     form.append("name", finalName);
     form.append("series_name", seriesName.trim());
     form.append("activity_types", activityTypes.join(","));
+    form.append("map_type", mapType);
+    if (mapType === "treasure") {
+      form.append("treasure_count", String(treasureCount));
+      form.append("treasure_reward_pool", JSON.stringify(treasurePool));
+    }
 
     startSubmit(async () => {
       try {
@@ -186,8 +221,14 @@ export default function UploadForm() {
         }
         setSuccess({ id: data.trail.id, name: data.trail.name });
         if (seriesName.trim()) invalidateSeriesNamesCache();
-        // 짧은 대기 후 목록으로
-        setTimeout(() => router.push("/admin/trails"), 1200);
+        // 짧은 대기 후 목록(또는 보물지도면 상세로 이동 — 설정 입력 유도)
+        setTimeout(() => {
+          if (mapType === "treasure") {
+            router.push(`/admin/trails/${data.trail.id}`);
+          } else {
+            router.push("/admin/trails");
+          }
+        }, 1200);
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : "업로드 실패");
       }
@@ -440,6 +481,35 @@ export default function UploadForm() {
           )}
         </div>
 
+        {mapType === "treasure" && (
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/[0.03] p-5 space-y-4">
+            <div className="flex items-center gap-2">
+              <Gem className="h-4 w-4 text-amber-300" />
+              <h2 className="text-sm font-semibold text-amber-100">
+                보물지도 설정
+              </h2>
+            </div>
+            <TreasureSettingsFields
+              count={treasureCount}
+              setCount={setTreasureCount}
+              pool={treasurePool}
+              setPool={setTreasurePool}
+              onResetDefaults={() => {
+                if (
+                  !confirm(
+                    "기본 보상 풀로 되돌릴까요? 지금 입력한 내용은 사라져요."
+                  )
+                )
+                  return;
+                setTreasurePool(
+                  DEFAULT_TREASURE_REWARD_POOL.map((r) => ({ ...r }))
+                );
+              }}
+              disabled={submitting}
+            />
+          </div>
+        )}
+
         {error && (
           <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200 flex items-start gap-2">
             <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
@@ -451,10 +521,18 @@ export default function UploadForm() {
           type="button"
           onClick={submit}
           disabled={submitting || validEntries.length === 0}
-          className="w-full h-11 rounded-lg bg-orange-500 hover:bg-orange-600 disabled:bg-white/[0.06] disabled:text-gray-500 text-white text-sm font-semibold inline-flex items-center justify-center gap-2 transition-colors"
+          className={`w-full h-11 rounded-lg disabled:bg-white/[0.06] disabled:text-gray-500 text-white text-sm font-semibold inline-flex items-center justify-center gap-2 transition-colors ${
+            mapType === "treasure"
+              ? "bg-amber-500 hover:bg-amber-600"
+              : "bg-orange-500 hover:bg-orange-600"
+          }`}
         >
           {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-          {submitting ? "업로드 중…" : "등록"}
+          {submitting
+            ? "업로드 중…"
+            : mapType === "treasure"
+              ? "보물 지도 등록"
+              : "등록"}
         </button>
       </div>
     </div>
