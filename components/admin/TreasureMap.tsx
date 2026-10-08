@@ -26,11 +26,11 @@ type Coord = [number, number] | [number, number, number];
 type Coordinates = Coord[] | Coord[][];
 
 export type TreasurePoint = {
-  id: string;
+  id?: string;
   seq: number;
   lng: number;
   lat: number;
-  cell_index: number;
+  cell_index?: number;
 };
 
 export type TreasureMapProps = {
@@ -168,7 +168,11 @@ export default function TreasureMap({
       const ordered = [...treasures].sort((a, b) => a.seq - b.seq);
       ordered.forEach((t, i) => {
         const gem = GEM_PALETTE[t.seq % GEM_PALETTE.length];
-        const el = makeTreasureEl(gem, `보물 ${i + 1} · 조각 #${t.cell_index}`);
+        const title =
+          typeof t.cell_index === "number"
+            ? `보물 ${i + 1} · 조각 #${t.cell_index}`
+            : `보물 ${i + 1}`;
+        const el = makeTreasureEl(gem, title);
         const marker = new mapboxgl.Marker(el).setLngLat([t.lng, t.lat]).addTo(map);
         markersRef.current.push(marker);
       });

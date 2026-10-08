@@ -366,6 +366,7 @@ export default async function TrailDetailPage({
                   ? trail.treasure_reward_pool
                   : DEFAULT_TREASURE_REWARD_POOL
               }
+              coordinates={trail.coordinates}
             />
           ) : (
             /* 코스 퀴즈 — 경로 위 교육 퀴즈 배치 (보물지도엔 불필요) */
