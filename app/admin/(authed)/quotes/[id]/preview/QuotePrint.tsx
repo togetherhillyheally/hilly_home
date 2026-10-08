@@ -28,7 +28,10 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => window.close() || history.back()}
+            onClick={() => {
+              window.close();
+              history.back();
+            }}
             className="inline-flex items-center gap-1 h-9 px-3 rounded-md text-neutral-600 hover:bg-neutral-100 text-sm"
           >
             <ArrowLeft className="h-4 w-4" /> 닫기
@@ -134,7 +137,7 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
             <div className="text-[11px] tracking-[0.28em] font-semibold text-orange-300 mb-4">
               견적서
             </div>
-            <h1 className="text-5xl md:text-6xl font-black leading-[1.15] tracking-tight text-white">
+            <h1 className="text-5xl md:text-6xl font-black leading-[1.15] tracking-tight text-white whitespace-pre-line">
               {quote.project_name}
             </h1>
             <div className="mt-8 h-[3px] w-24 bg-gradient-to-r from-orange-400 to-pink-500 rounded-full" />
