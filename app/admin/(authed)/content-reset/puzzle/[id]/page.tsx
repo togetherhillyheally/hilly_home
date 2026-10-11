@@ -51,26 +51,19 @@ async function buildPuzzleRows(puzzleId: string): Promise<ProgressRow[]> {
       ),
     ]);
 
-  // 지도(보물박스)에서만 얻을 수 있는 칸 — draw_puzzle_piece(씨앗 뽑기)는 이 칸들을 제외하고 뽑음
-  const treasureCellSet = new Set(treasureCellRes.rows.map((r) => r.cell_index));
-
-  // 초기화 대상과 일치시키기 위해, 목록도 "씨앗으로 뽑은 조각"만으로 판단 —
-  // 지도(보물)로만 얻은 유저는 이 화면에서 초기화할 게 없으므로 목록에 아예 안 보이게 함
+  // 2026-10-11: 퍼즐 초기화가 인증 지점(도장) 조각까지 지우므로, 목록도 모든 조각 기준.
+  void treasureCellRes;
   const cells: CellRow[] = [
-    ...revealRows.rows
-      .filter((r) => !treasureCellSet.has(r.cell_index))
-      .map((r) => ({
-        user_id: r.user_id,
-        cell_index: r.cell_index,
-        at: r.revealed_at,
-      })),
-    ...drawnRows.rows
-      .filter((r) => !treasureCellSet.has(r.cell_index))
-      .map((r) => ({
-        user_id: r.user_id,
-        cell_index: r.cell_index,
-        at: r.drawn_at,
-      })),
+    ...revealRows.rows.map((r) => ({
+      user_id: r.user_id,
+      cell_index: r.cell_index,
+      at: r.revealed_at,
+    })),
+    ...drawnRows.rows.map((r) => ({
+      user_id: r.user_id,
+      cell_index: r.cell_index,
+      at: r.drawn_at,
+    })),
   ];
 
   type Agg = {

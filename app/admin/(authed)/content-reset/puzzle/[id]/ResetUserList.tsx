@@ -62,7 +62,7 @@ export default function ResetUserList({
       .join(", ");
     if (
       !window.confirm(
-        `선택한 ${selected.size}명의 이 퍼즐에서 "씨앗으로 뽑은 조각"만 초기화할까요?\n\n${names}\n\n지도(보물)로 찾은 조각과 이미 지급된 보상은 그대로 유지돼요. 되돌릴 수 없습니다.`
+        `선택한 ${selected.size}명의 이 퍼즐 진행을 모두 초기화할까요?\n\n${names}\n\n씨앗으로 뽑은 조각과 인증 지점(도장)으로 얻은 조각·획득 기록이 모두 지워져요. 다시 그 지점을 지나면 도장이 다시 찍혀요. 이미 지급된 보상은 회수하지 않아요. 되돌릴 수 없습니다.`
       )
     ) {
       return;
@@ -95,7 +95,7 @@ export default function ResetUserList({
   if (rows.length === 0) {
     return (
       <div className="rounded-xl border border-white/10 bg-white/[0.02] p-12 text-center text-sm text-gray-500">
-        이 퍼즐에서 씨앗으로 뽑은 조각이 있는 유저가 없어요.
+        이 퍼즐에 조각이 있는 유저가 없어요.
       </div>
     );
   }
@@ -127,7 +127,7 @@ export default function ResetUserList({
             ) : (
               <RotateCcw className="h-3.5 w-3.5" />
             )}
-            선택 초기화 (씨앗 조각만)
+            선택 초기화 (모든 조각)
           </button>
         </div>
       </div>
@@ -146,7 +146,7 @@ export default function ResetUserList({
                 <th className="w-10 px-4 py-3"></th>
                 <th className="text-left px-4 py-3 font-medium">유저</th>
                 <th className="text-left px-4 py-3 font-medium">연락처</th>
-                <th className="text-center px-3 py-3 font-medium">씨앗 조각</th>
+                <th className="text-center px-3 py-3 font-medium">조각</th>
                 <th className="text-center px-3 py-3 font-medium">완료 횟수</th>
                 <th className="text-center px-3 py-3 font-medium">티어</th>
                 <th className="text-left px-4 py-3 font-medium">최근 활동</th>
