@@ -11,6 +11,7 @@ import {
   PUZZLE_GRID_PIECES,
   PUZZLE_GRID_ROWS,
   TIER_BOTTLES,
+  TIER_REQUIRED_COMPLETIONS,
 } from "@/lib/puzzle-config";
 
 export default function NewPuzzleForm() {
@@ -164,7 +165,8 @@ export default function NewPuzzleForm() {
           <div className="flex justify-between">
             <span className="text-gray-500">난이도</span>
             <span className="text-white font-mono">
-              {difficulty} (물 {TIER_BOTTLES[difficulty]})
+              {difficulty} · {TIER_REQUIRED_COMPLETIONS[difficulty]}회 완주 ·
+              물 {TIER_BOTTLES[difficulty]}
             </span>
           </div>
         </div>
@@ -206,9 +208,9 @@ export default function NewPuzzleForm() {
 
         <div>
           <div className="text-xs text-gray-400 mb-1.5">
-            난이도 (완성 시 물병 수) — 격자는 4 × 4 고정
+            난이도 (완주 횟수 + 완성 시 물병 수) — 격자는 4 × 4 고정
           </div>
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-4 gap-2">
             {DIFFICULTY_TIERS.map((opt) => {
               const selected = difficulty === opt.tier;
               return (
@@ -224,12 +226,16 @@ export default function NewPuzzleForm() {
                 >
                   <div>{opt.label}</div>
                   <div className="font-mono text-[10px] mt-0.5 opacity-70">
-                    물 {TIER_BOTTLES[opt.tier]}
+                    {TIER_REQUIRED_COMPLETIONS[opt.tier]}회 · 물 {TIER_BOTTLES[opt.tier]}
                   </div>
                 </button>
               );
             })}
           </div>
+          <p className="text-[10px] text-gray-500 mt-1.5 leading-relaxed">
+            쉬움=1회, 보통=2회, 어려움=3회, 도전=5회 완주로 완성되도록 설계.
+            (실제 씨앗 분배 적용은 추후 서버 트리거 반영 후)
+          </p>
         </div>
 
         <div>

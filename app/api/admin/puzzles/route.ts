@@ -110,7 +110,7 @@ export async function POST(req: Request) {
   const collabDescription =
     String(form.get("collab_description") ?? "").trim() || null;
 
-  const baseTier = parseIntInRange(form.get("base_tier"), 1, 5, 1);
+  const baseTier = parseIntInRange(form.get("base_tier"), 1, 4, 1);
   // 격자는 4 × 4 고정 (2026-10-11) — 클라에서 넘어오는 grid_rows/grid_cols 는 무시
   const eventStartsAt = parseDateIso(form.get("event_starts_at"), false);
   const eventEndsAt = parseDateIso(form.get("event_ends_at"), true);

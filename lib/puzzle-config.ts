@@ -8,12 +8,16 @@ export const PUZZLE_GRID_ROWS = 4;
 export const PUZZLE_GRID_COLS = 4;
 export const PUZZLE_GRID_PIECES = PUZZLE_GRID_ROWS * PUZZLE_GRID_COLS;
 
+/**
+ * 난이도 체계 (2026-10-11 재정의, 5종 → 4종):
+ *   격자는 4×4 고정, "어려움"은 완주 횟수로 차등 — 쉬움 1회, 보통 2회,
+ *   어려움 3회, 도전 5회로 완성. (실제 분배 트리거 반영은 Phase B)
+ */
 export const DIFFICULTY_TIERS = [
   { tier: 1, label: "쉬움" },
   { tier: 2, label: "보통" },
   { tier: 3, label: "어려움" },
-  { tier: 4, label: "아주 어려움" },
-  { tier: 5, label: "도전" },
+  { tier: 4, label: "도전" },
 ] as const;
 
 /** 난이도별 완성 물병 — 서버 puzzle_tier_bottles 와 동일 (표시용) */
@@ -21,8 +25,15 @@ export const TIER_BOTTLES: Record<number, number> = {
   1: 1,
   2: 2,
   3: 4,
-  4: 6,
-  5: 9,
+  4: 7,
+};
+
+/** 난이도별 "N회 완주로 완성" — 티어→완주 횟수 매핑 (디자인 의도). */
+export const TIER_REQUIRED_COMPLETIONS: Record<number, number> = {
+  1: 1,
+  2: 2,
+  3: 3,
+  4: 5,
 };
 
 /** ISO → date input 값(YYYY-MM-DD). 로컬 기준 */

@@ -11,6 +11,7 @@ import {
   PUZZLE_GRID_PIECES,
   PUZZLE_GRID_ROWS,
   TIER_BOTTLES,
+  TIER_REQUIRED_COMPLETIONS,
   isoToDateInput,
 } from "@/lib/puzzle-config";
 
@@ -53,7 +54,7 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
   );
 
   const [difficulty, setDifficulty] = useState(
-    Math.max(1, Math.min(5, puzzle.base_tier ?? 1))
+    Math.max(1, Math.min(4, puzzle.base_tier ?? 1))
   );
   // 이벤트 기간 (date input 값) — 빈 문자열 = 상시
   const [eventStart, setEventStart] = useState(
@@ -104,7 +105,7 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
       (collabDescription.trim() || null) !== (puzzle.collab_description ?? null)
     )
       return true;
-    if (difficulty !== Math.max(1, Math.min(5, puzzle.base_tier ?? 1)))
+    if (difficulty !== Math.max(1, Math.min(4, puzzle.base_tier ?? 1)))
       return true;
     if (eventStart !== isoToDateInput(puzzle.event_starts_at)) return true;
     if (eventEnd !== isoToDateInput(puzzle.event_ends_at)) return true;
@@ -321,7 +322,8 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
           <div className="flex justify-between">
             <span className="text-gray-500">난이도</span>
             <span className="text-white font-mono">
-              {difficulty} (물 {TIER_BOTTLES[difficulty]})
+              {difficulty} · {TIER_REQUIRED_COMPLETIONS[difficulty]}회 완주 ·
+              물 {TIER_BOTTLES[difficulty]}
             </span>
           </div>
           {!(gridRows === PUZZLE_GRID_ROWS && gridCols === PUZZLE_GRID_COLS) ? (
@@ -382,12 +384,12 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
           />
         </div>
 
-        {/* 난이도 — 운영자가 이미지를 보고 직접 선택 (완성 물병 수 결정) */}
+        {/* 난이도 — 운영자가 이미지를 보고 직접 선택 (완성 물병·완주 횟수 결정) */}
         <div>
           <div className="text-xs text-gray-400 mb-1.5">
-            난이도 · 직접 선택 (완성 시 물병 수 결정)
+            난이도 · 직접 선택 (완성 시 물병 수 + 완주 횟수)
           </div>
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-4 gap-2">
             {DIFFICULTY_TIERS.map((opt) => {
               const selected = difficulty === opt.tier;
               return (
@@ -403,12 +405,16 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
                 >
                   <div>{opt.label}</div>
                   <div className="font-mono text-[10px] mt-0.5 opacity-70">
-                    물 {TIER_BOTTLES[opt.tier]}
+                    {TIER_REQUIRED_COMPLETIONS[opt.tier]}회 · 물 {TIER_BOTTLES[opt.tier]}
                   </div>
                 </button>
               );
             })}
           </div>
+          <p className="text-[10px] text-gray-500 mt-1.5 leading-relaxed">
+            쉬움=1회, 보통=2회, 어려움=3회, 도전=5회 완주로 완성되도록
+            설계. (실제 씨앗 분배는 서버 트리거 반영 후 적용 — 지금은 UI 표시만)
+          </p>
         </div>
 
         {/* 이벤트 기간 — 인증(콜라보) 씨앗 부스트 유효 구간. 비우면 상시 */}

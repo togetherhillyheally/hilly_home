@@ -136,11 +136,12 @@ export async function PATCH(
   }
 
   // 난이도 — 운영자가 이미지를 보고 직접 지정 (완성 물병 수 결정)
+  // 2026-10-11: 5종 → 4종 축소 (쉬움·보통·어려움·도전)
   if (body.base_tier !== undefined) {
     const t = Number(body.base_tier);
-    if (!Number.isInteger(t) || t < 1 || t > 5) {
+    if (!Number.isInteger(t) || t < 1 || t > 4) {
       return NextResponse.json(
-        { error: "base_tier 는 1~5 정수여야 해요." },
+        { error: "base_tier 는 1~4 정수여야 해요." },
         { status: 400 }
       );
     }
