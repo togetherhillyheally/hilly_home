@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { hasMenuAccess, readAdminSession } from "@/lib/admin-session";
 import { adminFetch } from "@/lib/admin-rest";
+import {
+  PUZZLE_GRID_COLS,
+  PUZZLE_GRID_PIECES,
+  PUZZLE_GRID_ROWS,
+} from "@/lib/puzzle-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -106,8 +111,7 @@ export async function POST(req: Request) {
     String(form.get("collab_description") ?? "").trim() || null;
 
   const baseTier = parseIntInRange(form.get("base_tier"), 1, 5, 1);
-  const gridRows = parseIntInRange(form.get("grid_rows"), 5, 10, 5);
-  const gridCols = parseIntInRange(form.get("grid_cols"), 5, 10, 5);
+  // 격자는 4 × 4 고정 (2026-10-11) — 클라에서 넘어오는 grid_rows/grid_cols 는 무시
   const eventStartsAt = parseDateIso(form.get("event_starts_at"), false);
   const eventEndsAt = parseDateIso(form.get("event_ends_at"), true);
 
@@ -122,9 +126,9 @@ export async function POST(req: Request) {
       name,
       description,
       reward_description: reward,
-      total_pieces: gridRows * gridCols,
-      grid_rows: gridRows,
-      grid_cols: gridCols,
+      total_pieces: PUZZLE_GRID_PIECES,
+      grid_rows: PUZZLE_GRID_ROWS,
+      grid_cols: PUZZLE_GRID_COLS,
       base_tier: baseTier,
       puzzle_type: "mystery",
       trail_id: finalTrailId,

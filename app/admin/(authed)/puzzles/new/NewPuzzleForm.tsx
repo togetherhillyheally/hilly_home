@@ -1,14 +1,16 @@
 "use client";
 
-import { useMemo, useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, CheckCircle2, Loader2, Upload } from "lucide-react";
 import TrailPicker, { type TrailMini } from "@/components/admin/TrailPicker";
 import AutocompleteInput from "@/components/admin/AutocompleteInput";
 import {
   DIFFICULTY_TIERS,
+  PUZZLE_GRID_COLS,
+  PUZZLE_GRID_PIECES,
+  PUZZLE_GRID_ROWS,
   TIER_BOTTLES,
-  computeGrid,
 } from "@/lib/puzzle-config";
 
 export default function NewPuzzleForm() {
@@ -28,26 +30,16 @@ export default function NewPuzzleForm() {
 
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [imageAspect, setImageAspect] = useState(4 / 3);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-
-  const computedGrid = useMemo(() => computeGrid(imageAspect), [imageAspect]);
 
   const onPickFile = (f: File) => {
     setError(null);
     setFile(f);
     const url = URL.createObjectURL(f);
     setPreviewUrl(url);
-  };
-
-  const imgOnLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const el = e.currentTarget;
-    if (el.naturalWidth > 0 && el.naturalHeight > 0) {
-      setImageAspect(el.naturalWidth / el.naturalHeight);
-    }
   };
 
   const submit = () => {
@@ -69,8 +61,6 @@ export default function NewPuzzleForm() {
         if (description.trim()) fd.append("description", description.trim());
         if (reward.trim()) fd.append("reward_description", reward.trim());
         fd.append("base_tier", String(difficulty));
-        fd.append("grid_rows", String(computedGrid.rows));
-        fd.append("grid_cols", String(computedGrid.cols));
         if (seriesName.trim()) {
           fd.append("series_name", seriesName.trim());
         } else if (trail) {
@@ -119,7 +109,6 @@ export default function NewPuzzleForm() {
                   src={previewUrl}
                   alt="preview"
                   className="w-full h-full object-cover"
-                  onLoad={imgOnLoad}
                 />
               ) : (
                 <span className="text-gray-600 text-xs">이미지를 선택해주세요</span>
@@ -128,13 +117,11 @@ export default function NewPuzzleForm() {
                 <div
                   className="absolute inset-0 grid pointer-events-none"
                   style={{
-                    gridTemplateRows: `repeat(${computedGrid.rows}, 1fr)`,
-                    gridTemplateColumns: `repeat(${computedGrid.cols}, 1fr)`,
+                    gridTemplateRows: `repeat(${PUZZLE_GRID_ROWS}, 1fr)`,
+                    gridTemplateColumns: `repeat(${PUZZLE_GRID_COLS}, 1fr)`,
                   }}
                 >
-                  {Array.from({
-                    length: computedGrid.rows * computedGrid.cols,
-                  }).map((_, i) => (
+                  {Array.from({ length: PUZZLE_GRID_PIECES }).map((_, i) => (
                     <div key={i} className="border border-white/10" />
                   ))}
                 </div>
@@ -163,28 +150,24 @@ export default function NewPuzzleForm() {
           </div>
         </div>
 
-        {previewUrl ? (
-          <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-xs space-y-1.5">
-            <div className="flex justify-between">
-              <span className="text-gray-500">격자</span>
-              <span className="text-white font-mono">
-                {computedGrid.rows} × {computedGrid.cols}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">총 조각</span>
-              <span className="text-white font-mono">
-                {computedGrid.rows * computedGrid.cols}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">난이도</span>
-              <span className="text-white font-mono">
-                {difficulty} (물 {TIER_BOTTLES[difficulty]})
-              </span>
-            </div>
+        <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-xs space-y-1.5">
+          <div className="flex justify-between">
+            <span className="text-gray-500">격자</span>
+            <span className="text-white font-mono">
+              {PUZZLE_GRID_ROWS} × {PUZZLE_GRID_COLS} (고정)
+            </span>
           </div>
-        ) : null}
+          <div className="flex justify-between">
+            <span className="text-gray-500">총 조각</span>
+            <span className="text-white font-mono">{PUZZLE_GRID_PIECES}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-500">난이도</span>
+            <span className="text-white font-mono">
+              {difficulty} (물 {TIER_BOTTLES[difficulty]})
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* 우: 폼 */}
@@ -223,7 +206,7 @@ export default function NewPuzzleForm() {
 
         <div>
           <div className="text-xs text-gray-400 mb-1.5">
-            난이도 (완성 시 물병 수) — 격자는 이미지 비율로 자동
+            난이도 (완성 시 물병 수) — 격자는 4 × 4 고정
           </div>
           <div className="grid grid-cols-5 gap-2">
             {DIFFICULTY_TIERS.map((opt) => {

@@ -8,7 +8,6 @@ import AutocompleteInput from "@/components/admin/AutocompleteInput";
 import {
   DIFFICULTY_TIERS,
   TIER_BOTTLES,
-  computeGrid,
   isoToDateInput,
 } from "@/lib/puzzle-config";
 
@@ -58,9 +57,6 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
     isoToDateInput(puzzle.event_starts_at)
   );
   const [eventEnd, setEventEnd] = useState(isoToDateInput(puzzle.event_ends_at));
-  const [imageAspect, setImageAspect] = useState(
-    puzzle.grid_cols / puzzle.grid_rows
-  );
 
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(
     puzzle.image_url ?? puzzle.cover_image_url
@@ -88,14 +84,6 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
     };
   }, [puzzle.trail_id]);
 
-  // 이미지 aspect 재계산: 새 이미지가 로드되면 자연 크기로부터
-  const imgOnLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const el = e.currentTarget;
-    if (el.naturalWidth > 0 && el.naturalHeight > 0) {
-      setImageAspect(el.naturalWidth / el.naturalHeight);
-    }
-  };
-
   const dirty = useMemo(() => {
     if (name.trim() !== puzzle.name) return true;
     if ((description.trim() || null) !== (puzzle.description ?? null))
@@ -111,9 +99,6 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
     if (
       (collabDescription.trim() || null) !== (puzzle.collab_description ?? null)
     )
-      return true;
-    const grid = computeGrid(imageAspect);
-    if (grid.rows !== puzzle.grid_rows || grid.cols !== puzzle.grid_cols)
       return true;
     if (difficulty !== Math.max(1, Math.min(5, puzzle.base_tier ?? 1)))
       return true;
@@ -131,7 +116,6 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
     difficulty,
     eventStart,
     eventEnd,
-    imageAspect,
     puzzle,
   ]);
 
@@ -172,7 +156,6 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
     }
     setSaving(true);
     try {
-      const grid = computeGrid(imageAspect);
       // 이벤트 기간 — 시작은 그날 0시, 종료는 그날 23:59:59 (그날까지 유효)
       const startIso = eventStart
         ? new Date(`${eventStart}T00:00:00`).toISOString()
@@ -180,13 +163,12 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
       const endIso = eventEnd
         ? new Date(`${eventEnd}T23:59:59.999`).toISOString()
         : null;
-      // 트레일·시리즈 상호배타 — 클라이언트에서도 강제
+      // 격자(grid_rows/grid_cols)는 저장 시 건드리지 않는다 — 신규는 4×4 로
+      // 고정 생성, 기존 퍼즐은 플레이 중 조각 상태 보호를 위해 보존 (2026-10-11)
       const payload = {
         name: name.trim(),
         description: description.trim() || null,
         reward_description: reward.trim() || null,
-        grid_rows: grid.rows,
-        grid_cols: grid.cols,
         base_tier: difficulty,
         event_starts_at: startIso,
         event_ends_at: endIso,
@@ -216,7 +198,10 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
     }
   };
 
-  const computedGrid = computeGrid(imageAspect);
+  // 격자는 저장된 값 그대로 표시 (수정 UI 없음, 신규는 4×4 고정)
+  const gridRows = puzzle.grid_rows;
+  const gridCols = puzzle.grid_cols;
+  const gridPieces = gridRows * gridCols;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6">
@@ -232,7 +217,6 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
                   src={currentImageUrl}
                   alt={puzzle.name}
                   className="w-full h-full object-cover"
-                  onLoad={imgOnLoad}
                 />
               ) : (
                 <span className="text-gray-600 text-xs">이미지 없음</span>
@@ -242,23 +226,18 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
                   <Loader2 className="h-6 w-6 animate-spin text-white" />
                 </div>
               ) : null}
-              {/* 격자 오버레이 */}
+              {/* 격자 오버레이 — 저장된 격자 그대로 */}
               {currentImageUrl ? (
                 <div
                   className="absolute inset-0 grid pointer-events-none"
                   style={{
-                    gridTemplateRows: `repeat(${computedGrid.rows}, 1fr)`,
-                    gridTemplateColumns: `repeat(${computedGrid.cols}, 1fr)`,
+                    gridTemplateRows: `repeat(${gridRows}, 1fr)`,
+                    gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
                   }}
                 >
-                  {Array.from({ length: computedGrid.rows * computedGrid.cols }).map(
-                    (_, i) => (
-                      <div
-                        key={i}
-                        className="border border-white/10"
-                      />
-                    )
-                  )}
+                  {Array.from({ length: gridPieces }).map((_, i) => (
+                    <div key={i} className="border border-white/10" />
+                  ))}
                 </div>
               ) : null}
             </div>
@@ -284,19 +263,17 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
           </div>
         </div>
 
-        {/* 격자·티어 요약 */}
+        {/* 격자·티어 요약 — 격자는 저장된 값 (수정 불가) */}
         <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-xs space-y-1.5">
           <div className="flex justify-between">
             <span className="text-gray-500">격자</span>
             <span className="text-white font-mono">
-              {computedGrid.rows} × {computedGrid.cols}
+              {gridRows} × {gridCols}
             </span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-500">총 조각</span>
-            <span className="text-white font-mono">
-              {computedGrid.rows * computedGrid.cols}
-            </span>
+            <span className="text-white font-mono">{gridPieces}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-500">난이도</span>
@@ -304,6 +281,10 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
               {difficulty} (물 {TIER_BOTTLES[difficulty]})
             </span>
           </div>
+          <p className="text-[10px] text-gray-600 pt-1 border-t border-white/5 leading-relaxed">
+            격자는 생성 시 결정되고 이후 수정 불가. 신규 퍼즐은 4 × 4 (16조각)
+            고정.
+          </p>
         </div>
       </div>
 
@@ -339,12 +320,10 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
           />
         </div>
 
-        {/* 난이도 — 운영자가 이미지를 보고 직접 선택 (완성 물병 수 결정).
-            격자는 짧은 변 5 규칙으로 자동이라 난이도와 무관 (2026-08-12) */}
+        {/* 난이도 — 운영자가 이미지를 보고 직접 선택 (완성 물병 수 결정) */}
         <div>
           <div className="text-xs text-gray-400 mb-1.5">
-            난이도 · 직접 선택 (완성 시 물병 수 결정) — 격자는 이미지 비율로 자동
-            (짧은 변 5)
+            난이도 · 직접 선택 (완성 시 물병 수 결정)
           </div>
           <div className="grid grid-cols-5 gap-2">
             {DIFFICULTY_TIERS.map((opt) => {

@@ -1,7 +1,12 @@
 /**
  * 퍼즐 공용 상수·유틸 — 신규 등록 폼과 상세 편집 폼이 공유.
- * (hilly_rn 과 격자 규칙 동일: 짧은 변 5 고정)
+ * 격자는 전 퍼즐 4 × 4 (16조각) 고정 (2026-10-11).
+ * 기존 DB 는 다른 격자(5x7 등)가 있지만 플레이 중 조각 상태 보호를 위해 보존.
  */
+
+export const PUZZLE_GRID_ROWS = 4;
+export const PUZZLE_GRID_COLS = 4;
+export const PUZZLE_GRID_PIECES = PUZZLE_GRID_ROWS * PUZZLE_GRID_COLS;
 
 export const DIFFICULTY_TIERS = [
   { tier: 1, label: "쉬움" },
@@ -19,14 +24,6 @@ export const TIER_BOTTLES: Record<number, number> = {
   4: 6,
   5: 9,
 };
-
-/** 격자 규칙: 짧은 변 5 고정, 긴 변은 이미지 비율(W/H)대로 5~10 */
-export function computeGrid(aspect: number): { rows: number; cols: number } {
-  const clamp = (n: number) => Math.max(5, Math.min(10, Math.round(n)));
-  return aspect >= 1
-    ? { rows: 5, cols: clamp(5 * aspect) }
-    : { rows: clamp(5 / aspect), cols: 5 };
-}
 
 /** ISO → date input 값(YYYY-MM-DD). 로컬 기준 */
 export function isoToDateInput(iso: string | null): string {
