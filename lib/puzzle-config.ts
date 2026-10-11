@@ -10,8 +10,9 @@ export const PUZZLE_GRID_PIECES = PUZZLE_GRID_ROWS * PUZZLE_GRID_COLS;
 
 /**
  * 난이도 체계 (2026-10-11 재정의, 5종 → 4종):
- *   격자는 4×4 고정, "어려움"은 완주 횟수로 차등 — 쉬움 1회, 보통 2회,
- *   어려움 3회, 도전 5회로 완성. (실제 분배 트리거 반영은 Phase B)
+ *   격자는 4×4 고정, "어려움"은 "필요 씨앗 배율" 로 차등 — trail 연결 퍼즐은
+ *   자연스레 N회 완주 느낌, standalone 퍼즐은 N배 많은 씨앗을 모아야 완성.
+ *   두 모델에 통일 적용 가능. (실제 분배 트리거 반영은 Phase B)
  */
 export const DIFFICULTY_TIERS = [
   { tier: 1, label: "쉬움" },
@@ -28,8 +29,12 @@ export const TIER_BOTTLES: Record<number, number> = {
   4: 7,
 };
 
-/** 난이도별 "N회 완주로 완성" — 티어→완주 횟수 매핑 (디자인 의도). */
-export const TIER_REQUIRED_COMPLETIONS: Record<number, number> = {
+/**
+ * 난이도별 "필요 씨앗 배율" — 완성에 필요한 씨앗 수를 N 배로.
+ *   trail 퍼즐: N회 완주 느낌 (1회당 받는 씨앗은 그대로)
+ *   standalone 퍼즐: N배 많은 씨앗을 모아야 완성
+ */
+export const TIER_SEED_MULTIPLIER: Record<number, number> = {
   1: 1,
   2: 2,
   3: 3,

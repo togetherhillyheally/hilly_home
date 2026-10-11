@@ -11,7 +11,7 @@ import {
   PUZZLE_GRID_PIECES,
   PUZZLE_GRID_ROWS,
   TIER_BOTTLES,
-  TIER_REQUIRED_COMPLETIONS,
+  TIER_SEED_MULTIPLIER,
 } from "@/lib/puzzle-config";
 
 export default function NewPuzzleForm() {
@@ -165,8 +165,8 @@ export default function NewPuzzleForm() {
           <div className="flex justify-between">
             <span className="text-gray-500">난이도</span>
             <span className="text-white font-mono">
-              {difficulty} · {TIER_REQUIRED_COMPLETIONS[difficulty]}회 완주 ·
-              물 {TIER_BOTTLES[difficulty]}
+              {difficulty} · 씨앗 ×{TIER_SEED_MULTIPLIER[difficulty]} · 물{" "}
+              {TIER_BOTTLES[difficulty]}
             </span>
           </div>
         </div>
@@ -208,7 +208,7 @@ export default function NewPuzzleForm() {
 
         <div>
           <div className="text-xs text-gray-400 mb-1.5">
-            난이도 (완주 횟수 + 완성 시 물병 수) — 격자는 4 × 4 고정
+            난이도 (완성 물병 + 필요 씨앗 배율) — 격자는 4 × 4 고정
           </div>
           <div className="grid grid-cols-4 gap-2">
             {DIFFICULTY_TIERS.map((opt) => {
@@ -226,15 +226,16 @@ export default function NewPuzzleForm() {
                 >
                   <div>{opt.label}</div>
                   <div className="font-mono text-[10px] mt-0.5 opacity-70">
-                    {TIER_REQUIRED_COMPLETIONS[opt.tier]}회 · 물 {TIER_BOTTLES[opt.tier]}
+                    ×{TIER_SEED_MULTIPLIER[opt.tier]} · 물 {TIER_BOTTLES[opt.tier]}
                   </div>
                 </button>
               );
             })}
           </div>
           <p className="text-[10px] text-gray-500 mt-1.5 leading-relaxed">
-            쉬움=1회, 보통=2회, 어려움=3회, 도전=5회 완주로 완성되도록 설계.
-            (실제 씨앗 분배 적용은 추후 서버 트리거 반영 후)
+            "완성에 필요한 씨앗" 을 쉬움×1 ~ 도전×5 로 배수화. 코스 연결
+            퍼즐은 자연스레 N회 완주 느낌, standalone 은 N배 많은 씨앗 모으기.
+            (실제 분배 적용은 Phase B 서버 트리거 반영 후)
           </p>
         </div>
 

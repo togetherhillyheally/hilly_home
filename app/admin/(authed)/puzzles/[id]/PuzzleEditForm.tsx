@@ -11,7 +11,7 @@ import {
   PUZZLE_GRID_PIECES,
   PUZZLE_GRID_ROWS,
   TIER_BOTTLES,
-  TIER_REQUIRED_COMPLETIONS,
+  TIER_SEED_MULTIPLIER,
   isoToDateInput,
 } from "@/lib/puzzle-config";
 
@@ -322,8 +322,8 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
           <div className="flex justify-between">
             <span className="text-gray-500">난이도</span>
             <span className="text-white font-mono">
-              {difficulty} · {TIER_REQUIRED_COMPLETIONS[difficulty]}회 완주 ·
-              물 {TIER_BOTTLES[difficulty]}
+              {difficulty} · 씨앗 ×{TIER_SEED_MULTIPLIER[difficulty]} · 물{" "}
+              {TIER_BOTTLES[difficulty]}
             </span>
           </div>
           {!(gridRows === PUZZLE_GRID_ROWS && gridCols === PUZZLE_GRID_COLS) ? (
@@ -384,10 +384,10 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
           />
         </div>
 
-        {/* 난이도 — 운영자가 이미지를 보고 직접 선택 (완성 물병·완주 횟수 결정) */}
+        {/* 난이도 — 운영자가 이미지를 보고 직접 선택 (완성 물병·필요 씨앗 배율 결정) */}
         <div>
           <div className="text-xs text-gray-400 mb-1.5">
-            난이도 · 직접 선택 (완성 시 물병 수 + 완주 횟수)
+            난이도 · 직접 선택 (완성 물병 + 필요 씨앗 배율)
           </div>
           <div className="grid grid-cols-4 gap-2">
             {DIFFICULTY_TIERS.map((opt) => {
@@ -405,15 +405,16 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
                 >
                   <div>{opt.label}</div>
                   <div className="font-mono text-[10px] mt-0.5 opacity-70">
-                    {TIER_REQUIRED_COMPLETIONS[opt.tier]}회 · 물 {TIER_BOTTLES[opt.tier]}
+                    ×{TIER_SEED_MULTIPLIER[opt.tier]} · 물 {TIER_BOTTLES[opt.tier]}
                   </div>
                 </button>
               );
             })}
           </div>
           <p className="text-[10px] text-gray-500 mt-1.5 leading-relaxed">
-            쉬움=1회, 보통=2회, 어려움=3회, 도전=5회 완주로 완성되도록
-            설계. (실제 씨앗 분배는 서버 트리거 반영 후 적용 — 지금은 UI 표시만)
+            쉬움×1, 보통×2, 어려움×3, 도전×5 로 "완성에 필요한 씨앗" 을 배수화.
+            코스 연결 퍼즐은 자연스레 N회 완주 느낌, standalone 퍼즐은 N배
+            많은 씨앗을 모아야 완성. (실제 분배 적용은 Phase B 서버 트리거 반영 후)
           </p>
         </div>
 
