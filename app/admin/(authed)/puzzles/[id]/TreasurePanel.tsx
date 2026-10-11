@@ -34,6 +34,10 @@ type Summary = {
   coordinates?: Coordinates | null;
 };
 
+type Mode = "fixed" | "even";
+const EVEN_MIN = 2;
+const EVEN_MAX = 20;
+
 export default function TreasurePanel({
   puzzleId,
   trailId,
@@ -49,8 +53,15 @@ export default function TreasurePanel({
   const [error, setError] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
-  // 보물(인증 지점)은 코스당 3개 고정 — 시작·중간·끝 (2026-10-07)
-  const expected = Math.max(1, Math.min(totalPieces - 1, 3));
+  // 배치 모드: fixed(시작·중간·끝 3곳) / even(원하는 N개 균등)
+  const [mode, setMode] = useState<Mode>("fixed");
+  const [evenCount, setEvenCount] = useState<number>(5);
+
+  const plannedCount =
+    mode === "fixed"
+      ? Math.max(1, Math.min(totalPieces - 1, 3))
+      : Math.max(1, Math.min(totalPieces - 1, evenCount));
+  const expected = plannedCount;
 
   const load = useCallback(async () => {
     try {
@@ -96,12 +107,27 @@ export default function TreasurePanel({
 
   async function regenerate() {
     if (busy) return;
+    if (
+      mode === "even" &&
+      (!Number.isInteger(evenCount) ||
+        evenCount < EVEN_MIN ||
+        evenCount > EVEN_MAX)
+    ) {
+      setError(`보물 개수는 ${EVEN_MIN}~${EVEN_MAX} 사이 정수여야 해요.`);
+      return;
+    }
     setBusy(true);
     setError(null);
     setMsg(null);
     try {
+      const body =
+        mode === "even"
+          ? { mode: "even", count: evenCount }
+          : { mode: "fixed" };
       const res = await fetch(`/api/admin/puzzles/${puzzleId}/treasures`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
       });
       const d = (await res.json()) as Summary & { error?: string };
       if (!res.ok) {
@@ -204,10 +230,10 @@ export default function TreasurePanel({
         <h2 className="text-sm font-bold text-white">보물 (완주 인증)</h2>
       </div>
       <p className="text-xs text-gray-400 leading-relaxed mb-4">
-        경로의 <span className="text-amber-300 font-semibold">시작·중간·끝 3곳</span>에
-        인증 지점(보물)을 둬요. 모험자가 세 곳을 실제로 지나야 조각 {expected}개를 얻고,
-        나머지 {Math.max(0, totalPieces - expected)}개는 걸어서 번 씨앗으로 뽑아요(퍼즐 4×4
-        권장). 보물 셀은 씨앗 뽑기에서 제외돼 무결성이 지켜져요.
+        인증 지점(보물)을 경로상에 배치해요. 모험자가 각 지점을 실제로 지나야
+        조각 <span className="text-amber-300 font-semibold">{expected}</span>개를 얻고,
+        나머지 {Math.max(0, totalPieces - expected)}개는 걸어서 번 씨앗으로 뽑아요.
+        보물 셀은 씨앗 뽑기에서 제외돼 무결성이 지켜져요.
       </p>
 
       {!canPlace && (
@@ -226,6 +252,65 @@ export default function TreasurePanel({
           </span>
           개
         </div>
+      </div>
+
+      {/* 배치 모드 선택 */}
+      <div className="rounded-lg border border-white/10 bg-black/20 p-3 mb-3 space-y-2">
+        <div className="text-xs font-semibold text-white mb-1">배치 방식</div>
+        <label className="flex items-start gap-2 cursor-pointer">
+          <input
+            type="radio"
+            name="treasure-mode"
+            value="fixed"
+            checked={mode === "fixed"}
+            onChange={() => setMode("fixed")}
+            disabled={busy}
+            className="mt-0.5 accent-amber-400"
+          />
+          <div className="flex-1">
+            <div className="text-xs text-gray-200">
+              시작·중간·끝 3곳 <span className="text-gray-500">(권장)</span>
+            </div>
+            <div className="text-[11px] text-gray-500 leading-relaxed">
+              순환 코스는 0·⅓·⅔ 지점. 예측 가능한 인증 포인트로 쓰기 좋아요.
+            </div>
+          </div>
+        </label>
+        <label className="flex items-start gap-2 cursor-pointer">
+          <input
+            type="radio"
+            name="treasure-mode"
+            value="even"
+            checked={mode === "even"}
+            onChange={() => setMode("even")}
+            disabled={busy}
+            className="mt-0.5 accent-amber-400"
+          />
+          <div className="flex-1">
+            <div className="text-xs text-gray-200 flex items-center gap-2 flex-wrap">
+              <span>원하는 개수만큼 균등 배치</span>
+              <input
+                type="number"
+                min={EVEN_MIN}
+                max={EVEN_MAX}
+                step={1}
+                value={evenCount}
+                onChange={(e) => {
+                  const n = Number(e.target.value);
+                  setEvenCount(Number.isFinite(n) ? n : EVEN_MIN);
+                }}
+                onFocus={() => setMode("even")}
+                disabled={busy}
+                className="w-16 h-7 px-2 rounded-md bg-white/[0.04] border border-white/10 text-white text-xs text-right tabular-nums focus:outline-none focus:border-amber-400/50 disabled:opacity-50"
+              />
+              <span className="text-gray-500 text-[11px]">개</span>
+            </div>
+            <div className="text-[11px] text-gray-500 leading-relaxed">
+              경로를 등분해 보물을 배치. {EVEN_MIN}~{EVEN_MAX} 개 가능. 조각
+              수(총 {totalPieces})에서 1을 뺀 수를 넘지 못해요.
+            </div>
+          </div>
+        </label>
       </div>
 
       {/* 완주 씨앗 모델 안내 — 배율 폐지(2026-08-27) */}
@@ -381,8 +466,11 @@ export default function TreasurePanel({
           />
           {treasures.length === 0 && (
             <p className="text-[11px] text-gray-500 mt-2">
-              아직 배치된 인증 지점이 없어요. 위 「인증 지점 배치」를 누르면 경로의
-              시작·중간·끝에 표시됩니다.
+              아직 배치된 인증 지점이 없어요. 위 「인증 지점 배치」를 누르면
+              선택한 방식({mode === "fixed"
+                ? "시작·중간·끝 3곳"
+                : `균등 ${plannedCount}곳`}
+              )으로 표시돼요.
             </p>
           )}
         </div>

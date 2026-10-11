@@ -5,10 +5,11 @@ import { adminFetch } from "@/lib/admin-rest";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** 보물 비율 — 조각의 약 1/4 (나머지는 걸어서 번 씨앗으로 뽑음) */
-// 2026-10-07: 보물(인증 지점)은 코스당 3개 고정 — 시작·중간·끝 (이전 조각 1/4 jitter 폐기).
-// 앱 인앱 셋업(hilly_rn lib/utils/treasurePlacement.ts)과 같은 규칙.
+// 2026-10-07: fixed 모드 — 코스당 3개 고정, 시작·중간·끝 (이전 조각 1/4 jitter 폐기).
+// 2026-10-11: even 모드 — 운영자가 지정한 N 개를 경로상 균등 배치. 두 모드 중 선택.
 const TREASURE_COUNT = 3;
+const EVEN_COUNT_MIN = 2;
+const EVEN_COUNT_MAX = 20;
 
 type LngLat = [number, number];
 
@@ -239,9 +240,13 @@ export async function PUT(
   return NextResponse.json({ success: true, multiplier: m });
 }
 
-/** POST — 경로를 따라 보물 자동 배치 (기존 것 삭제 후 재생성) */
+/** POST — 경로를 따라 보물 자동 배치 (기존 것 삭제 후 재생성)
+ *  body: { mode?: 'fixed' | 'even', count?: number }
+ *    - fixed(기본): 시작·중간·끝 3곳 (loop 는 0·1/3·2/3)
+ *    - even: 운영자가 지정한 N 개를 경로상 균등 배치
+ */
 export async function POST(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ id: string }> }
 ) {
   const session = await readAdminSession();
@@ -251,6 +256,20 @@ export async function POST(
     return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
   }
   const { id } = await ctx.params;
+
+  // 모드/개수 파싱 — body 가 비어도 fixed 모드로 돌아감 (호환)
+  let mode: "fixed" | "even" = "fixed";
+  let requestedCount: number | null = null;
+  try {
+    const body = (await req.json().catch(() => ({}))) as {
+      mode?: string;
+      count?: number;
+    };
+    if (body.mode === "even") mode = "even";
+    if (typeof body.count === "number") requestedCount = Math.floor(body.count);
+  } catch {
+    // ignore — fixed 로 폴백
+  }
 
   const puzzle = await loadPuzzle(id);
   if (!puzzle)
@@ -303,13 +322,45 @@ export async function POST(
     );
   }
 
-  // 보물 개수 = 3 고정(시작·중간·끝), 최대 total-1
-  const count = Math.max(1, Math.min(total - 1, TREASURE_COUNT));
-
-  // 순환 코스(시작≈끝 50m 이내)는 시작·1/3·2/3, 아니면 시작·중간(거리 50%)·끝.
-  // 랜덤 jitter 없음 — 인증 지점은 예측 가능해야 한다.
   const isLoop = haversineM(coords[0], coords[coords.length - 1]) <= 50;
-  const fractions: number[] = (isLoop ? [0, 1 / 3, 2 / 3] : [0, 0.5, 1]).slice(0, count);
+
+  // 모드별 보물 개수 + 지점 비율 계산
+  let count: number;
+  let fractions: number[];
+  if (mode === "even") {
+    if (requestedCount == null) {
+      return NextResponse.json(
+        { error: "even 모드는 count 가 필요해요." },
+        { status: 400 }
+      );
+    }
+    if (
+      !Number.isInteger(requestedCount) ||
+      requestedCount < EVEN_COUNT_MIN ||
+      requestedCount > EVEN_COUNT_MAX
+    ) {
+      return NextResponse.json(
+        {
+          error: `보물 개수는 ${EVEN_COUNT_MIN}~${EVEN_COUNT_MAX} 사이 정수여야 해요.`,
+        },
+        { status: 400 }
+      );
+    }
+    count = Math.max(1, Math.min(total - 1, requestedCount));
+    // loop 는 0, 1/N, 2/N … (끝=시작이므로 1 포함 X)
+    // 비loop 는 0, 1/(N-1), 2/(N-1) …, 1 (양 끝 포함)
+    if (isLoop) {
+      fractions = Array.from({ length: count }, (_, i) => i / count);
+    } else if (count === 1) {
+      fractions = [0.5];
+    } else {
+      fractions = Array.from({ length: count }, (_, i) => i / (count - 1));
+    }
+  } else {
+    // fixed: 3개 고정 (시작·중간·끝 또는 0·1/3·2/3)
+    count = Math.max(1, Math.min(total - 1, TREASURE_COUNT));
+    fractions = (isLoop ? [0, 1 / 3, 2 / 3] : [0, 0.5, 1]).slice(0, count);
+  }
 
   // 보물 셀 = 전체 셀에서 무작위 count 개
   const cells = shuffle(Array.from({ length: total }, (_, i) => i)).slice(0, count);
