@@ -2,11 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Save, Upload } from "lucide-react";
+import { Grid3x3, Loader2, Save, Upload } from "lucide-react";
 import TrailPicker, { type TrailMini } from "@/components/admin/TrailPicker";
 import AutocompleteInput from "@/components/admin/AutocompleteInput";
 import {
   DIFFICULTY_TIERS,
+  PUZZLE_GRID_COLS,
+  PUZZLE_GRID_PIECES,
+  PUZZLE_GRID_ROWS,
   TIER_BOTTLES,
   isoToDateInput,
 } from "@/lib/puzzle-config";
@@ -63,6 +66,7 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
   );
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [changingGrid, setChangingGrid] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -198,10 +202,49 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
     }
   };
 
-  // 격자는 저장된 값 그대로 표시 (수정 UI 없음, 신규는 4×4 고정)
+  // 격자는 저장된 값 그대로 표시 — "쉬움(4×4)로 변경" 버튼으로만 바꿀 수 있음.
+  // 플레이 데이터(조각/공개/완성/티어/참여)가 있으면 서버가 거부함.
   const gridRows = puzzle.grid_rows;
   const gridCols = puzzle.grid_cols;
   const gridPieces = gridRows * gridCols;
+
+  const changeGridToDefault = async () => {
+    if (
+      !confirm(
+        `격자를 ${PUZZLE_GRID_ROWS}×${PUZZLE_GRID_COLS} (${PUZZLE_GRID_PIECES}조각)으로 변경할까요? 플레이 데이터가 있으면 거부돼요.`
+      )
+    ) {
+      return;
+    }
+    setError(null);
+    setMsg(null);
+    setChangingGrid(true);
+    try {
+      const res = await fetch(`/api/admin/puzzles/${puzzle.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          grid_rows: PUZZLE_GRID_ROWS,
+          grid_cols: PUZZLE_GRID_COLS,
+        }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        setError(data.error ?? `격자 변경 실패 (${res.status})`);
+        return;
+      }
+      setMsg(
+        `격자 변경 완료 (${PUZZLE_GRID_ROWS}×${PUZZLE_GRID_COLS}·${PUZZLE_GRID_PIECES}조각)`
+      );
+      startTransition(() => router.refresh());
+    } catch {
+      setError("네트워크 오류");
+    } finally {
+      setChangingGrid(false);
+    }
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6">
@@ -263,7 +306,7 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
           </div>
         </div>
 
-        {/* 격자·티어 요약 — 격자는 저장된 값 (수정 불가) */}
+        {/* 격자·티어 요약 */}
         <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-xs space-y-1.5">
           <div className="flex justify-between">
             <span className="text-gray-500">격자</span>
@@ -281,9 +324,28 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
               {difficulty} (물 {TIER_BOTTLES[difficulty]})
             </span>
           </div>
-          <p className="text-[10px] text-gray-600 pt-1 border-t border-white/5 leading-relaxed">
-            격자는 생성 시 결정되고 이후 수정 불가. 신규 퍼즐은 4 × 4 (16조각)
-            고정.
+          {!(gridRows === PUZZLE_GRID_ROWS && gridCols === PUZZLE_GRID_COLS) ? (
+            <button
+              type="button"
+              onClick={changeGridToDefault}
+              disabled={changingGrid}
+              className="mt-2 w-full inline-flex items-center justify-center gap-1.5 h-9 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-200 text-xs font-medium disabled:opacity-50"
+            >
+              {changingGrid ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Grid3x3 className="h-3.5 w-3.5" />
+              )}
+              쉬움 ({PUZZLE_GRID_ROWS}×{PUZZLE_GRID_COLS}·{PUZZLE_GRID_PIECES}조각)으로 변경
+            </button>
+          ) : (
+            <p className="text-[10px] text-emerald-400/70 pt-1 border-t border-white/5">
+              ✓ 기본 격자({PUZZLE_GRID_ROWS}×{PUZZLE_GRID_COLS}) 입니다.
+            </p>
+          )}
+          <p className="text-[10px] text-gray-600 leading-relaxed">
+            플레이 데이터(조각·공개·완성·참여)가 있는 퍼즐은 격자 변경이 거부돼요.
+            신규 퍼즐은 {PUZZLE_GRID_ROWS}×{PUZZLE_GRID_COLS} 고정.
           </p>
         </div>
       </div>

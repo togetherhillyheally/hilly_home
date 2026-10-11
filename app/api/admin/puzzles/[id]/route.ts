@@ -86,7 +86,8 @@ export async function PATCH(
   }
 
   // 격자 — rows, cols 둘 다 넘어와야 반영, total_pieces 동기.
-  // base_tier 는 더 이상 격자에서 유도하지 않는다 (수동 난이도, 2026-08-12)
+  // 플레이 데이터(조각/공개/완성/티어/참여)가 있으면 격자 변경 거부 — 조각 ID
+  // 가 격자 기반이라 변경 시 유저 진행 상태가 꼬임 (2026-10-11)
   if (body.grid_rows !== undefined || body.grid_cols !== undefined) {
     const r = Number(body.grid_rows);
     const c = Number(body.grid_cols);
@@ -101,6 +102,33 @@ export async function PATCH(
         { error: "격자가 너무 커요. (최대 20)" },
         { status: 400 }
       );
+    }
+    // 플레이 데이터 존재 체크 — 유저 진행이 있는 퍼즐은 격자 변경 금지
+    const hasRows = async (table: string): Promise<boolean> => {
+      const r = await adminFetch(
+        `${table}?puzzle_id=eq.${id}&select=puzzle_id&limit=1`
+      );
+      if (!r.ok) return false;
+      const rows = (await r.json()) as unknown[];
+      return rows.length > 0;
+    };
+    const tables = [
+      "puzzle_drawn_pieces",
+      "puzzle_reveals",
+      "puzzle_completions",
+      "user_puzzle_tiers",
+      "puzzle_participants",
+    ];
+    for (const t of tables) {
+      if (await hasRows(t)) {
+        return NextResponse.json(
+          {
+            error:
+              "이 퍼즐에 이미 플레이 데이터가 있어 격자를 변경할 수 없어요. (유저 조각 상태 보호)",
+          },
+          { status: 409 }
+        );
+      }
     }
     update.grid_rows = r;
     update.grid_cols = c;
