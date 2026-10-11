@@ -31,6 +31,8 @@ export type TreasurePoint = {
   lng: number;
   lat: number;
   cell_index?: number;
+  /** 인증 지점 도장 그림 (2026-10-11 도장 조각) */
+  stamp_image_url?: string | null;
 };
 
 export type TreasureMapProps = {

@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { Gem, Loader2, Sprout, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Gem, Loader2, Sprout, Stamp, Trash2, Upload, X } from "lucide-react";
 import TreasureMap, { type TreasurePoint } from "@/components/admin/TreasureMap";
 
 type Props = {
@@ -119,6 +119,59 @@ export default function TreasurePanel({
     }
   }
 
+  // ── 도장 그림(시작·중간·끝) — 앱의 "도장 조각" 표현에 쓰임 ──
+  const [stampBusy, setStampBusy] = useState<string | null>(null);
+  const fileInputs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  async function uploadStamp(tid: string, file: File) {
+    if (stampBusy) return;
+    setStampBusy(tid);
+    setError(null);
+    setMsg(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch(
+        `/api/admin/puzzles/${puzzleId}/treasures/${tid}/stamp`,
+        { method: "POST", body: fd }
+      );
+      const d = (await res.json()) as { error?: string; url?: string };
+      if (!res.ok) setError(d.error ?? "도장 업로드 실패");
+      else {
+        setMsg("도장 그림을 저장했어요.");
+        await load();
+      }
+    } catch {
+      setError("네트워크 오류");
+    } finally {
+      setStampBusy(null);
+    }
+  }
+
+  async function removeStamp(tid: string) {
+    if (stampBusy) return;
+    if (!confirm("이 지점의 도장 그림을 해제할까요?")) return;
+    setStampBusy(tid);
+    setError(null);
+    setMsg(null);
+    try {
+      const res = await fetch(
+        `/api/admin/puzzles/${puzzleId}/treasures/${tid}/stamp`,
+        { method: "DELETE" }
+      );
+      const d = (await res.json()) as { error?: string };
+      if (!res.ok) setError(d.error ?? "도장 해제 실패");
+      else {
+        setMsg("도장 그림을 해제했어요.");
+        await load();
+      }
+    } catch {
+      setError("네트워크 오류");
+    } finally {
+      setStampBusy(null);
+    }
+  }
+
   async function clearAll() {
     if (busy) return;
     if (!confirm("이 퍼즐의 보물을 모두 제거할까요?")) return;
@@ -221,6 +274,94 @@ export default function TreasurePanel({
         <br />· 조각 수(격자)나 코스를 바꾼 뒤에는 다시 배치해 주세요.
       </p>
 
+      {/* 인증 도장 — 지점별 도장 그림. 앱에서 획득 팝업·퍼즐 도장 조각·완성 카드 도장판에 쓰임 */}
+      {treasures.length > 0 && (
+        <div className="mt-5 rounded-lg border border-white/10 bg-black/20 p-4">
+          <div className="flex items-center gap-1.5 mb-1">
+            <Stamp className="h-4 w-4 text-amber-200" />
+            <span className="text-xs font-bold text-white">인증 도장 그림</span>
+          </div>
+          <p className="text-[11px] text-gray-400 leading-relaxed mb-3">
+            지점마다 도장 그림(크림 종이 + 먹 그림, 투명 배경 PNG 권장)을 올려요.
+            올리면 앱에서 그 지점 도착 시 도장이 찍히고, 퍼즐에선 사진 조각 대신{" "}
+            <span className="text-amber-200">도장 조각</span>으로 보이며, 완성 카드에
+            도장 3개가 한 줄로 찍혀요. 다시 배치해도 도장은 유지돼요.
+          </p>
+          <ul className="space-y-2">
+            {[...treasures]
+              .sort((a, b) => a.seq - b.seq)
+              .map((t) => {
+                const tid = t.id ?? "";
+                const label = STAMP_LABELS[t.seq] ?? `지점 ${t.seq + 1}`;
+                const busyHere = stampBusy === tid;
+                return (
+                  <li
+                    key={tid || t.seq}
+                    className="flex items-center gap-3 rounded-md border border-white/[0.06] bg-white/[0.02] px-3 py-2"
+                  >
+                    <div className="h-12 w-12 shrink-0 rounded-full bg-[#EFE7D6] overflow-hidden flex items-center justify-center">
+                      {t.stamp_image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={t.stamp_image_url}
+                          alt={label}
+                          className="h-12 w-12 object-contain"
+                        />
+                      ) : (
+                        <Stamp className="h-5 w-5 text-black/30" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-semibold text-white">{label}</div>
+                      <div className="text-[11px] text-gray-500 truncate">
+                        {t.stamp_image_url ? "도장 등록됨" : "아직 도장이 없어요"}
+                        {typeof t.cell_index === "number" ? ` · 조각 #${t.cell_index + 1}` : ""}
+                      </div>
+                    </div>
+                    <input
+                      ref={(el) => {
+                        fileInputs.current[tid] = el;
+                      }}
+                      type="file"
+                      accept="image/png,image/webp,image/jpeg"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        e.target.value = "";
+                        if (f && tid) void uploadStamp(tid, f);
+                      }}
+                    />
+                    <button
+                      type="button"
+                      disabled={!tid || !!stampBusy}
+                      onClick={() => fileInputs.current[tid]?.click()}
+                      className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] disabled:opacity-40 px-2.5 h-8 text-xs font-medium text-gray-200 transition"
+                    >
+                      {busyHere ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Upload className="h-3.5 w-3.5" />
+                      )}
+                      {t.stamp_image_url ? "교체" : "올리기"}
+                    </button>
+                    {t.stamp_image_url && (
+                      <button
+                        type="button"
+                        disabled={!!stampBusy}
+                        onClick={() => removeStamp(tid)}
+                        className="inline-flex items-center justify-center rounded-md border border-white/10 bg-white/[0.02] hover:bg-red-500/10 hover:text-red-300 disabled:opacity-40 h-8 w-8 text-gray-400 transition"
+                        title="도장 해제"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
+          </ul>
+        </div>
+      )}
+
       {/* 배치 미리보기 지도 — 경로 + 보물 위치(번호) */}
       {coordinates && (
         <div className="mt-4">
@@ -252,6 +393,12 @@ export default function TreasurePanel({
     </section>
   );
 }
+
+const STAMP_LABELS: Record<number, string> = {
+  0: "시작 지점",
+  1: "중간 지점",
+  2: "끝 지점",
+};
 
 function Row({
   label,

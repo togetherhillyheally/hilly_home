@@ -151,7 +151,7 @@ export async function GET(
   const { id } = await ctx.params;
 
   const res = await adminFetch(
-    `puzzle_treasures?puzzle_id=eq.${id}&select=id,cell_index,lng,lat,seq&order=seq.asc`
+    `puzzle_treasures?puzzle_id=eq.${id}&select=id,cell_index,lng,lat,seq,stamp_image_url&order=seq.asc`
   );
   const treasures = res.ok ? ((await res.json()) as unknown[]) : [];
 
@@ -314,6 +314,19 @@ export async function POST(
   // 보물 셀 = 전체 셀에서 무작위 count 개
   const cells = shuffle(Array.from({ length: total }, (_, i) => i)).slice(0, count);
 
+  // 기존 도장 그림(seq 별)은 재배치 후에도 이월 — 다시 배치할 때마다 올리지 않도록
+  const prevRes = await adminFetch(
+    `puzzle_treasures?puzzle_id=eq.${id}&select=seq,stamp_image_url`
+  );
+  const prevStamps = new Map<number, string>();
+  if (prevRes.ok) {
+    const prev = (await prevRes.json()) as Array<{
+      seq: number;
+      stamp_image_url: string | null;
+    }>;
+    for (const r of prev) if (r.stamp_image_url) prevStamps.set(r.seq, r.stamp_image_url);
+  }
+
   const rows = fractions.map((f, i) => {
     const p = pointAtDistance(coords, prefix, f * totalLen);
     return {
@@ -323,6 +336,7 @@ export async function POST(
       lng: p[0],
       lat: p[1],
       seq: i,
+      stamp_image_url: prevStamps.get(i) ?? null,
     };
   });
 
