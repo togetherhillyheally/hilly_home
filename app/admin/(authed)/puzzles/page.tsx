@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { adminList } from "@/lib/admin-rest";
 import PuzzleCard, { type PuzzleRow } from "./PuzzleCard";
 
@@ -58,13 +59,21 @@ export default async function PuzzlesPage({
 
   return (
     <main className="p-6 lg:p-10">
-      <header className="mb-6">
-        <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
-          퍼즐 정의
-        </h1>
-        <p className="text-sm text-gray-400 mt-1">
-          {LABELS[filter]} · 총 {total.toLocaleString()}개
-        </p>
+      <header className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
+            퍼즐 정의
+          </h1>
+          <p className="text-sm text-gray-400 mt-1">
+            {LABELS[filter]} · 총 {total.toLocaleString()}개
+          </p>
+        </div>
+        <Link
+          href="/admin/puzzles/new"
+          className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-sm font-medium shrink-0"
+        >
+          <Plus className="h-4 w-4" /> 새 퍼즐
+        </Link>
       </header>
 
       <div className="mb-4 flex flex-wrap gap-1.5">
