@@ -2,14 +2,17 @@ import Link from "next/link";
 import { ArrowLeft, Download, Gem, Gift, Search, Sprout } from "lucide-react";
 import { adminList } from "@/lib/admin-rest";
 import Pagination from "../../Pagination";
+import FulfillCell from "./FulfillCell";
 import {
   buildClaimsParams,
   claimsQueryString,
   formatKst,
   parseClaimFilters,
   KIND_LABELS,
+  STATUS_LABELS,
   type ClaimKind,
   type ClaimRow,
+  type FulfillStatus,
 } from "@/lib/treasure-claims";
 
 export const dynamic = "force-dynamic";
@@ -69,6 +72,7 @@ export default async function TreasureClaimsPage({
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const kinds: ClaimKind[] = ["prize", "seed", "none", "all"];
+  const statuses: FulfillStatus[] = ["all", "pending", "done"];
   const exportHref = `/api/admin/treasures/claims/export?${claimsQueryString(filters)}`;
   const hrefWith = (patch: Partial<typeof filters>) =>
     `/admin/treasures/claims?${claimsQueryString({ ...filters, ...patch })}`;
@@ -108,6 +112,7 @@ export default async function TreasureClaimsPage({
         className="mb-4 flex flex-wrap items-end gap-3"
       >
         <input type="hidden" name="kind" value={filters.kind} />
+        <input type="hidden" name="status" value={filters.status} />
         <label className="flex flex-col gap-1 text-xs text-gray-500">
           획득자
           <div className="relative">
@@ -177,7 +182,7 @@ export default async function TreasureClaimsPage({
           return (
             <Link
               key={k}
-              href={hrefWith({ kind: k })}
+              href={hrefWith({ kind: k, status: k === "prize" ? filters.status : "all" })}
               className={`px-3 h-7 inline-flex items-center rounded-md font-medium transition-colors ${
                 isActive
                   ? "bg-amber-500/20 text-amber-200 border border-amber-500/40"
@@ -188,6 +193,27 @@ export default async function TreasureClaimsPage({
             </Link>
           );
         })}
+        {filters.kind === "prize" && (
+          <>
+            <span className="text-gray-500 ml-4 mr-1">수령</span>
+            {statuses.map((st) => {
+              const isActive = filters.status === st;
+              return (
+                <Link
+                  key={st}
+                  href={hrefWith({ status: st })}
+                  className={`px-3 h-7 inline-flex items-center rounded-md font-medium transition-colors ${
+                    isActive
+                      ? "bg-emerald-500/15 text-emerald-200 border border-emerald-500/40"
+                      : "bg-white/[0.04] text-gray-400 border border-white/10 hover:text-white"
+                  }`}
+                >
+                  {STATUS_LABELS[st]}
+                </Link>
+              );
+            })}
+          </>
+        )}
       </div>
 
       {rows.length === 0 ? (
@@ -197,7 +223,7 @@ export default async function TreasureClaimsPage({
       ) : (
         <div className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[960px]">
+            <table className="w-full text-sm min-w-[1160px]">
               <thead className="bg-white/[0.03] text-gray-400 text-xs">
                 <tr>
                   <th className="text-left px-4 py-3 font-medium">획득 시각</th>
@@ -206,6 +232,7 @@ export default async function TreasureClaimsPage({
                   <th className="text-right px-3 py-3 font-medium">보물 #</th>
                   <th className="text-left px-4 py-3 font-medium">보물 지도</th>
                   <th className="text-left px-4 py-3 font-medium">세션</th>
+                  <th className="text-left px-4 py-3 font-medium">수령</th>
                 </tr>
               </thead>
               <tbody>
@@ -268,6 +295,14 @@ export default async function TreasureClaimsPage({
                           </span>
                         </Link>
                       </td>
+                      <td className="px-4 py-3">
+                        <FulfillCell
+                          treasureId={r.id}
+                          isPrize={r.reward_kind === "prize"}
+                          fulfilledAt={r.fulfilled_at}
+                          note={r.fulfill_note}
+                        />
+                      </td>
                     </tr>
                   );
                 })}
@@ -283,6 +318,7 @@ export default async function TreasureClaimsPage({
         totalPages={totalPages}
         query={{
           kind: filters.kind !== "prize" ? filters.kind : undefined,
+          status: filters.status !== "all" ? filters.status : undefined,
           q: filters.q || undefined,
           trail: filters.trail || undefined,
           from: filters.from || undefined,

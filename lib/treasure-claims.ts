@@ -13,8 +13,17 @@ export const KIND_LABELS: Record<ClaimKind, string> = {
   none: "꽝",
 };
 
+export type FulfillStatus = "all" | "pending" | "done";
+export const STATUS_LABELS: Record<FulfillStatus, string> = {
+  all: "전체",
+  pending: "미수령",
+  done: "수령 완료",
+};
+
 export type ClaimFilters = {
   kind: ClaimKind;
+  /** 경품 수령 상태 (경품 외 종류엔 의미 없음) */
+  status: FulfillStatus;
   /** 획득자 닉네임/전화 */
   q: string;
   /** 보물 지도(trail) id */
@@ -31,6 +40,8 @@ export type ClaimRow = {
   reward_value: number;
   reward_label: string;
   claimed_at: string | null;
+  fulfilled_at: string | null;
+  fulfill_note: string | null;
   session_id: string;
   hiking_sessions: {
     id: string;
@@ -48,7 +59,7 @@ export type ClaimRow = {
 };
 
 export const CLAIMS_SELECT =
-  "id,seq,reward_kind,reward_value,reward_label,claimed_at,session_id," +
+  "id,seq,reward_kind,reward_value,reward_label,claimed_at,fulfilled_at,fulfill_note,session_id," +
   "hiking_sessions!inner(id,title,trail_id,started_at,is_solo,trails(name))," +
   "claimer:profiles!claimed_by!inner(id,nickname,phone_number)";
 
@@ -57,8 +68,12 @@ export function parseClaimFilters(sp: Record<string, string | undefined>): Claim
     ? sp.kind
     : "prize") as ClaimKind;
   const day = /^\d{4}-\d{2}-\d{2}$/;
+  const status = (["pending", "done", "all"].includes(sp.status ?? "")
+    ? sp.status
+    : "all") as FulfillStatus;
   return {
     kind,
+    status,
     q: (sp.q ?? "").trim(),
     trail: /^[0-9a-f-]{36}$/i.test(sp.trail ?? "") ? (sp.trail as string) : "",
     from: day.test(sp.from ?? "") ? (sp.from as string) : "",
@@ -74,6 +89,8 @@ export function buildClaimsParams(f: ClaimFilters): URLSearchParams {
   });
   p.set("claimed_by", "not.is.null");
   if (f.kind !== "all") p.set("reward_kind", `eq.${f.kind}`);
+  if (f.status === "pending") p.set("fulfilled_at", "is.null");
+  if (f.status === "done") p.set("fulfilled_at", "not.is.null");
   if (f.trail) p.set("hiking_sessions.trail_id", `eq.${f.trail}`);
   if (f.from) p.append("claimed_at", `gte.${f.from}T00:00:00+09:00`);
   if (f.to) p.append("claimed_at", `lt.${nextDay(f.to)}T00:00:00+09:00`);
@@ -93,6 +110,7 @@ function nextDay(ymd: string): string {
 export function claimsQueryString(f: ClaimFilters, page?: number): string {
   const s = new URLSearchParams();
   if (f.kind !== "prize") s.set("kind", f.kind);
+  if (f.status !== "all") s.set("status", f.status);
   if (f.q) s.set("q", f.q);
   if (f.trail) s.set("trail", f.trail);
   if (f.from) s.set("from", f.from);
