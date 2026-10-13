@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Gem, Plus, Search } from "lucide-react";
+import { Gem, Plus, Search, Users } from "lucide-react";
 import { adminList, escapeIlike } from "@/lib/admin-rest";
 import Pagination from "../Pagination";
 import type { TreasureReward } from "@/lib/trail-treasure";
@@ -102,14 +102,23 @@ export default async function TreasuresPage({
             총 {total.toLocaleString()}개 · 세션마다 보물을 숨겨 씨앗 보상을 지급해요
           </p>
         </div>
-        <Link
-          href="/admin/trails/upload?map_type=treasure"
-          className="inline-flex items-center gap-2 px-4 h-10 rounded-lg text-white text-sm font-medium transition-colors"
-          style={{ backgroundColor: "#F2B705" }}
-        >
-          <Plus className="h-4 w-4" />
-          새 보물 지도
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/admin/treasures/claims"
+            className="inline-flex items-center gap-2 px-4 h-10 rounded-lg text-white text-sm font-medium transition-colors bg-white/[0.06] hover:bg-white/[0.1] border border-white/10"
+          >
+            <Users className="h-4 w-4" />
+            획득자 명단
+          </Link>
+          <Link
+            href="/admin/trails/upload?map_type=treasure"
+            className="inline-flex items-center gap-2 px-4 h-10 rounded-lg text-white text-sm font-medium transition-colors"
+            style={{ backgroundColor: "#F2B705" }}
+          >
+            <Plus className="h-4 w-4" />
+            새 보물 지도
+          </Link>
+        </div>
       </header>
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
