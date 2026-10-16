@@ -35,9 +35,21 @@ export type PuzzleFull = {
   collab_title: string | null;
   collab_description: string | null;
   created_at: string;
+  /** 메타 퍼즐(구간 완성으로만 조각 획득) / 상위 퍼즐 연결 (2026-10-16) */
+  is_meta?: boolean | null;
+  parent_puzzle_id?: string | null;
+  parent_cell_index?: number | null;
 };
 
-export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
+export type MetaPuzzleOption = { id: string; name: string; grid_rows: number; grid_cols: number };
+
+export default function PuzzleEditForm({
+  puzzle,
+  metaPuzzles = [],
+}: {
+  puzzle: PuzzleFull;
+  metaPuzzles?: MetaPuzzleOption[];
+}) {
   const router = useRouter();
   const [, startTransition] = useTransition();
 
@@ -52,6 +64,14 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
   const [collabDescription, setCollabDescription] = useState(
     puzzle.collab_description ?? ""
   );
+  // 메타 퍼즐 / 상위 퍼즐 연결
+  const [isMeta, setIsMeta] = useState<boolean>(puzzle.is_meta === true);
+  const [parentId, setParentId] = useState<string>(puzzle.parent_puzzle_id ?? "");
+  const [parentCell, setParentCell] = useState<string>(
+    puzzle.parent_cell_index == null ? "" : String(puzzle.parent_cell_index)
+  );
+  const parentOpt = metaPuzzles.find((m) => m.id === parentId) ?? null;
+  const parentCells = parentOpt ? parentOpt.grid_rows * parentOpt.grid_cols : 0;
 
   const [difficulty, setDifficulty] = useState(
     Math.max(1, Math.min(4, puzzle.base_tier ?? 1))
@@ -181,6 +201,9 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
         series_name: trail ? null : seriesName.trim() || null,
         collab_title: collabTitle.trim() || null,
         collab_description: collabDescription.trim() || null,
+        is_meta: isMeta,
+        parent_puzzle_id: !isMeta && parentId ? parentId : null,
+        parent_cell_index: !isMeta && parentId && parentCell !== "" ? Number(parentCell) : null,
       };
       const res = await fetch(`/api/admin/puzzles/${puzzle.id}`, {
         method: "PATCH",
@@ -209,10 +232,10 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
   const gridCols = puzzle.grid_cols;
   const gridPieces = gridRows * gridCols;
 
-  const changeGridToDefault = async () => {
+  const changeGridTo = async (rows: number, cols: number) => {
     if (
       !confirm(
-        `격자를 ${PUZZLE_GRID_ROWS}×${PUZZLE_GRID_COLS} (${PUZZLE_GRID_PIECES}조각)으로 변경할까요? 플레이 데이터가 있으면 거부돼요.`
+        `격자를 ${rows}×${cols} (${rows * cols}조각)으로 변경할까요? 플레이 데이터가 있으면 거부돼요.`
       )
     ) {
       return;
@@ -225,8 +248,8 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          grid_rows: PUZZLE_GRID_ROWS,
-          grid_cols: PUZZLE_GRID_COLS,
+          grid_rows: rows,
+          grid_cols: cols,
         }),
       });
       if (!res.ok) {
@@ -237,7 +260,7 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
         return;
       }
       setMsg(
-        `격자 변경 완료 (${PUZZLE_GRID_ROWS}×${PUZZLE_GRID_COLS}·${PUZZLE_GRID_PIECES}조각)`
+        `격자 변경 완료 (${rows}×${cols}·${rows * cols}조각)`
       );
       startTransition(() => router.refresh());
     } catch {
@@ -246,6 +269,7 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
       setChangingGrid(false);
     }
   };
+  const changeGridToDefault = () => changeGridTo(PUZZLE_GRID_ROWS, PUZZLE_GRID_COLS);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6">
@@ -345,10 +369,88 @@ export default function PuzzleEditForm({ puzzle }: { puzzle: PuzzleFull }) {
               ✓ 기본 격자({PUZZLE_GRID_ROWS}×{PUZZLE_GRID_COLS}) 입니다.
             </p>
           )}
+          {isMeta && !(gridRows === 3 && gridCols === 3) && (
+            <button
+              type="button"
+              onClick={() => void changeGridTo(3, 3)}
+              disabled={changingGrid}
+              className="mt-2 w-full inline-flex items-center justify-center gap-1.5 h-9 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/30 text-pink-200 text-xs font-medium disabled:opacity-50"
+            >
+              {changingGrid ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Grid3x3 className="h-3.5 w-3.5" />}
+              메타용 3×3 (9조각)으로 변경
+            </button>
+          )}
           <p className="text-[10px] text-gray-600 leading-relaxed">
             플레이 데이터(조각·공개·완성·참여)가 있는 퍼즐은 격자 변경이 거부돼요.
             신규 퍼즐은 {PUZZLE_GRID_ROWS}×{PUZZLE_GRID_COLS} 고정.
           </p>
+        </div>
+
+        {/* 메타 퍼즐 / 상위 퍼즐 연결 (2026-10-16, 한라산둘레길 9구간 → 3×3) */}
+        <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-xs space-y-3">
+          <label className="flex items-start gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isMeta}
+              onChange={(e) => {
+                setIsMeta(e.target.checked);
+                if (e.target.checked) {
+                  setParentId("");
+                  setParentCell("");
+                }
+              }}
+              className="mt-0.5"
+            />
+            <span>
+              <span className="text-white font-semibold">메타 퍼즐</span>
+              <span className="block text-[11px] text-gray-500 leading-relaxed">
+                씨앗 뽑기를 막고, 연결된 하위(구간) 퍼즐을 완성할 때마다 조각이 들어와요. 9구간이면 3×3 으로 두세요.
+                완성하면 앱에 "리워드 받기"가 떠요(리워드 내용은 위 완성 보상 문구).
+              </span>
+            </span>
+          </label>
+
+          {!isMeta && (
+            <div className="space-y-2 pt-2 border-t border-white/5">
+              <div className="text-gray-400">상위(메타) 퍼즐에 연결</div>
+              <select
+                value={parentId}
+                onChange={(e) => {
+                  setParentId(e.target.value);
+                  setParentCell("");
+                }}
+                className="w-full h-9 px-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-500/50"
+              >
+                <option value="">연결 안 함</option>
+                {metaPuzzles.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name} ({m.grid_rows}×{m.grid_cols})
+                  </option>
+                ))}
+              </select>
+              {parentOpt && (
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400 whitespace-nowrap">지급할 칸</span>
+                  <select
+                    value={parentCell}
+                    onChange={(e) => setParentCell(e.target.value)}
+                    className="h-9 px-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-500/50"
+                  >
+                    <option value="">선택</option>
+                    {Array.from({ length: parentCells }, (_, i) => (
+                      <option key={i} value={String(i)}>
+                        {i + 1}번 칸 ({Math.floor(i / parentOpt.grid_cols) + 1}행 {(i % parentOpt.grid_cols) + 1}열)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <p className="text-[10px] text-gray-600 leading-relaxed">
+                이 퍼즐을 완성한 사용자에게 상위 퍼즐의 그 칸 조각이 지급돼요. 구간 순서대로 1번 칸부터 두면 그림이 둘레길 순서로 채워져요.
+                메타 퍼즐이 목록에 없으면 먼저 상위 퍼즐을 만들고 "메타 퍼즐"을 켜 저장하세요.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

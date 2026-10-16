@@ -23,6 +23,7 @@ import {
   Users,
   UserX,
   type LucideIcon,
+  Gift,
 } from "lucide-react";
 import type { MenuKey } from "@/lib/admin-permissions";
 
@@ -125,6 +126,12 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         href: "/admin/puzzles",
         label: "퍼즐 정의",
         icon: Puzzle,
+        menuKey: "puzzles",
+      },
+      {
+        href: "/admin/reward-claims",
+        label: "완주 리워드 신청",
+        icon: Gift,
         menuKey: "puzzles",
       },
       {

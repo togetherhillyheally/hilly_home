@@ -16,10 +16,14 @@ export default async function PuzzleDetailPage({
   const { id } = await params;
 
   const { rows: puzzleRows } = await adminList<PuzzleFull>(
-    `puzzles?id=eq.${id}&select=id,name,description,total_pieces,cover_image_url,image_url,is_active,grid_rows,grid_cols,reward_description,trail_id,base_tier,event_starts_at,event_ends_at,puzzle_type,series_name,collab_title,collab_description,created_at`
+    `puzzles?id=eq.${id}&select=id,name,description,total_pieces,cover_image_url,image_url,is_active,grid_rows,grid_cols,reward_description,trail_id,base_tier,event_starts_at,event_ends_at,puzzle_type,series_name,collab_title,collab_description,created_at,is_meta,parent_puzzle_id,parent_cell_index`
   );
   const puzzle = puzzleRows[0];
   if (!puzzle) notFound();
+  // 상위(메타) 퍼즐 후보 — 메타로 표시된 퍼즐 전부 (자기 자신 제외)
+  const { rows: metaRows } = await adminList<{ id: string; name: string; grid_rows: number; grid_cols: number }>(
+    `puzzles?is_meta=eq.true&id=neq.${id}&select=id,name,grid_rows,grid_cols&order=name.asc`
+  );
 
   return (
     <main className="p-6 lg:p-10">
@@ -49,7 +53,7 @@ export default async function PuzzleDetailPage({
       </header>
 
       <PuzzleTabs
-        settings={<PuzzleEditForm puzzle={puzzle} />}
+        settings={<PuzzleEditForm puzzle={puzzle} metaPuzzles={metaRows} />}
         cert={
           <TreasurePanel
             puzzleId={puzzle.id}

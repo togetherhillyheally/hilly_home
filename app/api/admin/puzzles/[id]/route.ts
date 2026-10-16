@@ -16,6 +16,9 @@ type Body = {
   image_url?: string | null;
   cover_image_url?: string | null;
   grid_rows?: number;
+  is_meta?: boolean;
+  parent_puzzle_id?: string | null;
+  parent_cell_index?: number | null;
   grid_cols?: number;
   /** 난이도 1~5 — 운영자 수동값 (격자에서 유도하지 않음, 2026-08-12) */
   base_tier?: number;
@@ -195,6 +198,46 @@ export async function PATCH(
       body.collab_description === null
         ? null
         : String(body.collab_description).trim() || null;
+  }
+
+  // 메타 퍼즐 / 상위 퍼즐 연결 (2026-10-16)
+  if (body.is_meta !== undefined) {
+    update.is_meta = body.is_meta === true;
+    if (update.is_meta) {
+      update.parent_puzzle_id = null;
+      update.parent_cell_index = null;
+    }
+  }
+  if (body.parent_puzzle_id !== undefined && !(update.is_meta === true)) {
+    const pid = body.parent_puzzle_id === null ? null : String(body.parent_puzzle_id);
+    if (pid && !UUID_RE.test(pid)) {
+      return NextResponse.json({ error: "잘못된 parent_puzzle_id" }, { status: 400 });
+    }
+    if (pid === id) {
+      return NextResponse.json({ error: "자기 자신을 상위 퍼즐로 둘 수 없어요." }, { status: 400 });
+    }
+    let cell: number | null = null;
+    if (pid) {
+      const pr = await adminFetch(`puzzles?id=eq.${pid}&select=id,is_meta,grid_rows,grid_cols`);
+      const prow = pr.ok ? ((await pr.json()) as Array<{ is_meta: boolean; grid_rows: number; grid_cols: number }>)[0] : null;
+      if (!prow) return NextResponse.json({ error: "상위 퍼즐을 찾을 수 없어요." }, { status: 400 });
+      if (!prow.is_meta) return NextResponse.json({ error: "상위 퍼즐은 메타 퍼즐이어야 해요." }, { status: 400 });
+      const c = Number(body.parent_cell_index);
+      if (!Number.isInteger(c) || c < 0 || c >= prow.grid_rows * prow.grid_cols) {
+        return NextResponse.json({ error: "지급할 칸을 상위 퍼즐 격자 안에서 골라 주세요." }, { status: 400 });
+      }
+      // 같은 상위·같은 칸에 다른 하위 퍼즐이 이미 연결돼 있으면 거부(칸당 1구간)
+      const dup = await adminFetch(
+        `puzzles?parent_puzzle_id=eq.${pid}&parent_cell_index=eq.${c}&id=neq.${id}&select=id,name`
+      );
+      const drows = dup.ok ? ((await dup.json()) as Array<{ name: string }>) : [];
+      if (drows.length > 0) {
+        return NextResponse.json({ error: `그 칸은 이미 "${drows[0].name}" 에 연결돼 있어요.` }, { status: 400 });
+      }
+      cell = c;
+    }
+    update.parent_puzzle_id = pid;
+    update.parent_cell_index = cell;
   }
 
   if (body.puzzle_type !== undefined) {
