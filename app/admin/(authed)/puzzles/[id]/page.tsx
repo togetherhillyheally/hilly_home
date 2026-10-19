@@ -5,6 +5,7 @@ import { adminList } from "@/lib/admin-rest";
 import PuzzleEditForm, { type PuzzleFull } from "./PuzzleEditForm";
 import TreasurePanel from "./TreasurePanel";
 import PuzzleTabs from "./PuzzleTabs";
+import RewardManagersPanel from "./RewardManagersPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +52,13 @@ export default async function PuzzleDetailPage({
         </div>
         <p className="text-xs text-gray-500 mt-1 font-mono">{puzzle.id}</p>
       </header>
+
+      {/* 메타 퍼즐 — 현장 리워드 운영자 지정 */}
+      {puzzle.is_meta && (
+        <div className="mb-6">
+          <RewardManagersPanel puzzleId={puzzle.id} />
+        </div>
+      )}
 
       <PuzzleTabs
         settings={<PuzzleEditForm puzzle={puzzle} metaPuzzles={metaRows} />}
