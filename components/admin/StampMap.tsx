@@ -6,6 +6,7 @@ import mapboxgl, { type LngLatBoundsLike } from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { parseStampTitle } from "@/lib/stamp-pool";
 import { applyKoreanLabels } from "@/lib/mapbox-locale";
+import { syncRadiusCircles, type RadiusCircle } from "./radius-layer";
 
 const MAPBOX_STYLE = "mapbox://styles/mapbox/outdoors-v12";
 const PENDING_COLOR = "#f59e0b";
@@ -29,6 +30,10 @@ export type StampMapProps = {
   selectedId?: string | null;
   addMode?: boolean;
   pendingPoint?: LatLng | null;
+  /** 선택된 스탬프 등 도착 반경 원으로 표시할 포인트 */
+  radiusCircles?: RadiusCircle[];
+  /** 마커 드래그로 위치 이동 — 드래그 종료 시 호출 (lng/lat) */
+  onPointDragEnd?: (pointId: string, p: LatLng) => void;
   onMapClick?: (p: LatLng) => void;
   onMarkerClick?: (pointId: string) => void;
   className?: string;
@@ -122,6 +127,8 @@ export default function StampMap({
   selectedId,
   addMode,
   pendingPoint,
+  radiusCircles,
+  onPointDragEnd,
   onMapClick,
   onMarkerClick,
   className,
@@ -138,6 +145,8 @@ export default function StampMap({
   onMapClickRef.current = onMapClick;
   const onMarkerClickRef = useRef(onMarkerClick);
   onMarkerClickRef.current = onMarkerClick;
+  const onPointDragEndRef = useRef(onPointDragEnd);
+  onPointDragEndRef.current = onPointDragEnd;
   const addModeRef = useRef(addMode);
   addModeRef.current = addMode;
 
@@ -235,17 +244,43 @@ export default function StampMap({
         if (!entry) {
           const el = document.createElement("div");
           el.addEventListener("click", (ev) => {
+            // 드래그 끝에 발화되는 click 은 무시 (mapbox 는 dragend 뒤에도
+            // click 을 발생시킬 수 있어 선택 상태가 꼬일 수 있다)
+            if (
+              el.dataset.dragging === "1" ||
+              el.dataset.justDragged === "1"
+            ) {
+              el.dataset.justDragged = "";
+              return;
+            }
             ev.stopPropagation();
             onMarkerClickRef.current?.(pt.id);
           });
-          const root = createRoot(el);
-          const marker = new mapboxgl.Marker(el)
+          const marker = new mapboxgl.Marker(el, { draggable: true })
             .setLngLat([pt.lng, pt.lat])
             .addTo(map);
+          marker.on("dragstart", () => {
+            el.dataset.dragging = "1";
+            el.style.cursor = "grabbing";
+          });
+          marker.on("dragend", () => {
+            const ll = marker.getLngLat();
+            el.dataset.dragging = "";
+            el.dataset.justDragged = "1";
+            el.style.cursor = "";
+            onPointDragEndRef.current?.(pt.id, {
+              lat: ll.lat,
+              lng: ll.lng,
+            });
+          });
+          const root = createRoot(el);
           entry = { marker, root };
           existing.set(pt.id, entry);
         } else {
-          entry.marker.setLngLat([pt.lng, pt.lat]);
+          // 드래그 중에는 외부에서 setLngLat 하지 말 것 (튀는 느낌 방지)
+          if (entry.marker.getElement().dataset.dragging !== "1") {
+            entry.marker.setLngLat([pt.lng, pt.lat]);
+          }
         }
         entry.root.render(<MarkerContent point={pt} selected={isSel} />);
       }
@@ -278,6 +313,15 @@ export default function StampMap({
       canvas.style.cursor = "";
     };
   }, [addMode]);
+
+  // 도착 반경 원 동기화 (po 와 동일 레이어)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => syncRadiusCircles(map, radiusCircles ?? []);
+    if (map.loaded()) apply();
+    else map.once("load", apply);
+  }, [radiusCircles]);
 
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
   if (!token) {

@@ -17,7 +17,11 @@ import {
   Save,
 } from "lucide-react";
 import StampMap, { type LatLng } from "@/components/admin/StampMap";
+import type { RadiusCircle } from "@/components/admin/radius-layer";
 import { parseStampTitle } from "@/lib/stamp-pool";
+
+/** StampGuide/앱과 동일 — 반경 미지정 시 기본 25m */
+const DEFAULT_STAMP_RADIUS_M = 25;
 import QuizEditor, {
   emptyQuiz,
   isQuizComplete,
@@ -104,6 +108,19 @@ export default function StampEditor({
     () => points.find((p) => p.id === selectedId) ?? null,
     [points, selectedId]
   );
+
+  // po 와 동일 — 선택된 스탬프의 도착 반경 원만 지도에 표시
+  const radiusCircles = useMemo<RadiusCircle[]>(() => {
+    if (!selected) return [];
+    return [
+      {
+        id: selected.id,
+        lng: selected.lng,
+        lat: selected.lat,
+        radiusM: selected.radius_m ?? DEFAULT_STAMP_RADIUS_M,
+      },
+    ];
+  }, [selected]);
 
   const showError = (msg: string) => {
     setError(msg);
@@ -206,8 +223,17 @@ export default function StampEditor({
           selectedId={selectedId}
           addMode={addMode}
           pendingPoint={pending}
+          radiusCircles={radiusCircles}
           onMapClick={onMapClick}
           onMarkerClick={(id) => setSelectedId(id)}
+          onPointDragEnd={(id, p) => {
+            // 1) 로컬 상태 즉시 반영 (지도 튐 방지)
+            setPoints((prev) =>
+              prev.map((pt) => (pt.id === id ? { ...pt, lat: p.lat, lng: p.lng } : pt))
+            );
+            // 2) 서버 저장
+            updatePoint(id, { lat: p.lat, lng: p.lng });
+          }}
           height={560}
         />
 

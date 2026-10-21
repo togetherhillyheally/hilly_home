@@ -34,3 +34,27 @@ export interface LatLonBounds {
   minLon: number;
   maxLon: number;
 }
+
+/**
+ * 중심점 + 반경(m)으로 지오데식 원 폴리곤 좌표 생성 — 지도 위 도착 반경 표시용.
+ * 반환: [lng, lat][] 링 (닫힌 폴리곤, steps+1 개 점)
+ */
+export function makeCircleRing(
+  lng: number,
+  lat: number,
+  radiusM: number,
+  steps = 64
+): [number, number][] {
+  const ring: [number, number][] = [];
+  const latRad = toRad(lat);
+  const dLat = radiusM / R;
+  const dLon = radiusM / (R * Math.cos(latRad));
+  for (let i = 0; i <= steps; i++) {
+    const theta = (i / steps) * 2 * Math.PI;
+    ring.push([
+      lng + (dLon * Math.cos(theta) * 180) / Math.PI,
+      lat + (dLat * Math.sin(theta) * 180) / Math.PI,
+    ]);
+  }
+  return ring;
+}
