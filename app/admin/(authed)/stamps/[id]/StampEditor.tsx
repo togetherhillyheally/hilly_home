@@ -350,6 +350,17 @@ export default function StampEditor({
             );
             updatePoint(id, { lat: p.lat, lng: p.lng });
           }}
+          onStartDragEnd={(p) => {
+            setStart(p);
+            patchTrailStartEnd(
+              { start_lat: p.lat, start_lng: p.lng },
+              "start"
+            );
+          }}
+          onEndDragEnd={(p) => {
+            setEnd(p);
+            patchTrailStartEnd({ end_lat: p.lat, end_lng: p.lng }, "end");
+          }}
           height={560}
         />
 

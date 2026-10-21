@@ -45,6 +45,9 @@ export type StampMapProps = {
   /** 출발/도착 좌표 — 없으면 마커 미표시. S/E 가 서로 50m 이내면 "S/E" 로 합침 */
   start?: LatLng | null;
   end?: LatLng | null;
+  /** S/E 마커를 드래그해서 옮겼을 때 (dragend) 호출. 합쳐진 S/E 는 둘 다 호출. */
+  onStartDragEnd?: (p: LatLng) => void;
+  onEndDragEnd?: (p: LatLng) => void;
   onMapClick?: (p: LatLng, mode: AddMode) => void;
   onMarkerClick?: (pointId: string) => void;
   className?: string;
@@ -166,7 +169,8 @@ function makePendingEl(): HTMLDivElement {
   return el;
 }
 
-/** 출발·도착 마커 (hilly_po CheckpointMap 과 동일 — 녹색 S / 빨강 E / S/E) */
+/** 출발·도착 마커 (hilly_po CheckpointMap 과 동일 — 녹색 S / 빨강 E / S/E)
+ *  BO 에서는 드래그로 위치 이동 가능해야 하므로 pointer-events 허용. */
 function makeSeMarkerEl(
   bg: string,
   label: string,
@@ -180,7 +184,7 @@ function makeSeMarkerEl(
     display: flex; align-items: center; justify-content: center;
     font-size: ${textSize}px; font-weight: 700; letter-spacing: 0.04em;
     border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.35);
-    user-select: none; pointer-events: none;
+    user-select: none; cursor: grab;
   `;
   el.textContent = label;
   return el;
@@ -204,6 +208,8 @@ export default function StampMap({
   onPointDragEnd,
   start,
   end,
+  onStartDragEnd,
+  onEndDragEnd,
   onMapClick,
   onMarkerClick,
   className,
@@ -227,6 +233,10 @@ export default function StampMap({
   onMarkerClickRef.current = onMarkerClick;
   const onPointDragEndRef = useRef(onPointDragEnd);
   onPointDragEndRef.current = onPointDragEnd;
+  const onStartDragEndRef = useRef(onStartDragEnd);
+  onStartDragEndRef.current = onStartDragEnd;
+  const onEndDragEndRef = useRef(onEndDragEnd);
+  onEndDragEndRef.current = onEndDragEnd;
   const addModeRef = useRef<AddMode | null>(normalizedAddMode);
   addModeRef.current = normalizedAddMode;
 
@@ -391,7 +401,8 @@ export default function StampMap({
     };
   }, [normalizedAddMode]);
 
-  // 출발/도착 마커 — start/end 가 있을 때만 표시, 50m 이내면 S/E 합침
+  // 출발/도착 마커 — start/end 가 있을 때만 표시, 50m 이내면 S/E 합침.
+  // 각 마커는 draggable: true 로 드래그로 위치 이동 가능 (dragend 콜백).
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -403,6 +414,15 @@ export default function StampMap({
       endMarkerRef.current = null;
       seMarkerRef.current = null;
 
+      const attachGrabCursor = (el: HTMLElement, m: mapboxgl.Marker) => {
+        m.on("dragstart", () => {
+          el.style.cursor = "grabbing";
+        });
+        m.on("dragend", () => {
+          el.style.cursor = "grab";
+        });
+      };
+
       const hasStart = start?.lat != null && start?.lng != null;
       const hasEnd = end?.lat != null && end?.lng != null;
       if (hasStart && hasEnd) {
@@ -411,23 +431,44 @@ export default function StampMap({
           Math.abs(start!.lat - end!.lat) < SE_CLOSE_THRESHOLD;
         if (isClose) {
           const el = makeSeMarkerEl(START_COLOR, "S/E", 32, 10);
-          seMarkerRef.current = new mapboxgl.Marker(el)
+          const m = new mapboxgl.Marker(el, { draggable: true })
             .setLngLat([start!.lng, start!.lat])
             .addTo(map);
+          attachGrabCursor(el, m);
+          // S/E 합쳐진 상태에서 드래그하면 start/end 양쪽 좌표를 함께 이동
+          m.on("dragend", () => {
+            const ll = m.getLngLat();
+            const p = { lat: ll.lat, lng: ll.lng };
+            onStartDragEndRef.current?.(p);
+            onEndDragEndRef.current?.(p);
+          });
+          seMarkerRef.current = m;
           return;
         }
       }
       if (hasStart) {
         const el = makeSeMarkerEl(START_COLOR, "S");
-        startMarkerRef.current = new mapboxgl.Marker(el)
+        const m = new mapboxgl.Marker(el, { draggable: true })
           .setLngLat([start!.lng, start!.lat])
           .addTo(map);
+        attachGrabCursor(el, m);
+        m.on("dragend", () => {
+          const ll = m.getLngLat();
+          onStartDragEndRef.current?.({ lat: ll.lat, lng: ll.lng });
+        });
+        startMarkerRef.current = m;
       }
       if (hasEnd) {
         const el = makeSeMarkerEl(END_COLOR, "E");
-        endMarkerRef.current = new mapboxgl.Marker(el)
+        const m = new mapboxgl.Marker(el, { draggable: true })
           .setLngLat([end!.lng, end!.lat])
           .addTo(map);
+        attachGrabCursor(el, m);
+        m.on("dragend", () => {
+          const ll = m.getLngLat();
+          onEndDragEndRef.current?.({ lat: ll.lat, lng: ll.lng });
+        });
+        endMarkerRef.current = m;
       }
     };
     if (map.loaded()) apply();
