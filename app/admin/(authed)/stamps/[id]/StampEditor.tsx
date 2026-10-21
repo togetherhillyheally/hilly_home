@@ -18,7 +18,13 @@ import {
 } from "lucide-react";
 import StampMap, { type LatLng } from "@/components/admin/StampMap";
 import type { RadiusCircle } from "@/components/admin/radius-layer";
-import { parseStampTitle } from "@/lib/stamp-pool";
+import {
+  SCORE_TIERS,
+  TIER_COLOR,
+  composeStampTitle,
+  parseStampTitle,
+  type ScoreTier,
+} from "@/lib/stamp-pool";
 
 /** StampGuide/앱과 동일 — 반경 미지정 시 기본 25m */
 const DEFAULT_STAMP_RADIUS_M = 25;
@@ -483,8 +489,13 @@ function quizPatchIfChanged(
 }
 
 function PointDetail({ point, saving, onSave, onDelete, onError }: DetailProps) {
-  const { entry, name: initialName } = parseStampTitle(point.title);
+  const {
+    entry,
+    name: initialName,
+    score: initialScore,
+  } = parseStampTitle(point.title);
   const [name, setName] = useState(initialName);
+  const [score, setScore] = useState<ScoreTier | null>(initialScore);
   const [hint, setHint] = useState(point.hint ?? "");
   const [lat, setLat] = useState(String(point.lat));
   const [lng, setLng] = useState(String(point.lng));
@@ -498,6 +509,7 @@ function PointDetail({ point, saving, onSave, onDelete, onError }: DetailProps) 
     JSON.stringify(quizValue) !== JSON.stringify(baselineQuiz);
   const dirty =
     name !== initialTitleName ||
+    score !== initialScore ||
     hint !== (point.hint ?? "") ||
     Number(lat) !== point.lat ||
     Number(lng) !== point.lng ||
@@ -505,9 +517,9 @@ function PointDetail({ point, saving, onSave, onDelete, onError }: DetailProps) 
 
   const save = () => {
     const patch: PointPatch = {};
-    if (name !== initialTitleName) {
-      // title 은 "icon|name" 포맷 유지 (entry 가 있으면 그대로 사용)
-      patch.title = entry ? `${entry.icon}|${name.trim() || entry.name}` : name.trim();
+    if (name !== initialTitleName || score !== initialScore) {
+      // title = "icon|name(score)" — PO 이벤트 지도가 끝의 "(N)" 을 점수로 파싱
+      patch.title = composeStampTitle(entry, name, score);
     }
     if (hint !== (point.hint ?? "")) patch.hint = hint || null;
     const latN = Number(lat);
@@ -568,6 +580,48 @@ function PointDetail({ point, saving, onSave, onDelete, onError }: DetailProps) 
             아이콘은 {entry.icon} 으로 고정. 이름만 바꿀 수 있어요.
           </p>
         )}
+      </div>
+
+      <div>
+        <label className="block text-[10px] text-gray-500 mb-1">
+          배점 (낯선곳으로 이벤트 코스 지도 전용 · 선택)
+        </label>
+        <div className="grid grid-cols-6 gap-1.5">
+          <button
+            type="button"
+            onClick={() => setScore(null)}
+            className={`h-9 rounded-md text-[11px] font-semibold border transition-colors ${
+              score == null
+                ? "bg-white/[0.08] border-white/30 text-white"
+                : "bg-white/[0.02] border-white/10 text-gray-500 hover:text-white"
+            }`}
+          >
+            없음
+          </button>
+          {SCORE_TIERS.map((n) => {
+            const selected = score === n;
+            const c = TIER_COLOR[n];
+            return (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setScore(n)}
+                style={{
+                  background: selected ? c : "transparent",
+                  borderColor: selected ? "#fff" : c,
+                  color: selected ? "#fff" : c,
+                }}
+                className="h-9 rounded-md text-[11px] font-bold border-2 tabular-nums transition-colors"
+              >
+                {n}
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-[10px] text-gray-500 mt-1 leading-relaxed">
+          선택하면 지도 마커가 점선 테두리 + 숫자 + 색상(10 세이지~50 크림슨)
+          으로 바뀌어요. "낯선곳으로 — 광교산" 처럼 배점 체크포인트 지도에 사용.
+        </p>
       </div>
 
       <div>

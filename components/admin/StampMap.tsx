@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import mapboxgl, { type LngLatBoundsLike } from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { parseStampTitle } from "@/lib/stamp-pool";
+import { parseStampTitle, TIER_COLOR } from "@/lib/stamp-pool";
 import { applyKoreanLabels } from "@/lib/mapbox-locale";
 import { syncRadiusCircles, type RadiusCircle } from "./radius-layer";
 
@@ -47,7 +47,42 @@ function MarkerContent({
   point: StampPoint;
   selected: boolean;
 }) {
-  const { entry, name } = parseStampTitle(point.title);
+  const { entry, name, score } = parseStampTitle(point.title);
+
+  // 점수가 있으면 PO 이벤트 코스 지도(gwanggyo-cps) 와 동일한 스타일 —
+  // 색상 배경 + 숫자 + 점선 outline. hilly_po/components/events/CourseMap.tsx 참고.
+  if (score != null) {
+    const color = TIER_COLOR[score];
+    return (
+      <div
+        title={`${name || `#${point.sort_order}`} · ${score}점`}
+        style={{
+          width: selected ? 36 : 30,
+          height: selected ? 36 : 30,
+          borderRadius: "50%",
+          background: color,
+          border: selected ? "3px solid #fff" : "2px solid #fff",
+          outline: `2px dashed ${color}`,
+          outlineOffset: "1.5px",
+          boxShadow: selected
+            ? "0 0 0 3px rgba(255,255,255,0.6), 0 2px 6px rgba(0,0,0,0.45)"
+            : "0 1px 5px rgba(0,0,0,0.35)",
+          color: "#fff",
+          fontSize: selected ? 13 : 11,
+          fontWeight: 800,
+          fontVariantNumeric: "tabular-nums",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          transition: "transform .15s, box-shadow .15s",
+        }}
+      >
+        {score}
+      </div>
+    );
+  }
+
   const color = entry?.color ?? "#fb923c";
   const Icon = entry?.Icon;
   return (

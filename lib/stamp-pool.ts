@@ -88,21 +88,70 @@ export const STAMP_POOL: StampPoolEntry[] = [
 
 const POOL_BY_ICON = new Map(STAMP_POOL.map((e) => [e.icon, e]));
 
-/** title("icon-name|korean-name") → entry + name */
+/**
+ * 점수 티어 — PO 이벤트 코스 지도("낯선곳으로 — 광교산") 와 공유.
+ * title 끝의 "(10)" ~ "(50)" 패턴으로 저장하고, 지도 마커는 티어 색 + 숫자로 렌더.
+ */
+export const SCORE_TIERS = [10, 20, 30, 40, 50] as const;
+export type ScoreTier = (typeof SCORE_TIERS)[number];
+
+/** 배점별 색 — hilly_po/lib/events/gwanggyo-cps.ts TIER_COLOR 와 동일 */
+export const TIER_COLOR: Record<ScoreTier, string> = {
+  10: "#6B9E78", // 세이지 그린 — 초입
+  20: "#4C7FA4", // 스틸 블루 — 산중
+  30: "#D9A441", // 골든 앰버 — 능선
+  40: "#C96342", // 테라코타 — 주요 봉우리
+  50: "#CE2B37", // 크림슨 — 정상
+};
+
+const SCORE_RE = /[(（]\s*(\d{1,3})\s*[)）]\s*$/;
+
+/** title 끝의 "(점수)" 를 떼어 반환. 값이 10/20/30/40/50 중 하나일 때만 유효. */
+export function parseStampScore(title: string | null | undefined): {
+  score: ScoreTier | null;
+  withoutScore: string;
+} {
+  const t = (title ?? "").trim();
+  if (!t) return { score: null, withoutScore: "" };
+  const m = t.match(SCORE_RE);
+  if (!m) return { score: null, withoutScore: t };
+  const n = Number(m[1]);
+  if (!SCORE_TIERS.includes(n as ScoreTier))
+    return { score: null, withoutScore: t };
+  return { score: n as ScoreTier, withoutScore: t.replace(SCORE_RE, "").trim() };
+}
+
+/** title ("icon-name|korean-name" 혹은 그 뒤 "(점수)" 포함) → entry + name + score */
 export function parseStampTitle(title: string | null | undefined): {
   entry: StampPoolEntry | null;
   name: string;
+  score: ScoreTier | null;
 } {
-  const t = (title ?? "").trim();
-  if (!t) return { entry: null, name: "" };
-  const sepIdx = t.indexOf("|");
+  const { score, withoutScore: raw } = parseStampScore(title);
+  if (!raw) return { entry: null, name: "", score };
+  const sepIdx = raw.indexOf("|");
   if (sepIdx > 0) {
-    const iconPart = t.slice(0, sepIdx);
-    const namePart = t.slice(sepIdx + 1);
+    const iconPart = raw.slice(0, sepIdx);
+    const namePart = raw.slice(sepIdx + 1);
     const entry = POOL_BY_ICON.get(iconPart);
-    if (entry) return { entry, name: namePart || entry.name };
+    if (entry) return { entry, name: namePart || entry.name, score };
   }
-  return { entry: null, name: t };
+  return { entry: null, name: raw, score };
+}
+
+/**
+ * entry/name/score 를 합쳐 저장 title 생성. score 가 있으면 끝에 "(N)" 추가.
+ * entry 가 없으면 "name(N)" 만.
+ */
+export function composeStampTitle(
+  entry: StampPoolEntry | null,
+  name: string,
+  score: ScoreTier | null
+): string {
+  const base = entry
+    ? `${entry.icon}|${(name || entry.name).trim()}`
+    : name.trim();
+  return score ? `${base}(${score})` : base;
 }
 
 export function stampTitleFromEntry(entry: StampPoolEntry): string {
