@@ -241,18 +241,8 @@ export default function StampMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // bounds 가 바뀌면 fitBounds 재실행
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !bounds) return;
-    const fb: LngLatBoundsLike = [
-      [bounds.minLon, bounds.minLat],
-      [bounds.maxLon, bounds.maxLat],
-    ];
-    const apply = () => map.fitBounds(fb, { padding: 60, animate: true });
-    if (map.loaded()) apply();
-    else map.once("load", apply);
-  }, [bounds]);
+  // 초기 로드 시만 fitBounds (map.on("load") 안). bounds 가 포인트 추가/이동
+  // 으로 바뀔 때마다 자동 줌 조정하면 운영자가 거슬려 함 — 뷰 유지 (2026-10-21).
 
   // 마커 동기화 — points/selectedId 변경에 반응
   useEffect(() => {

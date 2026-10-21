@@ -176,6 +176,11 @@ export default function StampEditor({
   };
 
   const updatePoint = (id: string, patch: PointPatch) => {
+    // 낙관적 반영 — UI(지도·리스트) 를 호출 즉시 갱신. 서버 응답 실패 시 롤백.
+    const prevSnapshot = points.find((p) => p.id === id);
+    setPoints((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, ...patch } : p))
+    );
     startSave(async () => {
       try {
         const res = await fetch(`/api/admin/stamp-points/${id}`, {
@@ -185,14 +190,22 @@ export default function StampEditor({
         });
         const data = await res.json().catch(() => null);
         if (!res.ok || !data?.success) {
+          // 롤백
+          if (prevSnapshot) {
+            setPoints((prev) =>
+              prev.map((p) => (p.id === id ? prevSnapshot : p))
+            );
+          }
           showError(data?.error ?? "저장 실패");
           return;
         }
-        setPoints((prev) =>
-          prev.map((p) => (p.id === id ? { ...p, ...patch } : p))
-        );
         showInfo("저장되었습니다.");
       } catch (e: unknown) {
+        if (prevSnapshot) {
+          setPoints((prev) =>
+            prev.map((p) => (p.id === id ? prevSnapshot : p))
+          );
+        }
         showError(e instanceof Error ? e.message : "저장 실패");
       }
     });
@@ -361,7 +374,7 @@ export default function StampEditor({
             <div className="max-h-72 overflow-y-auto divide-y divide-white/5">
               {points.map((p) => {
                 const isSel = selectedId === p.id;
-                const { entry, name } = parseStampTitle(p.title);
+                const { entry, name, score } = parseStampTitle(p.title);
                 const Icon = entry?.Icon;
                 const color = entry?.color ?? "#fb923c";
                 return (
@@ -375,21 +388,36 @@ export default function StampEditor({
                         : "hover:bg-white/[0.03]"
                     }`}
                   >
-                    <span
-                      className="w-7 h-7 rounded-full border-2 flex items-center justify-center bg-white"
-                      style={{ borderColor: color }}
-                    >
-                      {Icon ? (
-                        <Icon width={14} height={14} color={color} />
-                      ) : (
-                        <span
-                          className="text-xs font-bold"
-                          style={{ color }}
-                        >
-                          {p.sort_order}
-                        </span>
-                      )}
-                    </span>
+                    {score != null ? (
+                      <span
+                        className="w-7 h-7 rounded-full border-2 flex items-center justify-center tabular-nums"
+                        style={{
+                          background: TIER_COLOR[score],
+                          borderColor: "#fff",
+                          color: "#fff",
+                          fontWeight: 800,
+                          fontSize: 11,
+                        }}
+                      >
+                        {score}
+                      </span>
+                    ) : (
+                      <span
+                        className="w-7 h-7 rounded-full border-2 flex items-center justify-center bg-white"
+                        style={{ borderColor: color }}
+                      >
+                        {Icon ? (
+                          <Icon width={14} height={14} color={color} />
+                        ) : (
+                          <span
+                            className="text-xs font-bold"
+                            style={{ color }}
+                          >
+                            {p.sort_order}
+                          </span>
+                        )}
+                      </span>
+                    )}
                     <div className="flex-1 min-w-0">
                       <div className="text-sm text-white truncate">
                         {name || `${p.sort_order}번째 스탬프`}
