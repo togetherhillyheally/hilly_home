@@ -374,7 +374,10 @@ export default function StampEditor({
             setEnd(p);
             patchTrailStartEnd({ end_lat: p.lat, end_lng: p.lng }, "end");
           }}
-          height={560}
+          // 뷰포트 기반 — lg 이상에서 "헤더+여백 뺀 전체 높이"에 지도 가득,
+          // 모바일(세로)에서는 최소 420px 로 축소. 좌측 column 전체가 sticky
+          // 니까 우측 목록 스크롤 중에도 지도는 화면에 고정.
+          height="clamp(420px, calc(100vh - 180px), 1200px)"
         />
 
         {addMode && (
