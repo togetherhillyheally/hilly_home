@@ -127,6 +127,19 @@ export default function StampEditor({
     [points, selectedId]
   );
 
+  // 지도에 그릴 포인트 — "(배점)" 도 없고 아이콘(icon|name 형식)도 없는 포인트는
+  // 숨긴다. 이런 포인트는 PO 가 START 로 자동 인식하는 "출발점용" 레거시 레코드
+  // 로, trails.start_lat/lng 와 중복돼 "0" 숫자 마커로 혼란을 주던 문제 해결.
+  // 리스트에서는 그대로 보이게 두어 운영자가 삭제/배점 지정할 수 있다.
+  const mapPoints = useMemo(
+    () =>
+      points.filter((p) => {
+        const { entry, score } = parseStampTitle(p.title);
+        return entry != null || score != null;
+      }),
+    [points]
+  );
+
   // po 와 동일 — 선택된 스탬프의 도착 반경 원만 지도에 표시
   const radiusCircles = useMemo<RadiusCircle[]>(() => {
     if (!selected) return [];
@@ -332,7 +345,7 @@ export default function StampEditor({
       {/* 좌측: 지도 + 알림 */}
       <div className="space-y-4">
         <StampMap
-          points={points}
+          points={mapPoints}
           bounds={bounds ?? undefined}
           selectedId={selectedId}
           addMode={addMode ?? false}
@@ -604,6 +617,7 @@ export default function StampEditor({
                 const { entry, name, score } = parseStampTitle(p.title);
                 const Icon = entry?.Icon;
                 const color = entry?.color ?? "#fb923c";
+                const isStartLegacy = entry == null && score == null;
                 return (
                   <button
                     key={p.id}
@@ -613,7 +627,7 @@ export default function StampEditor({
                       isSel
                         ? "bg-orange-500/10 border-l-2 border-orange-500"
                         : "hover:bg-white/[0.03]"
-                    }`}
+                    } ${isStartLegacy ? "opacity-70" : ""}`}
                   >
                     {score != null ? (
                       <span
@@ -627,6 +641,18 @@ export default function StampEditor({
                         }}
                       >
                         {score}
+                      </span>
+                    ) : isStartLegacy ? (
+                      <span
+                        className="w-7 h-7 rounded-full border-2 flex items-center justify-center"
+                        style={{
+                          background: "transparent",
+                          borderColor: "#52525b",
+                          color: "#a1a1aa",
+                        }}
+                        title="아이콘·배점 없음 — PO 에서 START 로 자동 인식됨"
+                      >
+                        <Flag className="h-3.5 w-3.5" />
                       </span>
                     ) : (
                       <span
@@ -649,9 +675,15 @@ export default function StampEditor({
                       <div className="text-sm text-white truncate">
                         {name || `${p.sort_order}번째 스탬프`}
                       </div>
-                      <div className="text-[10px] text-gray-500 font-mono">
-                        {p.lat.toFixed(5)}, {p.lng.toFixed(5)}
-                      </div>
+                      {isStartLegacy ? (
+                        <div className="text-[10px] text-amber-400/80">
+                          출발점용 · 지도에서 숨김 (PO 가 START 로 인식)
+                        </div>
+                      ) : (
+                        <div className="text-[10px] text-gray-500 font-mono">
+                          {p.lat.toFixed(5)}, {p.lng.toFixed(5)}
+                        </div>
+                      )}
                     </div>
                     <span className="text-[10px] text-gray-500 font-mono">
                       #{p.sort_order}
