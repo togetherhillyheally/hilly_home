@@ -24,6 +24,7 @@ export const MENU_KEYS = [
   "settlements",
   "legal",
   "app-versions",
+  "trackers",
   "backgrounds",
   "surveys",
   "content-reset",

@@ -16,6 +16,7 @@ import {
   Puzzle,
   Receipt,
   RotateCcw,
+  Satellite,
   Smartphone,
   Stamp,
   Trophy,
@@ -168,6 +169,17 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         label: "참가비 정산",
         icon: Banknote,
         menuKey: "settlements",
+      },
+    ],
+  },
+  {
+    title: "기기",
+    items: [
+      {
+        href: "/admin/trackers",
+        label: "트래커 기기",
+        icon: Satellite,
+        menuKey: "trackers",
       },
     ],
   },
