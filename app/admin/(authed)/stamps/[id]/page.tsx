@@ -49,8 +49,9 @@ export default async function StampMapDetailPage({
   );
 
   return (
-    <main className="p-6 lg:p-10">
-      <header className="mb-6">
+    // lg: 페이지를 뷰포트 높이로 고정 — 헤더·지도는 안 움직이고 우측 목록만 내부 스크롤
+    <main className="p-6 lg:p-10 lg:h-screen lg:flex lg:flex-col lg:overflow-hidden">
+      <header className="mb-6 shrink-0">
         <Link
           href="/admin/stamps"
           className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-white mb-3"
@@ -84,6 +85,7 @@ export default async function StampMapDetailPage({
         )}
       </header>
 
+      <div className="lg:flex-1 lg:min-h-0">
       <StampEditor
         trailId={trail.id}
         initialPoints={points}
@@ -99,6 +101,7 @@ export default async function StampMapDetailPage({
             : null
         }
       />
+      </div>
     </main>
   );
 }

@@ -341,9 +341,11 @@ export default function StampEditor({
   };
 
   return (
-    <div className="grid lg:grid-cols-[1fr_420px] gap-6 lg:items-start">
-      {/* 좌측: 지도 + 알림 — 우측 목록 스크롤 중에도 지도는 화면에 고정 */}
-      <div className="space-y-4 lg:sticky lg:top-6 lg:self-start lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto">
+    <div className="grid lg:grid-cols-[1fr_420px] gap-6 lg:h-full lg:min-h-0">
+      {/* 좌측: 지도 + 알림 — 페이지가 뷰포트 높이로 고정돼 헤더·지도는 절대 안 움직임.
+          스크롤은 우측 column 내부에서만 일어난다 (PO 에디터와 동일 구조). */}
+      <div className="flex flex-col gap-4 lg:h-full lg:min-h-0">
+        <div className="h-[420px] lg:h-auto lg:flex-1 lg:min-h-0">
         <StampMap
           points={mapPoints}
           bounds={bounds ?? undefined}
@@ -374,11 +376,10 @@ export default function StampEditor({
             setEnd(p);
             patchTrailStartEnd({ end_lat: p.lat, end_lng: p.lng }, "end");
           }}
-          // 뷰포트 기반 — lg 이상에서 "헤더+여백 뺀 전체 높이"에 지도 가득,
-          // 모바일(세로)에서는 최소 420px 로 축소. 좌측 column 전체가 sticky
-          // 니까 우측 목록 스크롤 중에도 지도는 화면에 고정.
-          height="clamp(420px, calc(100vh - 180px), 1200px)"
+          // 래퍼 div 가 높이를 결정 (모바일 420px / lg 는 column 잔여 높이 전체)
+          height="100%"
         />
+        </div>
 
         {addMode && (
           <div
@@ -437,8 +438,8 @@ export default function StampEditor({
         )}
       </div>
 
-      {/* 우측: 컨트롤 + pending + 목록 + 상세 */}
-      <div className="space-y-4">
+      {/* 우측: 컨트롤 + pending + 목록 + 상세 — 이 column 만 내부 스크롤 */}
+      <div className="space-y-4 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:pr-1">
         <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 space-y-3">
           <h3 className="text-xs text-gray-400 font-medium uppercase tracking-wider">
             스탬프 추가
