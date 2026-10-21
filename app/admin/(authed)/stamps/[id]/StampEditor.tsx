@@ -836,24 +836,35 @@ function PointDetail({ point, saving, onSave, onDelete, onError }: DetailProps) 
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 space-y-3">
       <div className="flex items-center gap-2">
-        <span
-          className="w-7 h-7 rounded-full border-2 flex items-center justify-center bg-white"
-          style={{ borderColor: entry?.color ?? "#fb923c" }}
-        >
-          {entry?.Icon ? (
-            <entry.Icon
-              width={14}
-              height={14}
-              color={entry.color}
-            />
-          ) : (
-            <span className="text-xs font-bold text-orange-400">
-              {point.sort_order}
-            </span>
-          )}
-        </span>
+        {currentScore != null ? (
+          <span
+            className="w-7 h-7 rounded-full border-2 flex items-center justify-center tabular-nums"
+            style={{
+              background: TIER_COLOR[currentScore],
+              borderColor: "#fff",
+              color: "#fff",
+              fontWeight: 800,
+              fontSize: 11,
+            }}
+          >
+            {currentScore}
+          </span>
+        ) : (
+          <span
+            className="w-7 h-7 rounded-full border-2 flex items-center justify-center bg-white"
+            style={{ borderColor: entry?.color ?? "#fb923c" }}
+          >
+            {entry?.Icon ? (
+              <entry.Icon width={14} height={14} color={entry.color} />
+            ) : (
+              <span className="text-xs font-bold text-orange-400">
+                {point.sort_order}
+              </span>
+            )}
+          </span>
+        )}
         <h3 className="text-sm font-medium text-white truncate flex-1">
-          {entry?.name ?? currentName ?? `${point.sort_order}번째 스탬프`}
+          {currentName || entry?.name || `${point.sort_order}번째 스탬프`}
           {entry && (
             <span className="ml-2 text-[10px] text-gray-500 font-mono">
               {entry.icon}
