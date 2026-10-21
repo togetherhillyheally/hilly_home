@@ -489,13 +489,14 @@ function quizPatchIfChanged(
 }
 
 function PointDetail({ point, saving, onSave, onDelete, onError }: DetailProps) {
-  const {
-    entry,
-    name: initialName,
-    score: initialScore,
-  } = parseStampTitle(point.title);
-  const [name, setName] = useState(initialName);
-  const [score, setScore] = useState<ScoreTier | null>(initialScore);
+  // 매 렌더마다 point 기준으로 유도 — 저장 후 point prop 이 바뀌면 자연 동기화
+  const parsed = parseStampTitle(point.title);
+  const { entry } = parsed;
+  const currentName = parsed.name;
+  const currentScore = parsed.score;
+
+  const [name, setName] = useState(currentName);
+  const [score, setScore] = useState<ScoreTier | null>(currentScore);
   const [hint, setHint] = useState(point.hint ?? "");
   const [lat, setLat] = useState(String(point.lat));
   const [lng, setLng] = useState(String(point.lng));
@@ -503,21 +504,29 @@ function PointDetail({ point, saving, onSave, onDelete, onError }: DetailProps) 
     initialQuizValue(point)
   );
 
-  const initialTitleName = initialName;
   const baselineQuiz = useMemo(() => initialQuizValue(point), [point]);
   const quizDirty =
     JSON.stringify(quizValue) !== JSON.stringify(baselineQuiz);
+  // dirty 비교는 "현재 point(서버 저장된 값)" 기준 — 저장 후 자동으로 false
   const dirty =
-    name !== initialTitleName ||
-    score !== initialScore ||
+    name !== currentName ||
+    score !== currentScore ||
     hint !== (point.hint ?? "") ||
     Number(lat) !== point.lat ||
     Number(lng) !== point.lng ||
     quizDirty;
 
+  // 배점은 다른 필드와 다르게 "즉시 저장" — 드래그 이동과 동일 패턴.
+  // 이름은 저장되지 않은 변경일 수 있으므로 서버에 저장된 currentName 을 사용.
+  const changeScore = (next: ScoreTier | null) => {
+    setScore(next);
+    const nextTitle = composeStampTitle(entry, currentName, next);
+    if (nextTitle !== point.title) onSave({ title: nextTitle });
+  };
+
   const save = () => {
     const patch: PointPatch = {};
-    if (name !== initialTitleName || score !== initialScore) {
+    if (name !== currentName || score !== currentScore) {
       // title = "icon|name(score)" — PO 이벤트 지도가 끝의 "(N)" 을 점수로 파싱
       patch.title = composeStampTitle(entry, name, score);
     }
@@ -557,7 +566,7 @@ function PointDetail({ point, saving, onSave, onDelete, onError }: DetailProps) 
           )}
         </span>
         <h3 className="text-sm font-medium text-white truncate flex-1">
-          {entry?.name ?? initialName ?? `${point.sort_order}번째 스탬프`}
+          {entry?.name ?? currentName ?? `${point.sort_order}번째 스탬프`}
           {entry && (
             <span className="ml-2 text-[10px] text-gray-500 font-mono">
               {entry.icon}
@@ -589,8 +598,9 @@ function PointDetail({ point, saving, onSave, onDelete, onError }: DetailProps) 
         <div className="grid grid-cols-6 gap-1.5">
           <button
             type="button"
-            onClick={() => setScore(null)}
-            className={`h-9 rounded-md text-[11px] font-semibold border transition-colors ${
+            onClick={() => changeScore(null)}
+            disabled={saving}
+            className={`h-9 rounded-md text-[11px] font-semibold border transition-colors disabled:opacity-50 ${
               score == null
                 ? "bg-white/[0.08] border-white/30 text-white"
                 : "bg-white/[0.02] border-white/10 text-gray-500 hover:text-white"
@@ -605,13 +615,14 @@ function PointDetail({ point, saving, onSave, onDelete, onError }: DetailProps) 
               <button
                 key={n}
                 type="button"
-                onClick={() => setScore(n)}
+                onClick={() => changeScore(n)}
+                disabled={saving}
                 style={{
                   background: selected ? c : "transparent",
                   borderColor: selected ? "#fff" : c,
                   color: selected ? "#fff" : c,
                 }}
-                className="h-9 rounded-md text-[11px] font-bold border-2 tabular-nums transition-colors"
+                className="h-9 rounded-md text-[11px] font-bold border-2 tabular-nums transition-colors disabled:opacity-50"
               >
                 {n}
               </button>
@@ -619,8 +630,9 @@ function PointDetail({ point, saving, onSave, onDelete, onError }: DetailProps) 
           })}
         </div>
         <p className="text-[10px] text-gray-500 mt-1 leading-relaxed">
-          선택하면 지도 마커가 점선 테두리 + 숫자 + 색상(10 세이지~50 크림슨)
-          으로 바뀌어요. "낯선곳으로 — 광교산" 처럼 배점 체크포인트 지도에 사용.
+          누르면 바로 저장돼요 — 지도 마커가 점선 테두리 + 숫자 + 색상(10
+          세이지~50 크림슨) 으로 즉시 바뀜. "낯선곳으로 — 광교산" 처럼 배점
+          체크포인트 지도에 사용.
         </p>
       </div>
 
