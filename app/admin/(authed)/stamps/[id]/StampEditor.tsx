@@ -341,9 +341,9 @@ export default function StampEditor({
   };
 
   return (
-    <div className="grid lg:grid-cols-[1fr_420px] gap-6">
-      {/* 좌측: 지도 + 알림 */}
-      <div className="space-y-4">
+    <div className="grid lg:grid-cols-[1fr_420px] gap-6 lg:items-start">
+      {/* 좌측: 지도 + 알림 — 우측 목록 스크롤 중에도 지도는 화면에 고정 */}
+      <div className="space-y-4 lg:sticky lg:top-6 lg:self-start lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto">
         <StampMap
           points={mapPoints}
           bounds={bounds ?? undefined}
