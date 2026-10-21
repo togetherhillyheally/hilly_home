@@ -15,8 +15,13 @@ import {
   X,
   Trash2,
   Save,
+  Flag,
+  CircleDot,
 } from "lucide-react";
-import StampMap, { type LatLng } from "@/components/admin/StampMap";
+import StampMap, {
+  type AddMode,
+  type LatLng,
+} from "@/components/admin/StampMap";
 import type { RadiusCircle } from "@/components/admin/radius-layer";
 import {
   SCORE_TIERS,
@@ -69,6 +74,8 @@ type Props = {
     minLon: number;
     maxLon: number;
   } | null;
+  initialStart?: LatLng | null;
+  initialEnd?: LatLng | null;
 };
 
 type Pending = LatLng & { hint: string };
@@ -94,13 +101,18 @@ export default function StampEditor({
   trailId,
   initialPoints,
   initialBounds,
+  initialStart = null,
+  initialEnd = null,
 }: Props) {
   const [points, setPoints] = useState<StampPointRow[]>(initialPoints);
   const [selectedId, setSelectedId] = useState<string | null>(
     initialPoints[0]?.id ?? null
   );
-  const [addMode, setAddMode] = useState(false);
+  // addMode: null | 'point' (스탬프 추가) | 'start' | 'end' (출발·도착 지정)
+  const [addMode, setAddMode] = useState<AddMode | null>(null);
   const [pending, setPending] = useState<Pending | null>(null);
+  const [start, setStart] = useState<LatLng | null>(initialStart);
+  const [end, setEnd] = useState<LatLng | null>(initialEnd);
   const [saving, startSave] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
@@ -137,10 +149,93 @@ export default function StampEditor({
     setTimeout(() => setInfo(null), 2500);
   };
 
-  const onMapClick = useCallback((p: LatLng) => {
-    setPending({ ...p, hint: "" });
-    setAddMode(false);
-  }, []);
+  // 지도 click 시: 모드별로 분기 (스탬프 추가 / 출발·도착 지정)
+  const onMapClick = useCallback(
+    (p: LatLng, mode: AddMode) => {
+      if (mode === "start") {
+        patchTrailStartEnd({ start_lat: p.lat, start_lng: p.lng }, "start");
+        setStart(p);
+        setAddMode(null);
+      } else if (mode === "end") {
+        patchTrailStartEnd({ end_lat: p.lat, end_lng: p.lng }, "end");
+        setEnd(p);
+        setAddMode(null);
+      } else {
+        setPending({ ...p, hint: "" });
+        setAddMode(null);
+      }
+    },
+    // patchTrailStartEnd 는 아래에서 선언 — 참조만 하므로 ESLint 순환 경고 억제
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
+  const patchTrailStartEnd = (
+    patch: Record<string, number | null>,
+    kind: "start" | "end"
+  ) => {
+    // 낙관적 반영은 호출자가 이미 setStart/setEnd 했음. 롤백 스냅샷만 보관.
+    const snapStart = start;
+    const snapEnd = end;
+    startSave(async () => {
+      try {
+        const res = await fetch(`/api/admin/trails/${trailId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(patch),
+        });
+        if (!res.ok) {
+          const d = (await res.json().catch(() => null)) as {
+            error?: string;
+          } | null;
+          // 롤백
+          if (kind === "start") setStart(snapStart);
+          else setEnd(snapEnd);
+          showError(d?.error ?? "저장 실패");
+          return;
+        }
+        showInfo(kind === "start" ? "출발점 저장됨" : "도착점 저장됨");
+      } catch (e) {
+        if (kind === "start") setStart(snapStart);
+        else setEnd(snapEnd);
+        showError(e instanceof Error ? e.message : "네트워크 오류");
+      }
+    });
+  };
+
+  const clearStartEnd = (kind: "start" | "end") => {
+    const confirmMsg =
+      kind === "start" ? "출발점을 지울까요?" : "도착점을 지울까요?";
+    if (!confirm(confirmMsg)) return;
+    const snapStart = start;
+    const snapEnd = end;
+    if (kind === "start") setStart(null);
+    else setEnd(null);
+    startSave(async () => {
+      try {
+        const patch =
+          kind === "start"
+            ? { start_lat: null, start_lng: null }
+            : { end_lat: null, end_lng: null };
+        const res = await fetch(`/api/admin/trails/${trailId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(patch),
+        });
+        if (!res.ok) {
+          if (kind === "start") setStart(snapStart);
+          else setEnd(snapEnd);
+          showError("저장 실패");
+          return;
+        }
+        showInfo(kind === "start" ? "출발점 해제" : "도착점 해제");
+      } catch {
+        if (kind === "start") setStart(snapStart);
+        else setEnd(snapEnd);
+        showError("네트워크 오류");
+      }
+    });
+  };
 
   const cancelPending = () => setPending(null);
 
@@ -240,31 +335,59 @@ export default function StampEditor({
           points={points}
           bounds={bounds ?? undefined}
           selectedId={selectedId}
-          addMode={addMode}
+          addMode={addMode ?? false}
           pendingPoint={pending}
           radiusCircles={radiusCircles}
+          start={start}
+          end={end}
           onMapClick={onMapClick}
           onMarkerClick={(id) => setSelectedId(id)}
           onPointDragEnd={(id, p) => {
-            // 1) 로컬 상태 즉시 반영 (지도 튐 방지)
+            // 지도 튐 방지 — updatePoint 내부에서 낙관적 setPoints 가 돌지만
+            // drag end 시점에선 외부 setPoints 로 명시 한 번 더 (안전).
             setPoints((prev) =>
               prev.map((pt) => (pt.id === id ? { ...pt, lat: p.lat, lng: p.lng } : pt))
             );
-            // 2) 서버 저장
             updatePoint(id, { lat: p.lat, lng: p.lng });
           }}
           height={560}
         />
 
         {addMode && (
-          <div className="rounded-lg border border-orange-500/40 bg-orange-500/10 px-4 py-3 flex items-center gap-3 text-sm">
-            <MapPin className="h-4 w-4 text-orange-300" />
-            <span className="flex-1 text-orange-100">
-              지도에서 스탬프 포인트를 찍을 위치를 클릭하세요.
+          <div
+            className={`rounded-lg border px-4 py-3 flex items-center gap-3 text-sm ${
+              addMode === "start"
+                ? "border-emerald-500/40 bg-emerald-500/10"
+                : addMode === "end"
+                  ? "border-rose-500/40 bg-rose-500/10"
+                  : "border-orange-500/40 bg-orange-500/10"
+            }`}
+          >
+            {addMode === "start" ? (
+              <CircleDot className="h-4 w-4 text-emerald-300" />
+            ) : addMode === "end" ? (
+              <Flag className="h-4 w-4 text-rose-300" />
+            ) : (
+              <MapPin className="h-4 w-4 text-orange-300" />
+            )}
+            <span
+              className={`flex-1 ${
+                addMode === "start"
+                  ? "text-emerald-100"
+                  : addMode === "end"
+                    ? "text-rose-100"
+                    : "text-orange-100"
+              }`}
+            >
+              {addMode === "start"
+                ? "지도에서 출발점(S) 위치를 클릭하세요."
+                : addMode === "end"
+                  ? "지도에서 도착점(E) 위치를 클릭하세요."
+                  : "지도에서 스탬프 포인트를 찍을 위치를 클릭하세요."}
             </span>
             <button
               type="button"
-              onClick={() => setAddMode(false)}
+              onClick={() => setAddMode(null)}
               className="px-3 h-8 rounded-md bg-white/[0.06] hover:bg-white/[0.12] text-white text-xs inline-flex items-center gap-1.5"
             >
               <X className="h-3.5 w-3.5" />
@@ -296,12 +419,12 @@ export default function StampEditor({
           <button
             type="button"
             onClick={() => {
-              setAddMode((v) => !v);
+              setAddMode((v) => (v === "point" ? null : "point"));
               setPending(null);
             }}
             disabled={saving || !!pending}
             className={`w-full h-10 rounded-lg text-sm font-medium inline-flex items-center justify-center gap-2 transition-colors ${
-              addMode
+              addMode === "point"
                 ? "bg-orange-500 text-white"
                 : "bg-white/[0.06] hover:bg-white/[0.12] text-white"
             }`}
@@ -312,6 +435,99 @@ export default function StampEditor({
           <p className="text-[10px] text-gray-500 leading-relaxed">
             클릭하면 자동으로 STAMP_POOL의 아이콘(잎·꽃·별 등)이 할당돼요.
             제목·아이콘은 등록 후 변경 가능합니다.
+          </p>
+        </div>
+
+        {/* 출발/도착 지점 지정 — trails.start_lat/lng, end_lat/lng 에 저장 */}
+        <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 space-y-3">
+          <h3 className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+            출발 · 도착
+          </h3>
+          <div className="grid grid-cols-2 gap-2">
+            {/* 출발 */}
+            <div className="rounded-lg border border-white/10 bg-black/20 p-2.5 space-y-2">
+              <div className="flex items-center gap-1.5 text-xs">
+                <CircleDot className="h-3.5 w-3.5 text-emerald-400" />
+                <span className="font-semibold text-white">출발 (S)</span>
+              </div>
+              <div className="text-[10px] text-gray-500 font-mono min-h-[14px]">
+                {start
+                  ? `${start.lat.toFixed(5)}, ${start.lng.toFixed(5)}`
+                  : "미지정"}
+              </div>
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAddMode((v) => (v === "start" ? null : "start"));
+                    setPending(null);
+                  }}
+                  disabled={saving}
+                  className={`flex-1 h-8 rounded-md text-[11px] font-medium ${
+                    addMode === "start"
+                      ? "bg-emerald-500 text-white"
+                      : "bg-white/[0.06] hover:bg-white/[0.12] text-white"
+                  }`}
+                >
+                  {addMode === "start" ? "취소" : start ? "변경" : "지정"}
+                </button>
+                {start && (
+                  <button
+                    type="button"
+                    onClick={() => clearStartEnd("start")}
+                    disabled={saving}
+                    className="h-8 w-8 rounded-md bg-red-500/10 hover:bg-red-500/20 border border-red-500/40 text-red-200 inline-flex items-center justify-center"
+                    title="출발점 해제"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+            {/* 도착 */}
+            <div className="rounded-lg border border-white/10 bg-black/20 p-2.5 space-y-2">
+              <div className="flex items-center gap-1.5 text-xs">
+                <Flag className="h-3.5 w-3.5 text-rose-400" />
+                <span className="font-semibold text-white">도착 (E)</span>
+              </div>
+              <div className="text-[10px] text-gray-500 font-mono min-h-[14px]">
+                {end
+                  ? `${end.lat.toFixed(5)}, ${end.lng.toFixed(5)}`
+                  : "미지정"}
+              </div>
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAddMode((v) => (v === "end" ? null : "end"));
+                    setPending(null);
+                  }}
+                  disabled={saving}
+                  className={`flex-1 h-8 rounded-md text-[11px] font-medium ${
+                    addMode === "end"
+                      ? "bg-rose-500 text-white"
+                      : "bg-white/[0.06] hover:bg-white/[0.12] text-white"
+                  }`}
+                >
+                  {addMode === "end" ? "취소" : end ? "변경" : "지정"}
+                </button>
+                {end && (
+                  <button
+                    type="button"
+                    onClick={() => clearStartEnd("end")}
+                    disabled={saving}
+                    className="h-8 w-8 rounded-md bg-red-500/10 hover:bg-red-500/20 border border-red-500/40 text-red-200 inline-flex items-center justify-center"
+                    title="도착점 해제"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+          <p className="text-[10px] text-gray-500 leading-relaxed">
+            지도에서 "지정"을 눌러 클릭. 출발·도착이 50m 이내로 가까우면
+            지도에 "S/E" 한 마커로 합쳐져요 (순환 코스).
           </p>
         </div>
 

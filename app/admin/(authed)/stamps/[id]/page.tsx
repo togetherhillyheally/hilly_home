@@ -19,6 +19,10 @@ type StampTrail = {
     minLon: number;
     maxLon: number;
   } | null;
+  start_lat: number | null;
+  start_lng: number | null;
+  end_lat: number | null;
+  end_lng: number | null;
 };
 
 const ORDER_LABELS: Record<string, string> = {
@@ -35,7 +39,7 @@ export default async function StampMapDetailPage({
   const { id } = await params;
 
   const { rows: trails } = await adminList<StampTrail>(
-    `trails?select=id,name,series_name,is_active,map_type,stamp_order_mode,bounds&id=eq.${id}`
+    `trails?select=id,name,series_name,is_active,map_type,stamp_order_mode,bounds,start_lat,start_lng,end_lat,end_lng&id=eq.${id}`
   );
   const trail = trails[0];
   if (!trail) notFound();
@@ -84,6 +88,16 @@ export default async function StampMapDetailPage({
         trailId={trail.id}
         initialPoints={points}
         initialBounds={trail.bounds}
+        initialStart={
+          trail.start_lat != null && trail.start_lng != null
+            ? { lat: trail.start_lat, lng: trail.start_lng }
+            : null
+        }
+        initialEnd={
+          trail.end_lat != null && trail.end_lng != null
+            ? { lat: trail.end_lat, lng: trail.end_lng }
+            : null
+        }
       />
     </main>
   );
