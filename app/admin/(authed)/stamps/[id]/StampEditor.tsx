@@ -78,8 +78,6 @@ type Props = {
   initialEnd?: LatLng | null;
 };
 
-type Pending = LatLng & { hint: string };
-
 function computeBounds(
   points: StampPointRow[]
 ): { minLat: number; maxLat: number; minLon: number; maxLon: number } | null {
@@ -110,7 +108,6 @@ export default function StampEditor({
   );
   // addMode: null | 'point' (스탬프 추가) | 'start' | 'end' (출발·도착 지정)
   const [addMode, setAddMode] = useState<AddMode | null>(null);
-  const [pending, setPending] = useState<Pending | null>(null);
   const [start, setStart] = useState<LatLng | null>(initialStart);
   const [end, setEnd] = useState<LatLng | null>(initialEnd);
   const [saving, startSave] = useTransition();
@@ -174,11 +171,11 @@ export default function StampEditor({
         setEnd(p);
         setAddMode(null);
       } else {
-        setPending({ ...p, hint: "" });
-        setAddMode(null);
+        // 클릭 즉시 저장 — 추가 모드는 유지해서 연속으로 찍을 수 있게 (힌트는 상세에서)
+        createPointAt(p);
       }
     },
-    // patchTrailStartEnd 는 아래에서 선언 — 참조만 하므로 ESLint 순환 경고 억제
+    // patchTrailStartEnd/createPointAt 는 아래에서 선언 — 참조만 하므로 ESLint 순환 경고 억제
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
@@ -250,20 +247,14 @@ export default function StampEditor({
     });
   };
 
-  const cancelPending = () => setPending(null);
-
-  const savePending = () => {
-    if (!pending) return;
+  /** 지도 클릭 위치에 스탬프를 바로 생성 (아이콘은 서버가 풀에서 자동 할당) */
+  const createPointAt = (p: LatLng) => {
     startSave(async () => {
       try {
         const res = await fetch(`/api/admin/trails/${trailId}/stamp-points`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            lng: pending.lng,
-            lat: pending.lat,
-            hint: pending.hint.trim() || null,
-          }),
+          body: JSON.stringify({ lng: p.lng, lat: p.lat, hint: null }),
         });
         const data = await res.json().catch(() => null);
         if (!res.ok || !data?.success) {
@@ -275,8 +266,7 @@ export default function StampEditor({
           [...prev, row].sort((a, b) => a.sort_order - b.sort_order)
         );
         setSelectedId(row.id);
-        setPending(null);
-        showInfo("스탬프가 추가되었습니다.");
+        showInfo(`#${row.sort_order} 추가됨 — 계속 클릭해서 찍을 수 있어요`);
       } catch (e: unknown) {
         showError(e instanceof Error ? e.message : "등록 실패");
       }
@@ -351,7 +341,6 @@ export default function StampEditor({
           bounds={bounds ?? undefined}
           selectedId={selectedId}
           addMode={addMode ?? false}
-          pendingPoint={pending}
           radiusCircles={radiusCircles}
           start={start}
           end={end}
@@ -411,7 +400,7 @@ export default function StampEditor({
                 ? "지도에서 출발점(S) 위치를 클릭하세요."
                 : addMode === "end"
                   ? "지도에서 도착점(E) 위치를 클릭하세요."
-                  : "지도에서 스탬프 포인트를 찍을 위치를 클릭하세요."}
+                  : "지도를 클릭할 때마다 스탬프가 바로 저장돼요. 다 찍었으면 취소로 모드를 끄세요."}
             </span>
             <button
               type="button"
@@ -438,7 +427,7 @@ export default function StampEditor({
         )}
       </div>
 
-      {/* 우측: 컨트롤 + pending + 목록 + 상세 — 이 column 만 내부 스크롤 */}
+      {/* 우측: 컨트롤 + 목록 + 상세 — 이 column 만 내부 스크롤 */}
       <div className="space-y-4 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:pr-1">
         <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 space-y-3">
           <h3 className="text-xs text-gray-400 font-medium uppercase tracking-wider">
@@ -446,11 +435,8 @@ export default function StampEditor({
           </h3>
           <button
             type="button"
-            onClick={() => {
-              setAddMode((v) => (v === "point" ? null : "point"));
-              setPending(null);
-            }}
-            disabled={saving || !!pending}
+            onClick={() => setAddMode((v) => (v === "point" ? null : "point"))}
+            disabled={saving}
             className={`w-full h-10 rounded-lg text-sm font-medium inline-flex items-center justify-center gap-2 transition-colors ${
               addMode === "point"
                 ? "bg-orange-500 text-white"
@@ -486,10 +472,9 @@ export default function StampEditor({
               <div className="flex gap-1">
                 <button
                   type="button"
-                  onClick={() => {
-                    setAddMode((v) => (v === "start" ? null : "start"));
-                    setPending(null);
-                  }}
+                  onClick={() =>
+                    setAddMode((v) => (v === "start" ? null : "start"))
+                  }
                   disabled={saving}
                   className={`flex-1 h-8 rounded-md text-[11px] font-medium ${
                     addMode === "start"
@@ -526,10 +511,9 @@ export default function StampEditor({
               <div className="flex gap-1">
                 <button
                   type="button"
-                  onClick={() => {
-                    setAddMode((v) => (v === "end" ? null : "end"));
-                    setPending(null);
-                  }}
+                  onClick={() =>
+                    setAddMode((v) => (v === "end" ? null : "end"))
+                  }
                   disabled={saving}
                   className={`flex-1 h-8 rounded-md text-[11px] font-medium ${
                     addMode === "end"
@@ -558,47 +542,6 @@ export default function StampEditor({
             지도에 "S/E" 한 마커로 합쳐져요 (순환 코스).
           </p>
         </div>
-
-        {pending && (
-          <div className="rounded-xl border border-orange-500/40 bg-orange-500/[0.06] p-4 space-y-3">
-            <div className="flex items-center gap-2 text-sm font-medium text-white">
-              <Plus className="h-4 w-4 text-orange-300" />새 스탬프 포인트
-            </div>
-            <div className="text-[11px] text-gray-400 font-mono">
-              {pending.lat.toFixed(5)}, {pending.lng.toFixed(5)}
-            </div>
-            <textarea
-              value={pending.hint}
-              onChange={(e) => setPending({ ...pending, hint: e.target.value })}
-              placeholder="힌트 (선택, 참가자에게 노출됨)"
-              rows={2}
-              className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white placeholder:text-gray-600 text-sm focus:outline-none focus:border-orange-500/50 resize-none"
-            />
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={cancelPending}
-                disabled={saving}
-                className="flex-1 h-9 rounded-md bg-white/[0.04] hover:bg-white/[0.08] text-white text-xs"
-              >
-                취소
-              </button>
-              <button
-                type="button"
-                onClick={savePending}
-                disabled={saving}
-                className="flex-1 h-9 rounded-md bg-orange-500 hover:bg-orange-600 disabled:bg-orange-500/40 text-white text-xs font-semibold inline-flex items-center justify-center gap-1.5"
-              >
-                {saving ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Save className="h-3.5 w-3.5" />
-                )}
-                등록
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* 목록 */}
         <div className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden">
