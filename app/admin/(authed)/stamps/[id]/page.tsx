@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { adminList } from "@/lib/admin-rest";
 import StampEditor, { type StampPointRow } from "./StampEditor";
+import TrailNameEdit from "./TrailNameEdit";
 
 export const dynamic = "force-dynamic";
 
@@ -60,9 +61,7 @@ export default async function StampMapDetailPage({
           스탬프 지도 목록
         </Link>
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
-            {trail.name}
-          </h1>
+          <TrailNameEdit trailId={trail.id} initialName={trail.name} />
           {trail.is_active ? (
             <span className="inline-flex items-center px-2 h-6 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-medium">
               활성
