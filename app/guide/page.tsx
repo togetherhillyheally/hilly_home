@@ -14,7 +14,7 @@ import { ScreenshotFrame } from "./ScreenshotFrame";
 export const metadata: Metadata = {
   title: "인증 지도 가이드 · Hilly Heally",
   description:
-    "지도를 선택하고, 걸으며 보물을 인증하고, 퍼즐을 완성하는 힐리힐리 사용법을 5단계로 안내합니다.",
+    "코스·스탬프·보물지도 중 하나를 골라 걷고, 도착을 인증하고, 퍼즐을 완성하는 힐리힐리 사용법을 5단계로 안내합니다.",
 };
 
 type Step = {
@@ -34,13 +34,14 @@ const STEPS: Step[] = [
     slug: "select-map",
     title: "지도를 선택한다",
     sub: "가고 싶은 코스를 고르세요",
-    desc: "홈 화면에서 관심 있는 지도를 골라주세요. 시리즈별로 정리되어 있고, 위치·난이도·거리 정보를 미리 확인할 수 있어요.",
+    desc: "홈 화면에서 관심 있는 지도를 골라주세요. 지도는 세 종류예요 — 정해진 경로를 따라가는 코스 지도, 자유 순서로 장소를 도는 스탬프 지도, 경로 주변에 숨은 보물을 찾는 보물지도. 어떤 지도를 고르느냐에 따라 3단계 인증 방식이 달라져요.",
     icon: MapIcon,
     images: [
       { src: "/images/guide/step1-list.png", caption: "지도 목록" },
       { src: "/images/guide/step1-detail.jpg", caption: "지도 상세" },
     ],
     bullets: [
+      "코스 지도 · 스탬프 지도 · 보물지도 중 선택",
       "시리즈·지역별로 지도를 탐색",
       "거리·상승고도·예상 시간 확인",
       "즐겨찾기로 나중에 다시 찾기",
@@ -66,17 +67,18 @@ const STEPS: Step[] = [
   {
     n: 3,
     slug: "treasure",
-    title: "보물박스 인증",
-    sub: "지도 위 보이는 보물을 따라 걸으세요",
-    desc: "지도 곳곳에 배치된 보물박스에 도착하면 자동으로 인증되고, 도착지에서 짧은 퀴즈나 사진 인증으로 스탬프를 획득합니다.",
+    title: "도착 인증",
+    sub: "지도 종류마다 인증 방식이 달라요",
+    desc: "GPS로 도착하면 자동 인증돼요. 코스 지도는 경로 위 체크포인트 보물박스에 도착하거나 짧은 퀴즈를 풀고, 스탬프 지도는 장소마다 스탬프를 찍고, 보물지도는 경로 주변에 숨겨진 보물을 힌트를 따라 찾아냅니다.",
     icon: Package,
     images: [
-      { src: "/images/guide/step3-map.jpg", caption: "지도 위 보물박스" },
+      { src: "/images/guide/step3-map.jpg", caption: "지도 위 체크포인트" },
       { src: "/images/guide/step3-arrive.jpg", caption: "도착 인증 · 조각 획득" },
     ],
     bullets: [
-      "GPS로 자동 도착 감지",
-      "객관식 퀴즈 · 사진 인증 지원",
+      "코스 지도 — 체크포인트 보물박스 도착 · 객관식 퀴즈 · 사진 인증",
+      "스탬프 지도 — 순서 자유, 장소마다 스탬프",
+      "보물지도 — 가까워지면 힌트, 찾으면 씨앗·상품 보상",
       "인증 시마다 스탬프 · 씨앗 지급",
     ],
   },
@@ -85,7 +87,7 @@ const STEPS: Step[] = [
     slug: "puzzle",
     title: "지도와 연결된 퍼즐 맞추기",
     sub: "인증한 만큼 조각이 열려요",
-    desc: "각 지도에는 고유한 퍼즐 이미지가 연결되어 있어요. 보물박스를 인증할 때마다 퍼즐 조각이 하나씩 열리고, 코스를 완주하면 퍼즐이 완성됩니다.",
+    desc: "각 지도에는 고유한 퍼즐 이미지가 연결되어 있어요. 도착을 인증할 때마다 퍼즐 조각이 하나씩 열리고, 코스를 완주하면 퍼즐이 완성됩니다.",
     icon: Puzzle,
     images: [
       { src: "/images/guide/step4-list.png", caption: "퍼즐함" },
@@ -173,7 +175,7 @@ export default function GuidePage() {
             <p className="text-lg text-neutral-600 leading-relaxed">
               힐리힐리는 산책·트레킹을 놀이로 바꿉니다.
               <br />
-              지도를 선택하고, 보물박스를 인증하고, 나만의 퍼즐을 완성해보세요.
+              지도를 고르고, 도착을 인증하고, 나만의 퍼즐을 완성해보세요.
             </p>
             <div className="mt-8 flex items-center justify-center gap-3">
               <Link

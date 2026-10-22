@@ -1,5 +1,6 @@
 import {
   Map,
+  Gem,
   Users,
   Menu,
   Star,
@@ -95,7 +96,7 @@ export default function HillyheallyHomepage() {
             </div>
             <div className="animate-fade-in-up delay-500">
               <p className="text-lg text-gray-500 mb-10 max-w-xl mx-auto leading-relaxed">
-                지도를 선택하고, 보물박스를 인증하며
+                코스·스탬프·보물지도를 고르고, 걸으며 도착을 인증하고
                 <br />
                 나만의 퍼즐을 완성하는 워킹 앱
               </p>
@@ -179,7 +180,12 @@ export default function HillyheallyHomepage() {
                 step: "01",
                 icon: <Map className="h-5 w-5 text-orange-400" />,
                 title: "지도 선택",
-                desc: "코스 지도와 스탬프 지도를 탐색하고, 걷고 싶은 지도를 골라보세요. 거리·상승고도·예상 시간까지 미리 확인할 수 있어요.",
+                desc: "걷고 싶은 지도를 골라보세요. 지도는 세 종류 — 어떤 지도를 고르느냐에 따라 3단계 인증 방식이 달라져요. 거리·상승고도·예상 시간은 미리 확인할 수 있어요.",
+                kinds: [
+                  { label: "코스 지도", hint: "정해진 경로 + 체크포인트" },
+                  { label: "스탬프 지도", hint: "자유 순서로 장소 방문" },
+                  { label: "보물지도", hint: "경로 주변에 숨은 보물 찾기" },
+                ],
                 accent: "border-l-orange-500/60",
               },
               {
@@ -192,15 +198,15 @@ export default function HillyheallyHomepage() {
               {
                 step: "03",
                 icon: <Package className="h-5 w-5 text-orange-300" />,
-                title: "보물박스 인증",
-                desc: "지도 위 보이는 보물박스에 GPS로 도착하면 자동으로 인증돼요. 도착지에서 짧은 퀴즈로 인증할 수도 있어요.",
+                title: "도착 인증",
+                desc: "GPS로 도착하면 자동 인증돼요. 코스 지도는 체크포인트 보물박스(또는 퀴즈), 스탬프 지도는 장소마다 스탬프, 보물지도는 숨겨진 보물을 찾아내는 식으로 — 지도 종류마다 인증 방식이 달라요.",
                 accent: "border-l-orange-400/60",
               },
               {
                 step: "04",
                 icon: <Puzzle className="h-5 w-5 text-pink-300" />,
                 title: "퍼즐 조각 맞추기",
-                desc: "각 지도에는 고유한 퍼즐 이미지가 연결돼 있어요. 인증할 때마다 조각을 뽑고, 알맞은 자리에 맞춰 퍼즐을 완성해보세요.",
+                desc: "각 지도에는 고유한 퍼즐 이미지가 연결돼 있어요. 인증하고 걸으며 모은 씨앗으로 조각을 뽑고, 알맞은 자리에 맞춰 퍼즐을 완성해보세요.",
                 accent: "border-l-pink-400/60",
               },
               {
@@ -231,6 +237,21 @@ export default function HillyheallyHomepage() {
                   <p className="text-gray-500 text-sm leading-relaxed">
                     {item.desc}
                   </p>
+                  {"kinds" in item && item.kinds && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {item.kinds.map((k) => (
+                        <span
+                          key={k.label}
+                          className="inline-flex items-baseline gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[12px]"
+                        >
+                          <span className="font-semibold text-gray-200">
+                            {k.label}
+                          </span>
+                          <span className="text-gray-500">{k.hint}</span>
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -259,8 +280,8 @@ export default function HillyheallyHomepage() {
               {
                 icon: <Map className="h-6 w-6 text-orange-400" />,
                 iconBg: "bg-orange-400/10",
-                title: "코스 지도 & GPX 업로드",
-                desc: "GPX 파일을 업로드해 나만의 코스 지도를 만들고, 체크포인트에 사진·메모·후기를 남겨 트레일을 완성하세요.",
+                title: "코스 지도 & 체크포인트 인증",
+                desc: "GPX 파일을 업로드해 나만의 코스 지도를 만들어요. 경로 위 체크포인트 보물박스에 GPS로 도착하거나 짧은 퀴즈를 풀어 인증하고, 사진·메모·후기를 남겨 트레일을 완성하세요.",
                 hover: "hover:border-orange-500/30",
               },
               {
@@ -271,11 +292,11 @@ export default function HillyheallyHomepage() {
                 hover: "hover:border-pink-500/30",
               },
               {
-                icon: <Package className="h-6 w-6 text-orange-300" />,
-                iconBg: "bg-orange-300/10",
-                title: "보물박스 인증 & 퀴즈",
-                desc: "지도 위 배치된 보물박스에 GPS로 도착하면 자동 인증돼요. 관리자가 설정한 도착 반경과 객관식 퀴즈로 위·변조 없는 방문 데이터가 남습니다.",
-                hover: "hover:border-orange-400/30",
+                icon: <Gem className="h-6 w-6 text-amber-300" />,
+                iconBg: "bg-amber-300/10",
+                title: "보물지도",
+                desc: "경로 주변에 보물이 랜덤으로 숨겨져요. 걷다가 가까워지면 힌트가 뜨고, 찾아내면 씨앗이나 상품 같은 보상을 받아요. 세션마다 위치가 달라져 같은 길도 매번 새로워요.",
+                hover: "hover:border-amber-400/30",
               },
               {
                 icon: <Puzzle className="h-6 w-6 text-pink-300" />,
