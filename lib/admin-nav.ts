@@ -7,6 +7,7 @@ import {
   FileText,
   Flag,
   Gem,
+  Ticket,
   GlassWater,
   HelpCircle,
   Home,
@@ -105,6 +106,12 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         label: "보물 지도",
         icon: Gem,
         menuKey: "treasures",
+      },
+      {
+        href: "/admin/events",
+        label: "이벤트 신청",
+        icon: Ticket,
+        menuKey: "events",
       },
       {
         href: "/admin/quiz-pool",
