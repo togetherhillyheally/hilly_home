@@ -98,7 +98,7 @@ export default function HillyheallyHomepage() {
               <p className="text-lg text-gray-500 mb-10 max-w-xl mx-auto leading-relaxed">
                 코스·스탬프·보물지도를 고르고, 걸으며 도착을 인증하고
                 <br />
-                나만의 퍼즐을 완성하는 워킹 앱
+                나만의 퍼즐을 완성하는 지도 앱
               </p>
             </div>
             <div className="animate-fade-in-up delay-700 flex flex-wrap items-center justify-center gap-4">
