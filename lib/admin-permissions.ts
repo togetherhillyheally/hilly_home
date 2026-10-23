@@ -54,6 +54,7 @@ const MANAGER_DEFAULT_MENU_KEYS: MenuKey[] = [
   "puzzles",
   "progress",
   "puzzle-progress",
+  "sos",
 ];
 
 export function defaultMenuKeysForTier(tier: AdminTier): Set<MenuKey> {
