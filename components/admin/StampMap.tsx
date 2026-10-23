@@ -27,7 +27,20 @@ export type StampPoint = {
 export type LatLng = { lat: number; lng: number };
 
 /** 지도 클릭이 어떤 "지정" 모드인지. 'point' = 새 스탬프 추가, 'start' / 'end' = 출발·도착 지정 */
-export type AddMode = "point" | "start" | "end";
+export type AddMode = "point" | "start" | "end" | "farm";
+
+/** 파밍박스(보급 상자) — 표시 전용 지점 (2026-10-23) */
+export type FarmBox = { id: string; title: string; lat: number; lng: number };
+export const FARM_BOX_COLOR = "#E07B39";
+
+/** 파밍박스 아이콘 SVG — 주황 둥근 사각 + 흰 상자(뚜껑 선·잠금 띠). 앱(주황 상자)·관제와 같은 결 */
+export const FARM_BOX_SVG = (size = 30) => `
+<svg width="${size}" height="${size}" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <rect x="1" y="1" width="30" height="30" rx="8" fill="${FARM_BOX_COLOR}" stroke="#fff" stroke-width="2"/>
+  <path d="M8 13.5h16v9.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 8 23z" fill="#fff"/>
+  <path d="M7 9.5A1.5 1.5 0 0 1 8.5 8h15A1.5 1.5 0 0 1 25 9.5V13H7z" fill="#fff" opacity="0.85"/>
+  <rect x="14" y="11" width="4" height="6" rx="1" fill="${FARM_BOX_COLOR}"/>
+</svg>`;
 
 export type StampMapProps = {
   points: StampPoint[];
@@ -50,6 +63,11 @@ export type StampMapProps = {
   onEndDragEnd?: (p: LatLng) => void;
   onMapClick?: (p: LatLng, mode: AddMode) => void;
   onMarkerClick?: (pointId: string) => void;
+  /** 파밍박스 — 주황 상자 마커, 드래그로 이동, 클릭으로 선택 */
+  farmBoxes?: FarmBox[];
+  selectedFarmId?: string | null;
+  onFarmDragEnd?: (boxId: string, p: LatLng) => void;
+  onFarmClick?: (boxId: string) => void;
   className?: string;
   height?: number | string;
 };
@@ -212,6 +230,10 @@ export default function StampMap({
   onEndDragEnd,
   onMapClick,
   onMarkerClick,
+  farmBoxes,
+  selectedFarmId,
+  onFarmDragEnd,
+  onFarmClick,
   className,
   height = 520,
 }: StampMapProps) {
@@ -474,6 +496,43 @@ export default function StampMap({
     if (map.loaded()) apply();
     else map.once("load", apply);
   }, [start, end]);
+
+  // 파밍박스 마커 — 주황 상자, 드래그 이동·클릭 선택
+  const farmMarkersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
+  const onFarmDragEndRef = useRef(onFarmDragEnd);
+  onFarmDragEndRef.current = onFarmDragEnd;
+  const onFarmClickRef = useRef(onFarmClick);
+  onFarmClickRef.current = onFarmClick;
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => {
+      for (const [, m] of farmMarkersRef.current) m.remove();
+      farmMarkersRef.current.clear();
+      for (const b of farmBoxes ?? []) {
+        const el = document.createElement("div");
+        const selected = b.id === selectedFarmId;
+        el.style.cssText = `display:flex;flex-direction:column;align-items:center;cursor:grab;user-select:none;${
+          selected ? "filter: drop-shadow(0 0 6px rgba(224,123,57,0.9));" : ""
+        }`;
+        el.innerHTML = `${FARM_BOX_SVG(selected ? 34 : 30)}<div style="margin-top:2px;padding:1px 5px;border-radius:5px;background:rgba(0,0,0,0.65);color:#fff;font-size:10px;font-weight:700;white-space:nowrap">${b.title.replace(/[<>&"]/g, "")}</div>`;
+        el.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          onFarmClickRef.current?.(b.id);
+        });
+        const m = new mapboxgl.Marker({ element: el, draggable: true, anchor: "top", offset: [0, -15] })
+          .setLngLat([b.lng, b.lat])
+          .addTo(map);
+        m.on("dragend", () => {
+          const ll = m.getLngLat();
+          onFarmDragEndRef.current?.(b.id, { lat: ll.lat, lng: ll.lng });
+        });
+        farmMarkersRef.current.set(b.id, m);
+      }
+    };
+    if (map.loaded()) apply();
+    else map.once("load", apply);
+  }, [farmBoxes, selectedFarmId]);
 
   // 도착 반경 원 동기화 (po 와 동일 레이어)
   useEffect(() => {

@@ -49,6 +49,11 @@ export default async function StampMapDetailPage({
     `stamp_points?select=id,trail_id,title,hint,lng,lat,sort_order,radius_m,quiz_question,quiz_choices,quiz_answer_index&trail_id=eq.${id}&order=sort_order.asc`
   );
 
+  // 파밍박스 — 테이블이 없거나 실패해도 페이지는 뜨게
+  const { rows: farmBoxes } = await adminList<{ id: string; title: string; lat: number; lng: number }>(
+    `trail_farm_boxes?select=id,title,lat,lng&trail_id=eq.${id}&order=sort_order.asc`
+  ).catch(() => ({ rows: [] as { id: string; title: string; lat: number; lng: number }[] }));
+
   return (
     // lg: 페이지를 뷰포트 높이로 고정 — 헤더·지도는 안 움직이고 우측 목록만 내부 스크롤
     <main className="p-6 lg:p-10 lg:h-screen lg:flex lg:flex-col lg:overflow-hidden">
@@ -88,6 +93,7 @@ export default async function StampMapDetailPage({
       <StampEditor
         trailId={trail.id}
         initialPoints={points}
+        initialFarmBoxes={farmBoxes}
         initialBounds={trail.bounds}
         initialStart={
           trail.start_lat != null && trail.start_lng != null

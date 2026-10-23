@@ -20,7 +20,9 @@ import {
 } from "lucide-react";
 import StampMap, {
   type AddMode,
+  type FarmBox,
   type LatLng,
+  FARM_BOX_SVG,
 } from "@/components/admin/StampMap";
 import type { RadiusCircle } from "@/components/admin/radius-layer";
 import {
@@ -76,6 +78,8 @@ type Props = {
   } | null;
   initialStart?: LatLng | null;
   initialEnd?: LatLng | null;
+  /** 파밍박스(보급 상자) — 표시 전용 지점 */
+  initialFarmBoxes?: FarmBox[];
 };
 
 function computeBounds(
@@ -101,7 +105,10 @@ export default function StampEditor({
   initialBounds,
   initialStart = null,
   initialEnd = null,
+  initialFarmBoxes = [],
 }: Props) {
+  const [farmBoxes, setFarmBoxes] = useState<FarmBox[]>(initialFarmBoxes);
+  const [selectedFarmId, setSelectedFarmId] = useState<string | null>(null);
   const [points, setPoints] = useState<StampPointRow[]>(initialPoints);
   const [selectedId, setSelectedId] = useState<string | null>(
     initialPoints[0]?.id ?? null
@@ -170,6 +177,10 @@ export default function StampEditor({
         patchTrailStartEnd({ end_lat: p.lat, end_lng: p.lng }, "end");
         setEnd(p);
         setAddMode(null);
+      } else if (mode === "farm") {
+        // 파밍박스 — 하나 놓으면 모드 해제 (개수가 적어서)
+        createFarmAt(p);
+        setAddMode(null);
       } else {
         // 클릭 즉시 저장 — 추가 모드는 유지해서 연속으로 찍을 수 있게 (힌트는 상세에서)
         createPointAt(p);
@@ -179,6 +190,55 @@ export default function StampEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
+
+  // ── 파밍박스 CRUD (2026-10-23) ──
+  const createFarmAt = async (p: LatLng) => {
+    try {
+      const res = await fetch(`/api/admin/trails/${trailId}/farm-boxes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lat: p.lat, lng: p.lng }),
+      });
+      const d = (await res.json().catch(() => null)) as { row?: FarmBox; error?: string } | null;
+      if (!res.ok || !d?.row) throw new Error(d?.error ?? `추가 실패 (${res.status})`);
+      setFarmBoxes((prev) => [...prev, d.row!]);
+      setSelectedFarmId(d.row.id);
+      showInfo("파밍박스를 추가했어요.");
+    } catch (e) {
+      showError(e instanceof Error ? e.message : "파밍박스를 추가하지 못했어요.");
+    }
+  };
+  const patchFarm = async (id: string, patch: Partial<Pick<FarmBox, "title" | "lat" | "lng">>) => {
+    const snapshot = farmBoxes;
+    setFarmBoxes((prev) => prev.map((b) => (b.id === id ? { ...b, ...patch } : b)));
+    try {
+      const res = await fetch(`/api/admin/farm-boxes/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      if (!res.ok) {
+        const d = (await res.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(d?.error ?? `수정 실패 (${res.status})`);
+      }
+    } catch (e) {
+      setFarmBoxes(snapshot);
+      showError(e instanceof Error ? e.message : "파밍박스를 수정하지 못했어요.");
+    }
+  };
+  const deleteFarm = async (id: string) => {
+    if (!window.confirm("이 파밍박스를 삭제할까요?")) return;
+    const snapshot = farmBoxes;
+    setFarmBoxes((prev) => prev.filter((b) => b.id !== id));
+    try {
+      const res = await fetch(`/api/admin/farm-boxes/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(`삭제 실패 (${res.status})`);
+      showInfo("파밍박스를 삭제했어요.");
+    } catch (e) {
+      setFarmBoxes(snapshot);
+      showError(e instanceof Error ? e.message : "파밍박스를 삭제하지 못했어요.");
+    }
+  };
 
   const patchTrailStartEnd = (
     patch: Record<string, number | null>,
@@ -346,6 +406,10 @@ export default function StampEditor({
           end={end}
           onMapClick={onMapClick}
           onMarkerClick={(id) => setSelectedId(id)}
+          farmBoxes={farmBoxes}
+          selectedFarmId={selectedFarmId}
+          onFarmClick={(id) => setSelectedFarmId(id)}
+          onFarmDragEnd={(id, p) => void patchFarm(id, { lat: p.lat, lng: p.lng })}
           onPointDragEnd={(id, p) => {
             // 지도 튐 방지 — updatePoint 내부에서 낙관적 setPoints 가 돌지만
             // drag end 시점에선 외부 setPoints 로 명시 한 번 더 (안전).
@@ -398,6 +462,8 @@ export default function StampEditor({
             >
               {addMode === "start"
                 ? "지도에서 출발점(S) 위치를 클릭하세요."
+                : addMode === "farm"
+                  ? "지도에서 파밍박스 위치를 클릭하세요. 놓은 뒤 드래그로 옮길 수 있어요."
                 : addMode === "end"
                   ? "지도에서 도착점(E) 위치를 클릭하세요."
                   : "지도를 클릭할 때마다 스탬프가 바로 저장돼요. 다 찍었으면 취소로 모드를 끄세요."}
@@ -449,6 +515,69 @@ export default function StampEditor({
           <p className="text-[10px] text-gray-500 leading-relaxed">
             클릭하면 자동으로 STAMP_POOL의 아이콘(잎·꽃·별 등)이 할당돼요.
             제목·아이콘은 등록 후 변경 가능합니다.
+          </p>
+        </div>
+
+        {/* 파밍박스 — 보급 상자 위치(표시 전용, 점수 없음). 공개 시점은 스탬프와 같음 */}
+        <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+              파밍박스 {farmBoxes.length > 0 && <span className="text-gray-500">({farmBoxes.length})</span>}
+            </h3>
+            <span dangerouslySetInnerHTML={{ __html: FARM_BOX_SVG(20) }} />
+          </div>
+          <button
+            type="button"
+            onClick={() => setAddMode((v) => (v === "farm" ? null : "farm"))}
+            disabled={saving}
+            className={`w-full h-10 rounded-lg text-sm font-medium inline-flex items-center justify-center gap-2 transition-colors ${
+              addMode === "farm"
+                ? "bg-[#E07B39] text-white"
+                : "bg-white/[0.06] hover:bg-white/[0.12] text-white"
+            }`}
+          >
+            <Plus className="h-4 w-4" />
+            지도에서 클릭으로 파밍박스 추가
+          </button>
+          {farmBoxes.length > 0 && (
+            <ul className="space-y-1.5">
+              {farmBoxes.map((b) => (
+                <li
+                  key={b.id}
+                  className={`flex items-center gap-2 rounded-lg border px-2 py-1.5 ${
+                    b.id === selectedFarmId ? "border-[#E07B39]/60 bg-[#E07B39]/10" : "border-white/10 bg-black/20"
+                  }`}
+                  onClick={() => setSelectedFarmId(b.id)}
+                >
+                  <input
+                    defaultValue={b.title}
+                    key={`${b.id}-${b.title}`}
+                    onBlur={(e) => {
+                      const v = e.currentTarget.value.trim();
+                      if (v && v !== b.title) void patchFarm(b.id, { title: v });
+                    }}
+                    className="flex-1 min-w-0 bg-transparent text-sm text-white outline-none"
+                  />
+                  <span className="text-[10px] text-gray-500 font-mono">
+                    {b.lat.toFixed(4)}, {b.lng.toFixed(4)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void deleteFarm(b.id);
+                    }}
+                    className="p-1 rounded hover:bg-white/10 text-gray-400 hover:text-red-300"
+                    aria-label="파밍박스 삭제"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="text-[10px] text-gray-500 leading-relaxed">
+            지도에 주황 상자로 보여요. 점수·체크는 없고, 위치 공개 시점은 스탬프와 같아요. 마커를 드래그하면 위치가 바뀌어요.
           </p>
         </div>
 
