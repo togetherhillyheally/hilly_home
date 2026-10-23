@@ -26,6 +26,7 @@ export const MENU_KEYS = [
   "legal",
   "app-versions",
   "trackers",
+  "sos",
   "backgrounds",
   "surveys",
   "content-reset",

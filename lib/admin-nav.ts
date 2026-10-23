@@ -26,6 +26,7 @@ import {
   UserX,
   type LucideIcon,
   Gift,
+  Siren,
 } from "lucide-react";
 import type { MenuKey } from "@/lib/admin-permissions";
 
@@ -187,6 +188,12 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         label: "트래커 기기",
         icon: Satellite,
         menuKey: "trackers",
+      },
+      {
+        href: "/admin/sos",
+        label: "SOS 확인",
+        icon: Siren,
+        menuKey: "sos",
       },
     ],
   },
