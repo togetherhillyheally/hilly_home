@@ -14,7 +14,7 @@ import { ScreenshotFrame } from "./ScreenshotFrame";
 export const metadata: Metadata = {
   title: "인증 지도 가이드 · Hilly Heally",
   description:
-    "코스·스탬프·보물지도 중 하나를 골라 걷고, 도착을 인증하고, 퍼즐을 완성하는 힐리힐리 사용법을 5단계로 안내합니다.",
+    "코스·스탬프·보물지도 중 하나를 골라 걷고 도착을 인증하고 퍼즐을 완성하는 힐리힐리 사용법을 5단계로 안내합니다.",
 };
 
 type Step = {
@@ -87,7 +87,7 @@ const STEPS: Step[] = [
     slug: "puzzle",
     title: "지도와 연결된 퍼즐 맞추기",
     sub: "인증한 만큼 조각이 열려요",
-    desc: "각 지도에는 고유한 퍼즐 이미지가 연결되어 있어요. 도착을 인증할 때마다 퍼즐 조각이 하나씩 열리고, 코스를 완주하면 퍼즐이 완성됩니다.",
+    desc: "각 지도에는 고유한 퍼즐 이미지가 연결되어 있어요. 도착을 인증할 때마다 퍼즐 조각이 하나씩 열리고 코스를 완주하면 퍼즐이 완성됩니다.",
     icon: Puzzle,
     images: [
       { src: "/images/guide/step4-list.png", caption: "퍼즐함" },
@@ -105,7 +105,7 @@ const STEPS: Step[] = [
     slug: "collection",
     title: "완성된 퍼즐 확인",
     sub: "나의 발자국이 그림이 되어 남아요",
-    desc: "완성한 퍼즐은 컬렉션에 저장돼요. 언제든 다시 열어보고, 친구에게 공유하고, 새 지도에 도전하며 컬렉션을 늘려가세요.",
+    desc: "완성한 퍼즐은 컬렉션에 저장돼요. 언제든 다시 열어보고 친구에게 공유하고 새 지도에 도전하며 컬렉션을 늘려가세요.",
     icon: Sparkles,
     images: [
       { src: "/images/guide/step5-complete.png", caption: "퍼즐 완성" },
@@ -175,7 +175,7 @@ export default function GuidePage() {
             <p className="text-lg text-neutral-600 leading-relaxed">
               힐리힐리는 산책·트레킹을 놀이로 바꿉니다.
               <br />
-              지도를 고르고, 도착을 인증하고, 나만의 퍼즐을 완성해보세요.
+              지도를 고르고 도착을 인증하고 나만의 퍼즐을 완성해보세요.
             </p>
             <div className="mt-8 flex items-center justify-center gap-3">
               <Link

@@ -96,7 +96,7 @@ export default function HillyheallyHomepage() {
             </div>
             <div className="animate-fade-in-up delay-500">
               <p className="text-lg text-gray-500 mb-10 max-w-xl mx-auto leading-relaxed">
-                코스·스탬프·보물지도를 고르고, 걸으며 도착을 인증하고
+                코스·스탬프·보물지도를 고르고 걸으며 도착을 인증하고
                 <br />
                 나만의 퍼즐을 완성하는 지도 앱
               </p>
@@ -206,14 +206,14 @@ export default function HillyheallyHomepage() {
                 step: "04",
                 icon: <Puzzle className="h-5 w-5 text-pink-300" />,
                 title: "퍼즐 조각 맞추기",
-                desc: "각 지도에는 고유한 퍼즐 이미지가 연결돼 있어요. 인증하고 걸으며 모은 씨앗으로 조각을 뽑고, 알맞은 자리에 맞춰 퍼즐을 완성해보세요.",
+                desc: "각 지도에는 고유한 퍼즐 이미지가 연결돼 있어요. 인증하고 걸으며 모은 씨앗으로 조각을 뽑고 알맞은 자리에 맞춰 퍼즐을 완성해보세요.",
                 accent: "border-l-pink-400/60",
               },
               {
                 step: "05",
                 icon: <Sparkles className="h-5 w-5 text-orange-400" />,
                 title: "완성 · 공유",
-                desc: "완성한 퍼즐은 퍼즐함에 자동 보관되고, SNS에 공유해 나의 발자국을 남길 수 있어요.",
+                desc: "완성한 퍼즐은 퍼즐함에 자동 보관되고 SNS에 공유해 나의 발자국을 남길 수 있어요.",
                 accent: "border-l-orange-500/60",
               },
             ].map((item, idx) => (
@@ -281,21 +281,21 @@ export default function HillyheallyHomepage() {
                 icon: <Map className="h-6 w-6 text-orange-400" />,
                 iconBg: "bg-orange-400/10",
                 title: "코스 지도 & 체크포인트 인증",
-                desc: "GPX 파일을 업로드해 나만의 코스 지도를 만들어요. 경로 위 체크포인트 보물박스에 GPS로 도착하거나 짧은 퀴즈를 풀어 인증하고, 사진·메모·후기를 남겨 트레일을 완성하세요.",
+                desc: "GPX 파일을 업로드해 나만의 코스 지도를 만들어요. 경로 위 체크포인트 보물박스에 GPS로 도착하거나 짧은 퀴즈를 풀어 인증하고 사진·메모·후기를 남겨 트레일을 완성하세요.",
                 hover: "hover:border-orange-500/30",
               },
               {
                 icon: <Stamp className="h-6 w-6 text-pink-400" />,
                 iconBg: "bg-pink-400/10",
                 title: "스탬프 지도",
-                desc: "로게이닝에서 영감을 받은 스탬프 수집 지도. 실제 장소를 방문해 스탬프를 찍고, 모든 포인트를 완료하세요.",
+                desc: "로게이닝에서 영감을 받은 스탬프 수집 지도. 실제 장소를 방문해 스탬프를 찍고 모든 포인트를 완료하세요.",
                 hover: "hover:border-pink-500/30",
               },
               {
                 icon: <Gem className="h-6 w-6 text-amber-300" />,
                 iconBg: "bg-amber-300/10",
                 title: "보물지도",
-                desc: "경로 주변에 보물이 랜덤으로 숨겨져요. 걷다가 가까워지면 힌트가 뜨고, 찾아내면 씨앗이나 상품 같은 보상을 받아요. 세션마다 위치가 달라져 같은 길도 매번 새로워요.",
+                desc: "경로 주변에 보물이 랜덤으로 숨겨져요. 걷다가 가까워지면 힌트가 뜨고 찾아내면 씨앗이나 상품 같은 보상을 받아요. 세션마다 위치가 달라져 같은 길도 매번 새로워요.",
                 hover: "hover:border-amber-400/30",
               },
               {
@@ -309,14 +309,14 @@ export default function HillyheallyHomepage() {
                 icon: <Navigation className="h-6 w-6 text-orange-400" />,
                 iconBg: "bg-orange-400/10",
                 title: "함께 걷기 & 실시간 위치 공유",
-                desc: "초대 링크·주변 검색·닉네임으로 친구를 초대하고, 모험이 시작되면 실시간 위치를 공유하며 함께 걸어요. 백그라운드에서도 동작합니다.",
+                desc: "초대 링크·주변 검색·닉네임으로 친구를 초대하고 모험이 시작되면 실시간 위치를 공유하며 함께 걸어요. 백그라운드에서도 동작합니다.",
                 hover: "hover:border-orange-500/30",
               },
               {
                 icon: <Star className="h-6 w-6 text-pink-400" />,
                 iconBg: "bg-pink-400/10",
                 title: "후기 & 경로 카드 공유",
-                desc: "산행을 마치면 별점 후기를 남기고, GPS 이동 경로와 완성한 퍼즐을 카드로 만들어 SNS에 공유할 수 있어요.",
+                desc: "산행을 마치면 별점 후기를 남기고 GPS 이동 경로와 완성한 퍼즐을 카드로 만들어 SNS에 공유할 수 있어요.",
                 hover: "hover:border-pink-500/30",
               },
             ].map((item, idx) => (
@@ -400,7 +400,7 @@ export default function HillyheallyHomepage() {
           </div>
           <div className="animate-fade-in-up delay-300">
             <p className="text-gray-500 mb-8 max-w-xl mx-auto text-sm leading-relaxed">
-              지도를 선택하고, 인증하며, 나만의 퍼즐을 완성해보세요.
+              지도를 선택하고 인증하며 나만의 퍼즐을 완성해보세요.
             </p>
           </div>
           <div className="animate-fade-in-up delay-500 flex flex-wrap items-center justify-center gap-4">
