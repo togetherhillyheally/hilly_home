@@ -88,7 +88,7 @@ export default function HillyheallyHomepage() {
             <div className="animate-fade-in-up">
               <h1 className="text-4xl lg:text-6xl font-bold text-white mb-6 leading-tight tracking-tight">
                 <span className="bg-gradient-to-r from-orange-300 via-orange-400 to-pink-500 bg-clip-text text-transparent">
-                  나만의 지도를 만들고,
+                  나만의 지도를 만들고
                 </span>
                 <br />
                 <span className="text-white">함께 걷는 경험을 만드세요.</span>
@@ -96,7 +96,7 @@ export default function HillyheallyHomepage() {
             </div>
             <div className="animate-fade-in-up delay-500">
               <p className="text-lg text-gray-500 mb-10 max-w-xl mx-auto leading-relaxed">
-                코스·스탬프·보물지도를 고르고 걸으며 도착을 인증하고
+                코스, 스탬프, 보물지도를 고르고 걸으며 도착을 인증하고
                 <br />
                 나만의 퍼즐을 완성하는 지도 앱
               </p>
@@ -180,7 +180,7 @@ export default function HillyheallyHomepage() {
                 step: "01",
                 icon: <Map className="h-5 w-5 text-orange-400" />,
                 title: "지도 선택",
-                desc: "걷고 싶은 지도를 골라보세요. 지도는 세 종류 — 어떤 지도를 고르느냐에 따라 3단계 인증 방식이 달라져요. 거리·상승고도·예상 시간은 미리 확인할 수 있어요.",
+                desc: "걷고 싶은 지도를 골라보세요. 지도는 세 종류 — 어떤 지도를 고르느냐에 따라 3단계 인증 방식이 달라져요. 거리, 상승고도, 예상 시간은 미리 확인할 수 있어요.",
                 kinds: [
                   { label: "코스 지도", hint: "정해진 경로 + 체크포인트" },
                   { label: "스탬프 지도", hint: "자유 순서로 장소 방문" },
@@ -212,7 +212,7 @@ export default function HillyheallyHomepage() {
               {
                 step: "05",
                 icon: <Sparkles className="h-5 w-5 text-orange-400" />,
-                title: "완성 · 공유",
+                title: "완성과 공유",
                 desc: "완성한 퍼즐은 퍼즐함에 자동 보관되고 SNS에 공유해 나의 발자국을 남길 수 있어요.",
                 accent: "border-l-orange-500/60",
               },
@@ -281,7 +281,7 @@ export default function HillyheallyHomepage() {
                 icon: <Map className="h-6 w-6 text-orange-400" />,
                 iconBg: "bg-orange-400/10",
                 title: "코스 지도 & 체크포인트 인증",
-                desc: "GPX 파일을 업로드해 나만의 코스 지도를 만들어요. 경로 위 체크포인트 보물박스에 GPS로 도착하거나 짧은 퀴즈를 풀어 인증하고 사진·메모·후기를 남겨 트레일을 완성하세요.",
+                desc: "GPX 파일을 업로드해 나만의 코스 지도를 만들어요. 경로 위 체크포인트 보물박스에 GPS로 도착하거나 짧은 퀴즈를 풀어 인증하고 사진, 메모, 후기를 남겨 트레일을 완성하세요.",
                 hover: "hover:border-orange-500/30",
               },
               {
@@ -309,14 +309,14 @@ export default function HillyheallyHomepage() {
                 icon: <Navigation className="h-6 w-6 text-orange-400" />,
                 iconBg: "bg-orange-400/10",
                 title: "함께 걷기 & 실시간 위치 공유",
-                desc: "초대 링크·주변 검색·닉네임으로 친구를 초대하고 모험이 시작되면 실시간 위치를 공유하며 함께 걸어요. 백그라운드에서도 동작합니다.",
+                desc: "초대 링크나 주변 검색, 닉네임으로 친구를 초대하고 모험이 시작되면 실시간 위치를 공유하며 함께 걸어요. 백그라운드에서도 동작합니다.",
                 hover: "hover:border-orange-500/30",
               },
               {
                 icon: <Star className="h-6 w-6 text-pink-400" />,
                 iconBg: "bg-pink-400/10",
                 title: "후기 & 경로 카드 공유",
-                desc: "산행을 마치면 별점 후기를 남기고 GPS 이동 경로와 완성한 퍼즐을 카드로 만들어 SNS에 공유할 수 있어요.",
+                desc: "산행을 마치면 후기를 남기고 GPS 이동 경로와 완성한 퍼즐을 카드로 만들어 SNS에 공유할 수 있어요.",
                 hover: "hover:border-pink-500/30",
               },
             ].map((item, idx) => (
@@ -356,13 +356,13 @@ export default function HillyheallyHomepage() {
               <div className="flex-1 text-center lg:text-left">
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-500/15 border border-orange-500/30 text-orange-300 text-[11px] font-semibold tracking-wide mb-3">
                   <Sparkles className="h-3 w-3" />
-                  파트너·크리에이터
+                  파트너와 크리에이터
                 </div>
                 <h2 className="text-2xl lg:text-3xl font-bold text-white mb-3 tracking-tight">
                   이제 <span className="bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">웹에서 직접 지도</span>를 만들 수 있어요
                 </h2>
                 <p className="text-gray-400 text-sm lg:text-base leading-relaxed mb-5">
-                  GPX 업로드, 체크포인트·보물박스 배치, 퍼즐 이미지 연결까지 —
+                  GPX 업로드, 체크포인트와 보물박스 배치, 퍼즐 이미지 연결까지 —
                   브라우저 하나로 나만의 힐리힐리 지도를 등록하세요.
                 </p>
                 <a
