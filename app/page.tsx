@@ -98,7 +98,7 @@ export default function HillyheallyHomepage() {
               <p className="text-lg text-gray-500 mb-10 max-w-xl mx-auto leading-relaxed">
                 코스, 스탬프, 보물지도를 고르고 걸으며 도착을 인증하고
                 <br />
-                나만의 퍼즐을 완성하는 지도 앱
+                퍼즐을 완성하는 지도 앱
               </p>
             </div>
             <div className="animate-fade-in-up delay-700 flex flex-wrap items-center justify-center gap-4">
@@ -180,7 +180,7 @@ export default function HillyheallyHomepage() {
                 step: "01",
                 icon: <Map className="h-5 w-5 text-orange-400" />,
                 title: "지도 선택",
-                desc: "걷고 싶은 지도를 골라보세요. 지도는 세 종류 — 어떤 지도를 고르느냐에 따라 3단계 인증 방식이 달라져요. 거리, 상승고도, 예상 시간은 미리 확인할 수 있어요.",
+                desc: "걷고 싶은 지도를 골라보세요. 지도는 세 종류예요. 어떤 지도를 고르느냐에 따라 3단계 인증 방식이 달라져요. 거리, 상승고도, 예상 시간은 미리 확인할 수 있어요.",
                 kinds: [
                   { label: "코스 지도", hint: "정해진 경로 + 체크포인트" },
                   { label: "스탬프 지도", hint: "자유 순서로 장소 방문" },
@@ -199,7 +199,7 @@ export default function HillyheallyHomepage() {
                 step: "03",
                 icon: <Package className="h-5 w-5 text-orange-300" />,
                 title: "도착 인증",
-                desc: "GPS로 도착하면 자동 인증돼요. 코스 지도는 체크포인트 보물박스(또는 퀴즈), 스탬프 지도는 장소마다 스탬프, 보물지도는 숨겨진 보물을 찾아내는 식으로 — 지도 종류마다 인증 방식이 달라요.",
+                desc: "GPS로 도착하면 자동 인증돼요. 인증 방식은 지도 종류마다 달라요. 코스 지도는 체크포인트 보물박스(또는 퀴즈), 스탬프 지도는 장소마다 스탬프, 보물지도는 숨겨진 보물을 찾아내는 식이에요.",
                 accent: "border-l-orange-400/60",
               },
               {
@@ -213,7 +213,7 @@ export default function HillyheallyHomepage() {
                 step: "05",
                 icon: <Sparkles className="h-5 w-5 text-orange-400" />,
                 title: "완성과 공유",
-                desc: "완성한 퍼즐은 퍼즐함에 자동 보관되고 SNS에 공유해 나의 발자국을 남길 수 있어요.",
+                desc: "완성한 퍼즐은 퍼즐함에 자동 보관되고 SNS에 공유해 내 발자국을 남길 수 있어요.",
                 accent: "border-l-orange-500/60",
               },
             ].map((item, idx) => (
@@ -281,7 +281,7 @@ export default function HillyheallyHomepage() {
                 icon: <Map className="h-6 w-6 text-orange-400" />,
                 iconBg: "bg-orange-400/10",
                 title: "코스 지도 & 체크포인트 인증",
-                desc: "GPX 파일을 업로드해 나만의 코스 지도를 만들어요. 경로 위 체크포인트 보물박스에 GPS로 도착하거나 짧은 퀴즈를 풀어 인증하고 사진, 메모, 후기를 남겨 트레일을 완성하세요.",
+                desc: "GPX 파일을 업로드해 코스 지도를 만들어요. 경로 위 체크포인트 보물박스에 GPS로 도착하거나 짧은 퀴즈를 풀어 인증하고 사진, 메모, 후기를 남겨 트레일을 완성하세요.",
                 hover: "hover:border-orange-500/30",
               },
               {
@@ -302,14 +302,14 @@ export default function HillyheallyHomepage() {
                 icon: <Puzzle className="h-6 w-6 text-pink-300" />,
                 iconBg: "bg-pink-300/10",
                 title: "퍼즐 조각 & 완성",
-                desc: "지도별 고유 퍼즐 이미지가 있어요. 인증할 때마다 조각을 뽑아 알맞은 자리에 맞추면, 나만의 발자국이 그림으로 남아요.",
+                desc: "지도별 고유 퍼즐 이미지가 있어요. 인증할 때마다 조각을 뽑아 알맞은 자리에 맞추면, 내 발자국이 그림으로 남아요.",
                 hover: "hover:border-pink-500/30",
               },
               {
                 icon: <Navigation className="h-6 w-6 text-orange-400" />,
                 iconBg: "bg-orange-400/10",
                 title: "함께 걷기 & 실시간 위치 공유",
-                desc: "초대 링크나 주변 검색, 닉네임으로 친구를 초대하고 모험이 시작되면 실시간 위치를 공유하며 함께 걸어요. 백그라운드에서도 동작합니다.",
+                desc: "초대 링크나 주변 검색, 닉네임으로 친구를 초대하고 모험이 시작되면 실시간 위치를 공유하며 함께 걸어요. 백그라운드에서도 동작해요.",
                 hover: "hover:border-orange-500/30",
               },
               {
@@ -362,8 +362,8 @@ export default function HillyheallyHomepage() {
                   이제 <span className="bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">웹에서 직접 지도</span>를 만들 수 있어요
                 </h2>
                 <p className="text-gray-400 text-sm lg:text-base leading-relaxed mb-5">
-                  GPX 업로드, 체크포인트와 보물박스 배치, 퍼즐 이미지 연결까지 —
-                  브라우저 하나로 나만의 힐리힐리 지도를 등록하세요.
+                  GPX 업로드, 체크포인트와 보물박스 배치, 퍼즐 이미지 연결까지
+                  브라우저 하나로 힐리힐리 지도를 등록하세요.
                 </p>
                 <a
                   href="https://map.hillyheally.com"
