@@ -27,13 +27,13 @@ export const DEFAULT_EVENT_CONFIG: EventConfig = {
 
 export const EVENT_CATALOG: Record<string, EventConfig> = {
   "natseongot-2026-11": {
-    name: "낯선곳으로 — 광교산",
-    dateLabel: "2026.11.14",
-    teamCount: 4,
+    name: "ROUTE @광교산",
+    dateLabel: "2026.11.14 (토)",
+    teamCount: 8,
     teamSize: 4,
     squads: ["A", "B"],
     squadSize: 2,
-    capacity: 16,
+    capacity: 32,
   },
 };
 

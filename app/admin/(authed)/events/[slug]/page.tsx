@@ -17,7 +17,7 @@ export default async function EventDetailPage({
   if (!/^[a-z0-9-]+$/i.test(slug)) notFound();
 
   const { rows } = await adminList<SignupRow>(
-    `event_signups?select=id,order_id,user_id,name,phone,email,birth,gender,emergency_name,emergency_relation,emergency_phone,experience,note,agree_photo,amount,order_total,party_size,is_leader,status,paid_at,canceled_at,created_at,team_no,squad&event_slug=eq.${encodeURIComponent(slug)}&order=created_at.asc`,
+    `event_signups?select=id,order_id,user_id,name,phone,email,birth,gender,emergency_name,emergency_relation,emergency_phone,experience,note,agree_photo,amount,order_total,party_size,is_leader,status,paid_at,canceled_at,created_at,team_no,squad,play_style,dinner,metadata&event_slug=eq.${encodeURIComponent(slug)}&order=created_at.asc`,
     { from: 0, to: 1999 }
   );
   if (rows.length === 0) notFound();

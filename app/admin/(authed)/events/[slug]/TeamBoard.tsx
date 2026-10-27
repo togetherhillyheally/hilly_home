@@ -36,7 +36,42 @@ export type SignupRow = {
   created_at: string;
   team_no: number | null;
   squad: string | null;
+  /** 대표만 기입 — "도전파 — …" 형식 */
+  play_style: string | null;
+  /** 뒤풀이 식사 참석 (참가자별) */
+  dinner: boolean | null;
+  metadata: { method?: string; receipt?: string } | null;
 };
+
+/** "도전파 — 고득점…" → "도전파" */
+function styleShort(s: string | null | undefined): string | null {
+  if (!s) return null;
+  return s.split(/\s*[—-]\s*/)[0].trim() || null;
+}
+
+const STYLE_TONE: Record<string, string> = {
+  도전파: "bg-red-500/15 border-red-500/40 text-red-200",
+  전략파: "bg-sky-500/15 border-sky-500/40 text-sky-200",
+  소풍파: "bg-emerald-500/15 border-emerald-500/40 text-emerald-200",
+};
+
+function StyleBadge({ style }: { style: string | null }) {
+  if (!style) return null;
+  return (
+    <span
+      className={`inline-flex items-center px-1.5 h-5 rounded border text-[10px] font-semibold ${
+        STYLE_TONE[style] ?? "bg-white/[0.06] border-white/10 text-gray-300"
+      }`}
+    >
+      {style}
+    </span>
+  );
+}
+
+function csvCell(v: unknown): string {
+  const s = v == null ? "" : String(v);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
 
 type Assignment = { team_no: number | null; squad: string | null };
 type Update = Assignment & { id: string };
@@ -116,6 +151,68 @@ export default function TeamBoard({
       )
       .sort((a, b) => a[0].created_at.localeCompare(b[0].created_at));
   }, [rows, showCanceled]);
+
+  // 플레이 스타일은 대표만 기입 → 같은 신청 건 전원에게 적용
+  const styleByOrder = useMemo(() => {
+    const m = new Map<string, string | null>();
+    for (const r of rows) {
+      if (r.is_leader || !m.has(r.order_id)) {
+        const s = styleShort(r.play_style);
+        if (s || !m.has(r.order_id)) m.set(r.order_id, s);
+      }
+    }
+    return m;
+  }, [rows]);
+  const styleOf = (r: SignupRow) => styleByOrder.get(r.order_id) ?? null;
+
+  const dinnerCount = active.filter(
+    (r) => r.status === "paid" && r.dinner === true
+  ).length;
+  const styleCounts = useMemo(() => {
+    const c: Record<string, number> = {};
+    for (const r of active) {
+      if (r.status !== "paid") continue;
+      const s = styleByOrder.get(r.order_id);
+      if (s) c[s] = (c[s] ?? 0) + 1;
+    }
+    return c;
+  }, [active, styleByOrder]);
+
+  const exportCsv = () => {
+    const header = [
+      "상태", "팀", "조", "신청번호", "대표", "이름", "성별", "생년월일", "연락처",
+      "이메일", "비상연락처 이름", "관계", "비상연락처", "플레이 스타일", "뒤풀이",
+      "경험", "메모", "사진 동의", "결제금액", "결제수단", "신청시각", "결제시각",
+    ];
+    const lines = [...rows]
+      .sort(
+        (a, b) =>
+          (a.team_no ?? 99) - (b.team_no ?? 99) ||
+          (a.squad ?? "Z").localeCompare(b.squad ?? "Z") ||
+          a.created_at.localeCompare(b.created_at)
+      )
+      .map((r) =>
+        [
+          STATUS_LABEL[r.status] ?? r.status, r.team_no ?? "", r.squad ?? "",
+          r.order_id, r.is_leader ? "Y" : "", r.name, r.gender, r.birth, r.phone,
+          r.email, r.emergency_name, r.emergency_relation ?? "", r.emergency_phone,
+          styleOf(r) ?? "", r.dinner ? "참석" : "불참", r.experience ?? "",
+          r.note ?? "", r.agree_photo ? "Y" : "N", r.amount, r.metadata?.method ?? "",
+          r.created_at, r.paid_at ?? "",
+        ]
+          .map(csvCell)
+          .join(",")
+      );
+    const blob = new Blob(["﻿" + [header.join(","), ...lines].join("\n")], {
+      type: "text/csv;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${slug}-참가자-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const paidCount = active.filter((r) => r.status === "paid").length;
   const pendingCount = active.filter((r) => r.status === "pending").length;
@@ -218,6 +315,20 @@ export default function TeamBoard({
         <Chip tone={assignedCount >= paidCount ? "ok" : undefined}>
           팀 배정 {assignedCount}/{active.length}
         </Chip>
+        <Chip>뒤풀이 {dinnerCount}명</Chip>
+        {Object.entries(styleCounts).map(([s, n]) => (
+          <span key={s} className="inline-flex items-center gap-1">
+            <StyleBadge style={s} />
+            <span className="text-gray-400">{n}</span>
+          </span>
+        ))}
+        <button
+          type="button"
+          onClick={exportCsv}
+          className="inline-flex items-center px-2.5 h-6 rounded-md border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] text-gray-200"
+        >
+          CSV 내보내기
+        </button>
         <label className="ml-auto inline-flex items-center gap-1.5 text-gray-400 cursor-pointer select-none">
           <input
             type="checkbox"
@@ -321,6 +432,7 @@ export default function TeamBoard({
                           <MemberChip
                             key={m.id}
                             m={m}
+                            style={styleOf(m)}
                             onRemove={() => setMember(m.id, { team_no: null })}
                             disabled={saving}
                           />
@@ -340,6 +452,7 @@ export default function TeamBoard({
                           <MemberChip
                             key={m.id}
                             m={m}
+                            style={styleOf(m)}
                             onRemove={() => setMember(m.id, { team_no: null })}
                             disabled={saving}
                           />
@@ -391,6 +504,7 @@ export default function TeamBoard({
                   >
                     {STATUS_LABEL[leader.status] ?? leader.status}
                   </span>
+                  <StyleBadge style={styleOf(leader)} />
                   <span className="text-[11px] text-gray-500 font-mono">
                     {leader.order_id}
                   </span>
@@ -400,7 +514,18 @@ export default function TeamBoard({
                   </span>
                   <span className="text-[11px] text-gray-400 tabular-nums">
                     {(leader.order_total ?? leader.amount * members.length).toLocaleString()}원
+                    {leader.metadata?.method && ` · ${leader.metadata.method}`}
                   </span>
+                  {leader.metadata?.receipt && (
+                    <a
+                      href={leader.metadata.receipt}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[11px] text-orange-300 hover:text-orange-200"
+                    >
+                      영수증
+                    </a>
+                  )}
 
                   {!allCanceled && (
                     <div className="ml-auto flex items-center gap-1 flex-wrap">
@@ -465,6 +590,9 @@ export default function TeamBoard({
                         <span className="ml-2 text-gray-500">
                           {m.gender} · {m.birth}
                         </span>
+                        {m.dinner && (
+                          <span className="ml-2 text-[10px] text-amber-300">뒤풀이</span>
+                        )}
                       </div>
                       <a
                         href={`tel:${m.phone}`}
@@ -576,10 +704,12 @@ function Chip({
 
 function MemberChip({
   m,
+  style,
   onRemove,
   disabled,
 }: {
   m: SignupRow;
+  style?: string | null;
   onRemove: () => void;
   disabled?: boolean;
 }) {
@@ -591,8 +721,17 @@ function MemberChip({
           ? "border-amber-500/40 bg-amber-500/10 text-amber-100"
           : "border-white/15 bg-white/[0.06] text-white"
       }`}
-      title={`${m.name} · ${m.phone}${pending ? " · 미결제" : ""}`}
+      title={`${m.name} · ${m.phone}${style ? ` · ${style}` : ""}${m.dinner ? " · 뒤풀이" : ""}${pending ? " · 미결제" : ""}`}
     >
+      {style && (
+        <span
+          className={`text-[9px] font-bold ${
+            style === "도전파" ? "text-red-300" : style === "전략파" ? "text-sky-300" : "text-emerald-300"
+          }`}
+        >
+          {style.slice(0, 1)}
+        </span>
+      )}
       {m.name}
       <button
         type="button"
