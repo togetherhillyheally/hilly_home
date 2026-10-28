@@ -11,12 +11,13 @@ export const dynamic = "force-dynamic";
  *
  * 프로토콜별 문법이 달라 화이트리스트로 제한:
  *   MT710(텍스트)   MODE,모드,간격 / REBOOT
- *   JT808(ML100G 등) INTERVAL,초 / HEARTBEAT,초 / REBOOT
+ *   JT808(ML100G 등) INTERVAL,초 / HEARTBEAT,초 / REBOOT / PARAM(설정 조회)
  */
 const ALLOWED = [
   /^MODE,[0-9]+,[0-9]+(,[0-9]+)?$/,
   /^HEARTBEAT,[0-9]{2,5}$/,
   /^REBOOT$/,
+  /^PARAM$/,
 ];
 
 /** INTERVAL 은 초 범위까지 본다. 매뉴얼 규정은 10~3600 이지만 ML100G 가 공장
