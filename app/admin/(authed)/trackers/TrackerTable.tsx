@@ -104,6 +104,34 @@ export default function TrackerTable({
   /** 라벨 수정 중인 기기 */
   const [editId, setEditId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
+  /** 저장한 라벨을 서버 새로고침 전에 바로 보여주는 값 (id → label) */
+  const [labelOverride, setLabelOverride] = useState<
+    Record<string, string | null>
+  >({});
+  const [savingLabelId, setSavingLabelId] = useState<string | null>(null);
+
+  const saveLabel = async (d: TrackerDevice, raw: string) => {
+    const next = raw.trim() || null;
+    setEditId(null);
+    const prev = d.id in labelOverride ? labelOverride[d.id] : d.label;
+    if (next === prev) return;
+    setLabelOverride((m) => ({ ...m, [d.id]: next }));
+    setSavingLabelId(d.id);
+    setErrorMsg("");
+    const res = await fetch("/api/admin/trackers", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: d.id, label: raw }),
+    });
+    setSavingLabelId(null);
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      setErrorMsg(j.error ?? "라벨 저장에 실패했어요.");
+      setLabelOverride((m) => ({ ...m, [d.id]: prev }));
+      return;
+    }
+    router.refresh();
+  };
 
   const call = async (body: Record<string, unknown>, deviceId: string) => {
     setBusyId(deviceId);
@@ -173,6 +201,8 @@ export default function TrackerTable({
               const sig = signalOf(d.last_seen_at);
               const retired = d.status === "retired";
               const busy = busyId === d.id;
+              const label =
+                d.id in labelOverride ? labelOverride[d.id] : d.label;
               return (
                 <tr
                   key={d.id}
@@ -189,17 +219,9 @@ export default function TrackerTable({
                   <td className="px-4 py-3 text-white">
                     {editId === d.id ? (
                       <form
-                        onSubmit={async (e) => {
+                        onSubmit={(e) => {
                           e.preventDefault();
-                          if (editValue.trim() === (d.label ?? "")) {
-                            setEditId(null);
-                            return;
-                          }
-                          const ok = await call(
-                            { id: d.id, label: editValue },
-                            d.id
-                          );
-                          if (ok) setEditId(null);
+                          void saveLabel(d, editValue);
                         }}
                       >
                         <input
@@ -210,7 +232,6 @@ export default function TrackerTable({
                             if (e.key === "Escape") setEditId(null);
                           }}
                           onBlur={() => setEditId(null)}
-                          disabled={busy}
                           placeholder="예: 김필환 (ML100G #3)"
                           className="w-48 rounded-md border border-white/20 bg-black/30 px-2 py-1 text-sm text-white placeholder:text-gray-600 focus:border-white/40 focus:outline-none"
                         />
@@ -223,13 +244,18 @@ export default function TrackerTable({
                         type="button"
                         onClick={() => {
                           setEditId(d.id);
-                          setEditValue(d.label ?? "");
+                          setEditValue(label ?? "");
                         }}
+                        disabled={savingLabelId === d.id}
                         title="눌러서 라벨 수정"
                         className="group inline-flex items-center gap-1.5 rounded px-1 -mx-1 text-left hover:bg-white/5"
                       >
-                        {d.label ?? <span className="text-gray-600">—</span>}
-                        <Pencil className="h-3 w-3 text-gray-600 opacity-0 group-hover:opacity-100" />
+                        {label ?? <span className="text-gray-600">—</span>}
+                        {savingLabelId === d.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin text-gray-400" />
+                        ) : (
+                          <Pencil className="h-3 w-3 text-gray-600 opacity-0 group-hover:opacity-100" />
+                        )}
                       </button>
                     )}
                   </td>
