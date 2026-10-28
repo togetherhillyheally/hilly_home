@@ -9,9 +9,12 @@ const STATUSES = new Set(["inactive", "active", "retired"]);
 
 /** 기기 식별자 정규화 — 숫자만 12~15자리.
  *  MT710 은 IMEI 15자리, ML100G 등 JT808 기기는 라벨의 ID 12자리를 쓴다.
- *  (게이트웨이가 기기에게 받는 값과 같아야 위치가 연결된다) */
+ *  (게이트웨이가 기기에게 받는 값과 같아야 위치가 연결된다)
+ *  ML100G 라벨은 ID 를 11자리로 찍지만 기기는 앞에 0 을 채운 12자리로 보고한다
+ *  — 11자리 입력은 0 을 붙여 저장. */
 function normalizeDeviceId(raw: unknown): string | null {
-  const digits = String(raw ?? "").replace(/\D/g, "");
+  let digits = String(raw ?? "").replace(/\D/g, "");
+  if (digits.length === 11) digits = "0" + digits;
   if (digits.length < 12 || digits.length > 15) return null;
   return digits;
 }
@@ -42,7 +45,7 @@ export async function POST(req: Request) {
   const imei = normalizeDeviceId(body.imei);
   if (!imei) {
     return NextResponse.json(
-      { error: "기기 ID는 숫자 12~15자리예요." },
+      { error: "기기 ID는 숫자 11~15자리예요." },
       { status: 400 }
     );
   }

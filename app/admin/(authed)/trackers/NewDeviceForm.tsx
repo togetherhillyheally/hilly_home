@@ -19,8 +19,9 @@ export default function NewDeviceForm() {
 
   const submit = async () => {
     const digits = deviceId.replace(/\D/g, "");
-    if (digits.length < 12 || digits.length > 15) {
-      setErrorMsg("라벨의 ID 숫자를 입력해주세요 (12~15자리)");
+    // ML100G 라벨의 ID 는 11자리 — 서버가 앞에 0 을 붙여 12자리로 저장
+    if (digits.length < 11 || digits.length > 15) {
+      setErrorMsg("라벨의 ID 숫자를 입력해주세요 (11~15자리)");
       return;
     }
     const imeiDigits = hwImei.replace(/\D/g, "");
