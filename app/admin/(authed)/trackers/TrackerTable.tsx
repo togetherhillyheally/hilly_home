@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, Pencil } from "lucide-react";
 import AssignPicker from "./AssignPicker";
 
 export type TrackerDevice = {
@@ -101,6 +101,9 @@ export default function TrackerTable({
   const [openId, setOpenId] = useState<string | null>(null);
   /** 배정 검색창을 펼친 기기 */
   const [assignId, setAssignId] = useState<string | null>(null);
+  /** 라벨 수정 중인 기기 */
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
 
   const call = async (body: Record<string, unknown>, deviceId: string) => {
     setBusyId(deviceId);
@@ -183,7 +186,53 @@ export default function TrackerTable({
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-white">{d.label ?? "—"}</td>
+                  <td className="px-4 py-3 text-white">
+                    {editId === d.id ? (
+                      <form
+                        onSubmit={async (e) => {
+                          e.preventDefault();
+                          if (editValue.trim() === (d.label ?? "")) {
+                            setEditId(null);
+                            return;
+                          }
+                          const ok = await call(
+                            { id: d.id, label: editValue },
+                            d.id
+                          );
+                          if (ok) setEditId(null);
+                        }}
+                      >
+                        <input
+                          autoFocus
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Escape") setEditId(null);
+                          }}
+                          onBlur={() => setEditId(null)}
+                          disabled={busy}
+                          placeholder="예: 김필환 (ML100G #3)"
+                          className="w-48 rounded-md border border-white/20 bg-black/30 px-2 py-1 text-sm text-white placeholder:text-gray-600 focus:border-white/40 focus:outline-none"
+                        />
+                        <span className="mt-1 block text-[10px] text-gray-500">
+                          Enter 저장 · Esc 취소 · 괄호 안은 관제에서 숨김
+                        </span>
+                      </form>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditId(d.id);
+                          setEditValue(d.label ?? "");
+                        }}
+                        title="눌러서 라벨 수정"
+                        className="group inline-flex items-center gap-1.5 rounded px-1 -mx-1 text-left hover:bg-white/5"
+                      >
+                        {d.label ?? <span className="text-gray-600">—</span>}
+                        <Pencil className="h-3 w-3 text-gray-600 opacity-0 group-hover:opacity-100" />
+                      </button>
+                    )}
+                  </td>
                   <td className={`px-4 py-3 ${sig.cls}`}>
                     {retired ? "중지됨" : sig.label}
                   </td>
