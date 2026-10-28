@@ -4,6 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import { adminList } from "@/lib/admin-rest";
 import { getEventConfig } from "@/lib/event-catalog";
 import TeamBoard, { type SignupRow } from "./TeamBoard";
+import ConfirmSmsCard, { type EventSettings } from "./ConfirmSmsCard";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,15 @@ export default async function EventDetailPage({
   if (rows.length === 0) notFound();
 
   const cfg = getEventConfig(slug);
+
+  const { rows: settingsRows } = await adminList<EventSettings>(
+    `event_settings?select=confirm_sms_enabled,confirm_sms_template,updated_at,updated_by&event_slug=eq.${encodeURIComponent(slug)}`
+  );
+  // 확정 문자 결과는 대표 행 metadata.confirm_sms 에 남는다
+  const smsResults = rows
+    .filter((r) => r.is_leader)
+    .map((r) => (r.metadata as { confirm_sms?: { ok?: boolean } } | null)?.confirm_sms)
+    .filter((x): x is { ok?: boolean } => !!x);
 
   return (
     <main className="p-6 lg:p-10">
@@ -52,6 +62,13 @@ export default async function EventDetailPage({
           {cfg.squads.join("/")}) · 조마다 트래커 1개 · 정원 {cfg.capacity}명
         </p>
       </header>
+
+      <ConfirmSmsCard
+        slug={slug}
+        initial={settingsRows[0] ?? null}
+        sent={smsResults.filter((x) => x.ok).length}
+        failed={smsResults.filter((x) => !x.ok).length}
+      />
 
       <TeamBoard slug={slug} config={cfg} initialRows={rows} />
     </main>
