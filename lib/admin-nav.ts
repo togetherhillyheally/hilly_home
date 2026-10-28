@@ -98,7 +98,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { href: "/admin/trails", label: "코스 지도", icon: Map, menuKey: "trails" },
       {
         href: "/admin/stamps",
-        label: "스탬프 지도",
+        label: "ROUTE",
         icon: Stamp,
         menuKey: "stamps",
       },

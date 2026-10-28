@@ -183,7 +183,7 @@ export default function HillyheallyHomepage() {
                 desc: "걷고 싶은 지도를 골라보세요. 지도는 세 종류예요. 어떤 지도를 고르느냐에 따라 3단계 인증 방식이 달라져요. 거리, 상승고도, 예상 시간은 미리 확인할 수 있어요.",
                 kinds: [
                   { label: "코스 지도", hint: "정해진 경로 + 체크포인트" },
-                  { label: "스탬프 지도", hint: "자유 순서로 장소 방문" },
+                  { label: "ROUTE", hint: "배점 스탬프를 모아 점수를 겨루는 전략 게임" },
                   { label: "보물지도", hint: "경로 주변에 숨은 보물 찾기" },
                 ],
                 accent: "border-l-orange-500/60",
@@ -199,7 +199,7 @@ export default function HillyheallyHomepage() {
                 step: "03",
                 icon: <Package className="h-5 w-5 text-orange-300" />,
                 title: "도착 인증",
-                desc: "GPS로 도착하면 자동 인증돼요. 인증 방식은 지도 종류마다 달라요. 코스 지도는 체크포인트 보물박스(또는 퀴즈), 스탬프 지도는 장소마다 스탬프, 보물지도는 숨겨진 보물을 찾아내는 식이에요.",
+                desc: "GPS로 도착하면 자동 인증돼요. 인증 방식은 지도 종류마다 달라요. 코스 지도는 체크포인트 보물박스(또는 퀴즈), ROUTE는 배점이 매겨진 스탬프, 보물지도는 숨겨진 보물을 찾아내는 식이에요.",
                 accent: "border-l-orange-400/60",
               },
               {
@@ -287,8 +287,8 @@ export default function HillyheallyHomepage() {
               {
                 icon: <Stamp className="h-6 w-6 text-pink-400" />,
                 iconBg: "bg-pink-400/10",
-                title: "스탬프 지도",
-                desc: "로게이닝에서 영감을 받은 스탬프 수집 지도. 실제 장소를 방문해 스탬프를 찍고 모든 포인트를 완료하세요.",
+                title: "ROUTE",
+                desc: "로게이닝에서 영감을 받은 야외 전략 게임. 배점이 다른 스탬프를 골라 모으고 혼자서도 팀으로도 점수를 겨뤄요. 누구나 나만의 ROUTE를 만들 수 있어요.",
                 hover: "hover:border-pink-500/30",
               },
               {

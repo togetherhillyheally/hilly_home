@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 const VALID_ORDER_MODES = new Set(["free", "ordered", "random"]);
 
-// POST — 새 스탬프 지도(trail with map_type='stamp') 생성. 포인트는 별도 API로 추가.
+// POST — 새 ROUTE(trail with map_type='stamp') 생성. 포인트는 별도 API로 추가.
 export async function POST(req: Request) {
   const session = await readAdminSession();
   if (!session) {

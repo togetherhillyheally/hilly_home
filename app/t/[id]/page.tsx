@@ -105,7 +105,7 @@ export default async function TrailSharePage({
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Footprints className="h-4 w-4 flex-shrink-0" />
                 <span>
-                  {preview.map_type === "stamp" ? "스탬프 지도" : "코스 지도"}
+                  {preview.map_type === "stamp" ? "ROUTE" : "코스 지도"}
                 </span>
               </div>
             </div>

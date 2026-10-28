@@ -270,7 +270,7 @@ export default function ShareImagePanel({
     ctx.font = `800 ${Math.round(fontBase * 0.7)}px -apple-system, "Apple SD Gothic Neo", system-ui, sans-serif`;
     ctx.fillStyle = ACCENT_MUTED;
     ctx.textBaseline = "top";
-    const kicker = (mapType === "stamp" ? "스탬프 지도" : "코스 지도").toUpperCase();
+    const kicker = (mapType === "stamp" ? "ROUTE" : "코스 지도").toUpperCase();
     ctx.fillText(kicker, cardX + bodyPad, cursorY);
     cursorY += Math.round(fontBase * 1.2) + 6;
 

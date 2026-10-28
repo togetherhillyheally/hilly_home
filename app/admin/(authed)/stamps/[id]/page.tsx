@@ -63,7 +63,7 @@ export default async function StampMapDetailPage({
           className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-white mb-3"
         >
           <ChevronLeft className="h-4 w-4" />
-          스탬프 지도 목록
+          ROUTE 목록
         </Link>
         <div className="flex flex-wrap items-center gap-3">
           <TrailNameEdit trailId={trail.id} initialName={trail.name} />

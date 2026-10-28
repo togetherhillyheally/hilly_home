@@ -84,7 +84,7 @@ export default async function StampsPage({
   );
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  // 각 스탬프 지도의 포인트 수 — stamp_points 한 번 조회 후 group
+  // 각 ROUTE의 포인트 수 — stamp_points 한 번 조회 후 group
   const trailIds = rows.map((r) => r.id);
   const pointCountByTrail = new Map<string, number>();
   if (trailIds.length > 0) {
@@ -107,7 +107,7 @@ export default async function StampsPage({
       <header className="mb-6 flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
-            스탬프 지도
+            ROUTE
           </h1>
           <p className="text-sm text-gray-400 mt-1">
             총 {total.toLocaleString()}개
@@ -118,7 +118,7 @@ export default async function StampsPage({
           className="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium transition-colors"
         >
           <Plus className="h-4 w-4" />
-          새 스탬프 지도
+          새 ROUTE
         </Link>
       </header>
 
@@ -183,7 +183,7 @@ export default async function StampsPage({
             <table className="w-full text-sm min-w-[800px]">
               <thead className="bg-white/[0.03] text-gray-400 text-xs">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium">스탬프 지도</th>
+                  <th className="text-left px-4 py-3 font-medium">ROUTE</th>
                   <th className="text-left px-4 py-3 font-medium">시리즈</th>
                   <th className="text-right px-4 py-3 font-medium">포인트</th>
                   <th className="text-right px-3 py-3 font-medium">정렬 순서</th>
