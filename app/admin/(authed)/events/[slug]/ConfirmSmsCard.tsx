@@ -15,7 +15,7 @@ const SAMPLE: Record<string, string> = {
   "{이름}": "홍길동",
   "{인원}": "2명",
   "{금액}": "72,000원",
-  "{신청번호}": "nsg-mh2k3x-a1b2c3",
+  "{신청번호}": "ROUTE-GG-001",
 };
 
 /** event-signup 함수와 같은 기준 — 한글 2바이트, 90바이트 넘으면 LMS */

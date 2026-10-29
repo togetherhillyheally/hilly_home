@@ -14,6 +14,8 @@ import type { EventConfig } from "@/lib/event-catalog";
 export type SignupRow = {
   id: string;
   order_id: string;
+  /** 보여주는 신청번호 (ROUTE-GG-001) — 결제 확정 때 부여 */
+  signup_code: string | null;
   user_id: string | null;
   name: string;
   phone: string;
@@ -194,7 +196,7 @@ export default function TeamBoard({
       .map((r) =>
         [
           STATUS_LABEL[r.status] ?? r.status, r.team_no ?? "", r.squad ?? "",
-          r.order_id, r.is_leader ? "Y" : "", r.name, r.gender, r.birth, r.phone,
+          r.signup_code ?? r.order_id, r.is_leader ? "Y" : "", r.name, r.gender, r.birth, r.phone,
           r.email, r.emergency_name, r.emergency_relation ?? "", r.emergency_phone,
           styleOf(r) ?? "", r.dinner ? "참석" : "불참", r.experience ?? "",
           r.note ?? "", r.agree_photo ? "Y" : "N", r.amount, r.metadata?.method ?? "",
@@ -505,9 +507,18 @@ export default function TeamBoard({
                     {STATUS_LABEL[leader.status] ?? leader.status}
                   </span>
                   <StyleBadge style={styleOf(leader)} />
-                  <span className="text-[11px] text-gray-500 font-mono">
-                    {leader.order_id}
-                  </span>
+                  {leader.signup_code ? (
+                    <span
+                      className="text-[12px] font-semibold text-white font-mono"
+                      title={`토스 주문 ID ${leader.order_id}`}
+                    >
+                      {leader.signup_code}
+                    </span>
+                  ) : (
+                    <span className="text-[11px] text-gray-500 font-mono">
+                      {leader.order_id}
+                    </span>
+                  )}
                   <span className="text-[11px] text-gray-500">
                     신청 {fmtDate(leader.created_at)}
                     {leader.paid_at && ` · 결제 ${fmtDate(leader.paid_at)}`}
