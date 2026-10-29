@@ -12,6 +12,8 @@ import {
   ADMIN_UPLOADER_PROFILE_ID,
 } from "@/lib/trail-upload-constants";
 import { requestTrailThumbnail } from "@/lib/trail-thumbnail";
+import { adminFetch } from "@/lib/admin-rest";
+import { DEFAULT_MARKER_ICON } from "@/lib/checkpoint-constants";
 import {
   DEFAULT_TREASURE_COUNT,
   DEFAULT_TREASURE_REWARD_POOL,
@@ -269,11 +271,58 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 
+  // GPX 웨이포인트 → 체크포인트 (실패해도 지도는 이미 만들어짐 — 경고만)
+  let checkpointError: string | null = null;
+  const rawWaypoints = form.get("waypoints");
+  if (rawWaypoints != null && String(rawWaypoints).length > 0) {
+    try {
+      const parsed = JSON.parse(String(rawWaypoints)) as unknown;
+      const items = (Array.isArray(parsed) ? parsed : [])
+        .map((w) => w as { title?: unknown; lat?: unknown; lng?: unknown })
+        .filter(
+          (w) =>
+            typeof w.lat === "number" &&
+            Number.isFinite(w.lat) &&
+            typeof w.lng === "number" &&
+            Number.isFinite(w.lng)
+        )
+        .slice(0, 500);
+      if (items.length > 0) {
+        const nowIso = new Date().toISOString();
+        const res = await adminFetch("trail_checkpoints", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(
+            items.map((w, i) => ({
+              id: randomUUID(),
+              trail_id: inserted.id,
+              sort_order: i + 1,
+              title:
+                (typeof w.title === "string" && w.title.trim().slice(0, 100)) ||
+                `체크포인트 ${i + 1}`,
+              lng: w.lng,
+              lat: w.lat,
+              marker_icon: DEFAULT_MARKER_ICON,
+              created_by: ADMIN_UPLOADER_PROFILE_ID,
+              created_at: nowIso,
+              updated_at: nowIso,
+            }))
+          ),
+        });
+        if (!res.ok) throw new Error(await res.text().catch(() => ""));
+      }
+    } catch {
+      checkpointError =
+        "지도는 만들었지만 웨이포인트를 체크포인트로 옮기지 못했어요. 체크포인트 화면에서 추가해 주세요.";
+    }
+  }
+
   // 경로 썸네일 생성 (Edge Function, 비차단 — 실패해도 업로드는 성공)
   await requestTrailThumbnail(inserted.id);
 
   return NextResponse.json({
     success: true,
+    checkpoint_error: checkpointError,
     trail: {
       id: inserted.id,
       name: inserted.name,

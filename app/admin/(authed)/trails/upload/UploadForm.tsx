@@ -9,10 +9,12 @@ import {
   CheckCircle2,
   AlertCircle,
   X,
+  Flag,
 } from "lucide-react";
 import {
   prepareTrailFromText,
   displayNameFromFileName,
+  extractWaypoints,
   type PreparedTrailGeometry,
 } from "@/lib/gpx-prep";
 import TrailMapPreview from "@/components/admin/TrailMapPreview";
@@ -37,10 +39,21 @@ const ACTIVITY_LABELS: Record<ActivityType, string> = {
   cycling: "자전거",
 };
 
+/** GPX <wpt> → 체크포인트 후보. show=false 면 가져오지 않음 */
+type WaypointDraft = {
+  key: string;
+  name: string;
+  lat: number;
+  lon: number;
+  ele?: number;
+  show: boolean;
+};
+
 type FileEntry = {
   file: File;
   prep?: PreparedTrailGeometry;
   parseError?: string;
+  waypoints: WaypointDraft[];
 };
 
 type AnalyzingState = { done: number; total: number; currentFileName: string };
@@ -137,10 +150,22 @@ export default function UploadForm({ mapType = "adventure" }: { mapType?: MapKin
       try {
         const text = await file.text();
         const prep = prepareTrailFromText(text);
-        ingested.push({ file, prep });
+        const stamp = `${Date.now()}-${i}`;
+        const waypoints: WaypointDraft[] = extractWaypoints(text).map(
+          (w, j) => ({
+            key: `${stamp}-${j}`,
+            name: w.name || `웨이포인트 ${j + 1}`,
+            lat: w.lat,
+            lon: w.lon,
+            ele: w.ele,
+            // 출발·도착은 지도에 전용 마커가 있어 기본 미표시
+            show: !w.isStartFinish,
+          })
+        );
+        ingested.push({ file, prep, waypoints });
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : "파일 파싱 실패";
-        ingested.push({ file, parseError: msg });
+        ingested.push({ file, parseError: msg, waypoints: [] });
       }
     }
     setAnalyzing(null);
@@ -166,6 +191,21 @@ export default function UploadForm({ mapType = "adventure" }: { mapType?: MapKin
 
   const removeEntry = (idx: number) =>
     setEntries((prev) => prev.filter((_, i) => i !== idx));
+
+  const waypoints = useMemo(
+    () => validEntries.flatMap((e) => e.waypoints),
+    [validEntries]
+  );
+  const [importWaypoints, setImportWaypoints] = useState(true);
+  const updateWaypoint = (key: string, patch: Partial<WaypointDraft>) =>
+    setEntries((prev) =>
+      prev.map((e) => ({
+        ...e,
+        waypoints: e.waypoints.map((w) =>
+          w.key === key ? { ...w, ...patch } : w
+        ),
+      }))
+    );
 
   const toggleActivity = (t: ActivityType) => {
     setActivityTypes((prev) =>
@@ -203,6 +243,14 @@ export default function UploadForm({ mapType = "adventure" }: { mapType?: MapKin
     form.append("series_name", seriesName.trim());
     form.append("activity_types", activityTypes.join(","));
     form.append("map_type", mapType);
+    const pickedWaypoints = importWaypoints
+      ? waypoints
+          .filter((w) => w.show && w.name.trim())
+          .map((w) => ({ title: w.name.trim(), lat: w.lat, lng: w.lon }))
+      : [];
+    if (pickedWaypoints.length > 0) {
+      form.append("waypoints", JSON.stringify(pickedWaypoints));
+    }
     if (mapType === "treasure") {
       form.append("treasure_count", String(treasureCount));
       form.append("treasure_reward_pool", JSON.stringify(treasurePool));
@@ -219,6 +267,7 @@ export default function UploadForm({ mapType = "adventure" }: { mapType?: MapKin
           setError(data?.error ?? "업로드 실패");
           return;
         }
+        if (data.checkpoint_error) alert(data.checkpoint_error);
         setSuccess({ id: data.trail.id, name: data.trail.name });
         if (seriesName.trim()) invalidateSeriesNamesCache();
         // 짧은 대기 후 목록(또는 보물지도면 상세로 이동 — 설정 입력 유도)
@@ -379,6 +428,65 @@ export default function UploadForm({ mapType = "adventure" }: { mapType?: MapKin
                 </button>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* GPX 웨이포인트 → 체크포인트 */}
+        {waypoints.length > 0 && (
+          <div className="rounded-xl border border-white/10 bg-white/[0.02]">
+            <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
+              <div className="min-w-0">
+                <p className="flex items-center gap-1.5 text-sm font-semibold text-white">
+                  <Flag className="h-4 w-4 text-gray-400" />
+                  웨이포인트 {waypoints.length}개
+                </p>
+                <p className="mt-0.5 text-[11px] text-gray-500">
+                  체크한 지점을 체크포인트로 등록해요. 이름은 바로 고칠 수 있어요.
+                </p>
+              </div>
+              <label className="flex shrink-0 cursor-pointer items-center gap-2 text-xs text-gray-300">
+                가져오기
+                <input
+                  type="checkbox"
+                  checked={importWaypoints}
+                  onChange={(e) => setImportWaypoints(e.target.checked)}
+                  disabled={busy}
+                  className="h-4 w-4 accent-orange-500"
+                />
+              </label>
+            </div>
+            {importWaypoints && (
+              <ul className="max-h-80 divide-y divide-white/5 overflow-y-auto">
+                {waypoints.map((w) => (
+                  <li key={w.key} className="flex items-center gap-3 px-4 py-2">
+                    <input
+                      type="checkbox"
+                      checked={w.show}
+                      onChange={(e) =>
+                        updateWaypoint(w.key, { show: e.target.checked })
+                      }
+                      disabled={busy}
+                      aria-label="체크포인트로 등록"
+                      className="h-4 w-4 accent-orange-500"
+                    />
+                    <input
+                      type="text"
+                      value={w.name}
+                      onChange={(e) =>
+                        updateWaypoint(w.key, { name: e.target.value })
+                      }
+                      disabled={busy}
+                      className={`h-8 flex-1 rounded-md border border-white/10 bg-white/[0.04] px-2 text-sm text-white focus:border-orange-500/50 focus:outline-none ${
+                        w.show ? "" : "opacity-40"
+                      }`}
+                    />
+                    <span className="w-14 shrink-0 text-right font-mono text-[11px] text-gray-500">
+                      {w.ele != null ? `${w.ele}m` : ""}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
 
