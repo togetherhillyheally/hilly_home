@@ -154,7 +154,7 @@ export default function ConfirmSmsCard({
         </span>
       </div>
       <p className="mt-1.5 text-xs text-gray-500">
-        결제가 끝나면 대표 신청자에게 한 번 보내요. 같이 신청한 사람에게는 가지 않아요.
+        결제가 끝나면 대장에게 한 번 보내요. 같이 신청한 사람에게는 가지 않아요.
       </p>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">

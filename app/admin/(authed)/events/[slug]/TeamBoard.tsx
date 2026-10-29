@@ -36,7 +36,7 @@ export type SignupRow = {
   created_at: string;
   team_no: number | null;
   squad: string | null;
-  /** 대표만 기입 — "도전파 — …" 형식 */
+  /** 대장만 기입 — "도전파 — …" 형식 */
   play_style: string | null;
   /** 뒤풀이 식사 참석 (참가자별) */
   dinner: boolean | null;
@@ -152,7 +152,7 @@ export default function TeamBoard({
       .sort((a, b) => a[0].created_at.localeCompare(b[0].created_at));
   }, [rows, showCanceled]);
 
-  // 플레이 스타일은 대표만 기입 → 같은 신청 건 전원에게 적용
+  // 플레이 스타일은 대장만 기입 → 같은 신청 건 전원에게 적용
   const styleByOrder = useMemo(() => {
     const m = new Map<string, string | null>();
     for (const r of rows) {
@@ -180,7 +180,7 @@ export default function TeamBoard({
 
   const exportCsv = () => {
     const header = [
-      "상태", "팀", "조", "신청번호", "대표", "이름", "성별", "생년월일", "연락처",
+      "상태", "팀", "조", "신청번호", "대장", "이름", "성별", "생년월일", "연락처",
       "이메일", "비상연락처 이름", "관계", "비상연락처", "플레이 스타일", "뒤풀이",
       "경험", "메모", "사진 동의", "결제금액", "결제수단", "신청시각", "결제시각",
     ];
@@ -585,7 +585,7 @@ export default function TeamBoard({
                       <div className="min-w-[120px]">
                         <span className="text-white font-medium">{m.name}</span>
                         {m.is_leader && (
-                          <span className="ml-1 text-[10px] text-orange-300">대표</span>
+                          <span className="ml-1 text-[10px] text-orange-300">대장</span>
                         )}
                         <span className="ml-2 text-gray-500">
                           {m.gender} · {m.birth}
