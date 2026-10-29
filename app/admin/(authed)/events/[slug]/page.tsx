@@ -28,9 +28,9 @@ export default async function EventDetailPage({
   const { rows: settingsRows } = await adminList<EventSettings>(
     `event_settings?select=confirm_sms_enabled,confirm_sms_template,updated_at,updated_by&event_slug=eq.${encodeURIComponent(slug)}`
   );
-  // 확정 문자 결과는 대표 행 metadata.confirm_sms 에 남는다
+  // 확정 문자 결과는 받은 참가자 행마다 metadata.confirm_sms 에 남는다
+  // (2026-10-29 전 주문은 대장 행에만 있음)
   const smsResults = rows
-    .filter((r) => r.is_leader)
     .map((r) => (r.metadata as { confirm_sms?: { ok?: boolean } } | null)?.confirm_sms)
     .filter((x): x is { ok?: boolean } => !!x);
 
