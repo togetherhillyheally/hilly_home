@@ -506,6 +506,36 @@ export default function UploadForm({ mapType = "adventure" }: { mapType?: MapKin
             />
           </div>
         )}
+
+        {/* 보물지도 설정 — 상세 화면처럼 넓은 좌측 영역에 배치 */}
+        {mapType === "treasure" && (
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/[0.03] p-5 space-y-4">
+            <div className="flex items-center gap-2">
+              <Gem className="h-4 w-4 text-amber-300" />
+              <h2 className="text-sm font-semibold text-amber-100">
+                보물지도 설정
+              </h2>
+            </div>
+            <TreasureSettingsFields
+              count={treasureCount}
+              setCount={setTreasureCount}
+              pool={treasurePool}
+              setPool={setTreasurePool}
+              onResetDefaults={() => {
+                if (
+                  !confirm(
+                    "기본 보상 풀로 되돌릴까요? 지금 입력한 내용은 사라져요."
+                  )
+                )
+                  return;
+                setTreasurePool(
+                  DEFAULT_TREASURE_REWARD_POOL.map((r) => ({ ...r }))
+                );
+              }}
+              disabled={submitting}
+            />
+          </div>
+        )}
       </div>
 
       {/* Right: 메타정보 + 제출 */}
@@ -588,35 +618,6 @@ export default function UploadForm({ mapType = "adventure" }: { mapType?: MapKin
             </div>
           )}
         </div>
-
-        {mapType === "treasure" && (
-          <div className="rounded-xl border border-amber-500/30 bg-amber-500/[0.03] p-5 space-y-4">
-            <div className="flex items-center gap-2">
-              <Gem className="h-4 w-4 text-amber-300" />
-              <h2 className="text-sm font-semibold text-amber-100">
-                보물지도 설정
-              </h2>
-            </div>
-            <TreasureSettingsFields
-              count={treasureCount}
-              setCount={setTreasureCount}
-              pool={treasurePool}
-              setPool={setTreasurePool}
-              onResetDefaults={() => {
-                if (
-                  !confirm(
-                    "기본 보상 풀로 되돌릴까요? 지금 입력한 내용은 사라져요."
-                  )
-                )
-                  return;
-                setTreasurePool(
-                  DEFAULT_TREASURE_REWARD_POOL.map((r) => ({ ...r }))
-                );
-              }}
-              disabled={submitting}
-            />
-          </div>
-        )}
 
         {error && (
           <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200 flex items-start gap-2">
