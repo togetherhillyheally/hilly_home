@@ -58,8 +58,17 @@ export default async function EventDetailPage({
           </span>
         </div>
         <p className="text-sm text-gray-400 mt-1.5">
-          {cfg.teamSize}인 1팀 × {cfg.teamCount}팀 · 팀 안에서 {cfg.squadSize}인 1조(
-          {cfg.squads.join("/")}) · 조마다 트래커 1개 · 정원 {cfg.capacity}명
+          {cfg.squads.length > 1 ? (
+            <>
+              {cfg.teamSize}인 1팀 × {cfg.teamCount}팀 · 팀 안에서 {cfg.squadSize}인 1조(
+              {cfg.squads.join("/")})
+            </>
+          ) : (
+            <>
+              {cfg.teamSize}인 1조 × 최대 {cfg.teamCount}조 · 혼자 신청은 매칭 또는 개인전
+            </>
+          )}{" "}
+          · 조마다 트래커 1개 · 정원 {cfg.capacity}명
         </p>
       </header>
 

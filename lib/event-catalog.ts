@@ -29,9 +29,10 @@ export const EVENT_CATALOG: Record<string, EventConfig> = {
   "natseongot-2026-11": {
     name: "ROUTE @광교산",
     dateLabel: "2026.11.14 (토)",
-    teamCount: 8,
-    teamSize: 4,
-    squads: ["A", "B"],
+    // 2026-10-30 2인 1조로 변경 — 한 팀 = 한 조(트래커 1개), 개인전은 1명 팀
+    teamCount: 32, // 개인전이 섞이면 조 수가 늘어남 — 전원 개인전이어도 칸이 모자라지 않게
+    teamSize: 2,
+    squads: ["A"],
     squadSize: 2,
     capacity: 32,
   },

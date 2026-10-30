@@ -42,8 +42,32 @@ export type SignupRow = {
   play_style: string | null;
   /** 뒤풀이 식사 참석 (참가자별) */
   dinner: boolean | null;
-  metadata: { method?: string; receipt?: string } | null;
+  metadata: {
+    method?: string;
+    receipt?: string;
+    /** 플레이 방식 — pair: 둘이 신청, solo: 개인전, match: 짝꿍 매칭 희망 */
+    play_mode?: "pair" | "solo" | "match" | null;
+  } | null;
 };
+
+const MODE_LABEL: Record<string, string> = { solo: "개인전", match: "매칭 희망" };
+
+/** 혼자 신청한 건만 — 개인전/매칭 희망 표시 (둘이 신청은 표시 안 함) */
+function ModeBadge({ mode }: { mode: string | null | undefined }) {
+  const label = mode ? MODE_LABEL[mode] : null;
+  if (!label) return null;
+  return (
+    <span
+      className={`inline-flex items-center px-1.5 h-5 rounded border text-[10px] font-semibold ${
+        mode === "solo"
+          ? "bg-amber-500/15 border-amber-500/40 text-amber-200"
+          : "bg-violet-500/15 border-violet-500/40 text-violet-200"
+      }`}
+    >
+      {label}
+    </span>
+  );
+}
 
 /** "도전파 — 고득점…" → "도전파" */
 function styleShort(s: string | null | undefined): string | null {
@@ -183,7 +207,7 @@ export default function TeamBoard({
   const exportCsv = () => {
     const header = [
       "상태", "팀", "조", "신청번호", "대장", "이름", "성별", "생년월일", "연락처",
-      "이메일", "비상연락처 이름", "관계", "비상연락처", "플레이 스타일", "뒤풀이",
+      "이메일", "비상연락처 이름", "관계", "비상연락처", "플레이 스타일", "플레이 방식", "뒤풀이",
       "경험", "메모", "사진 동의", "결제금액", "결제수단", "신청시각", "결제시각",
     ];
     const lines = [...rows]
@@ -198,7 +222,7 @@ export default function TeamBoard({
           STATUS_LABEL[r.status] ?? r.status, r.team_no ?? "", r.squad ?? "",
           r.signup_code ?? r.order_id, r.is_leader ? "Y" : "", r.name, r.gender, r.birth, r.phone,
           r.email, r.emergency_name, r.emergency_relation ?? "", r.emergency_phone,
-          styleOf(r) ?? "", r.dinner ? "참석" : "불참", r.experience ?? "",
+          styleOf(r) ?? "", MODE_LABEL[r.metadata?.play_mode ?? ""] ?? (r.party_size > 1 ? "2인 신청" : ""), r.dinner ? "참석" : "불참", r.experience ?? "",
           r.note ?? "", r.agree_photo ? "Y" : "N", r.amount, r.metadata?.method ?? "",
           r.created_at, r.paid_at ?? "",
         ]
@@ -507,6 +531,7 @@ export default function TeamBoard({
                     {STATUS_LABEL[leader.status] ?? leader.status}
                   </span>
                   <StyleBadge style={styleOf(leader)} />
+                  <ModeBadge mode={leader.metadata?.play_mode} />
                   {leader.signup_code ? (
                     <span
                       className="text-[12px] font-semibold text-white font-mono"
