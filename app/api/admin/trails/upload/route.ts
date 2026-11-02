@@ -444,6 +444,9 @@ async function createDirectTreasureMap(form: FormData) {
     return NextResponse.json({ error: `보물 자리 저장 실패: ${text}` }, { status: 500 });
   }
 
+  // 썸네일 — 경로가 없어도 범위(+출발점)로 그린다 (Edge Function 이 bounds 분기 처리). 비차단.
+  await requestTrailThumbnail(inserted.id);
+
   return NextResponse.json({
     success: true,
     trail: { id: inserted.id, name: inserted.name, distance_km: null, total_ascent_m: null },
