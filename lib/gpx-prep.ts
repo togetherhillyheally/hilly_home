@@ -102,22 +102,58 @@ function downsample(points: LatLonEle[], targetCount: number): LatLonEle[] {
   return result;
 }
 
-const ELE_THRESHOLD = 4; // 미터
+const ELE_THRESHOLD = 3; // 미터 — 평탄화 뒤에 남은 잔떨림 무시용
+const ELE_SMOOTH_RADIUS_M = 50; // 앞뒤 50m 창
+
+/**
+ * 고도 평탄화 — 앞뒤 ELE_SMOOTH_RADIUS_M 안의 점들로 중앙값(튀는 점 제거) → 평균(잔떨림 제거).
+ * 휴대폰 GPS 고도는 점마다 수십 m씩 출렁여서 그대로 더하면 누적 상승이 몇 배로 부풀어요
+ * (예: 종댕이길 3.9km 772m → 평탄화 211m, 에브리트레일 176m). 고도가 깨끗한 트랙은 거의 그대로예요.
+ * 앱(hilly_rn lib/gpxTrailPrep.ts)과 같은 계산 — 바꿀 때 둘 다 바꿀 것.
+ */
+function smoothElevations(points: LatLonEle[]): (number | undefined)[] {
+  const cum = [0];
+  for (let i = 1; i < points.length; i++) cum.push(cum[i - 1] + haversineM(points[i - 1], points[i]));
+  const pass = (vals: (number | undefined)[], f: (w: number[]) => number) => {
+    const out: (number | undefined)[] = [];
+    let lo = 0;
+    let hi = 0;
+    for (let i = 0; i < vals.length; i++) {
+      while (hi < vals.length && cum[hi] - cum[i] <= ELE_SMOOTH_RADIUS_M) hi++;
+      while (cum[i] - cum[lo] > ELE_SMOOTH_RADIUS_M) lo++;
+      if (vals[i] == null) {
+        out.push(undefined);
+        continue;
+      }
+      const w = vals.slice(lo, hi).filter((v): v is number => v != null);
+      out.push(f(w));
+    }
+    return out;
+  };
+  const median = (w: number[]) => {
+    const s = [...w].sort((a, b) => a - b);
+    const m = s.length >> 1;
+    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+  };
+  const mean = (w: number[]) => w.reduce((a, b) => a + b, 0) / w.length;
+  return pass(pass(points.map((p) => p.ele), median), mean);
+}
 
 function accumulateSegmentStats(
   points: LatLonEle[],
   acc: { totalDist: number; totalAscent: number; totalDescent: number }
 ): void {
+  const eles = smoothElevations(points);
   let refEle: number | undefined;
-  for (const p of points) {
-    if (p.ele != null) {
-      refEle = p.ele;
+  for (const e of eles) {
+    if (e != null) {
+      refEle = e;
       break;
     }
   }
   for (let i = 1; i < points.length; i++) {
     acc.totalDist += haversineM(points[i - 1], points[i]);
-    const ele = points[i].ele;
+    const ele = eles[i];
     if (ele == null || refEle == null) continue;
     const diff = ele - refEle;
     if (diff >= ELE_THRESHOLD) {
