@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 
 export default function HillyheallyHomepage() {
   return (
-    <div className="min-h-screen bg-[#08080f]">
+    <div className="min-h-screen bg-[#08080f] break-keep">
       {/* Header */}
       <header className="sticky top-0 py-2 z-50 bg-[#08080f]/80 backdrop-blur-md border-b border-white/5">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -95,7 +95,7 @@ export default function HillyheallyHomepage() {
               </h1>
             </div>
             <div className="animate-fade-in-up delay-500">
-              <p className="text-lg text-gray-500 mb-10 max-w-xl mx-auto leading-relaxed">
+              <p className="text-lg text-gray-300 mb-10 max-w-xl mx-auto leading-relaxed">
                 코스, 스탬프, 보물지도를 고르고 걸으며 도착을 인증하고
                 <br />
                 퍼즐을 완성하는 지도 앱
@@ -116,7 +116,7 @@ export default function HillyheallyHomepage() {
                   <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-27.1-46.9-42.4-83.7-45.9-35.4-3.4-73.8 20.9-88 20.9-15 0-49-19.7-74.5-19.7C60.2 141.1 0 185.3 0 273.5c0 27.1 5 55.3 14.8 84.6 13.2 38.7 60.8 133.4 110.3 131.9 25.6-.6 43.6-18.3 73.3-18.3 28.6 0 45.3 18.3 74.5 18.3 50.1-.8 92.4-85.8 106.1-124.6-67.5-32-66.3-93.6-66.3-96.7zM266.7 79.6c28.5-34.5 25.8-66 25-77.6-24.2 1.5-52.3 16.7-68.6 35.8C203 61.4 186.7 96 190.5 127.4c26.6 2 51.2-13.4 76.2-47.8z" />
                 </svg>
                 <div className="text-left">
-                  <div className="text-[10px] text-gray-500 leading-none">
+                  <div className="text-[10px] text-gray-400 leading-none">
                     Download on the
                   </div>
                   <div className="text-sm font-semibold text-white leading-tight">
@@ -138,7 +138,7 @@ export default function HillyheallyHomepage() {
                   <path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6l-58.9-34.1-65.7 64.5 65.7 64.5 60.1-34.1c18-14.3 18-46.5-1.2-60.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z" />
                 </svg>
                 <div className="text-left">
-                  <div className="text-[10px] text-gray-500 leading-none">
+                  <div className="text-[10px] text-gray-400 leading-none">
                     GET IT ON
                   </div>
                   <div className="text-sm font-semibold text-white leading-tight">
@@ -164,12 +164,15 @@ export default function HillyheallyHomepage() {
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-16 animate-fade-in-up">
             <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4 tracking-tight">
-              함께 걷는 경험,{" "}
+              함께 걷는 경험,
+              {/* 모바일은 두 줄로 — 낱말 중간에서 끊기지 않게 */}
+              <br className="sm:hidden" />
+              <span className="hidden sm:inline"> </span>
               <span className="bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">
                 이렇게 만들어집니다!
               </span>
             </h2>
-            <p className="text-gray-500 text-base max-w-xl mx-auto">
+            <p className="text-gray-300 text-base max-w-xl mx-auto">
               발견부터 기록까지, 힐리힐리가 모든 흐름을 함께합니다
             </p>
           </div>
@@ -223,7 +226,7 @@ export default function HillyheallyHomepage() {
                 style={{ animationDelay: `${idx * 80}ms` }}
               >
                 <div className="flex-shrink-0 flex flex-col items-center gap-2 pt-0.5">
-                  <span className="text-[10px] font-bold text-gray-600 tracking-widest">
+                  <span className="text-[10px] font-bold text-gray-400 tracking-widest">
                     {item.step}
                   </span>
                   <div className="w-9 h-9 bg-white/[0.04] rounded-lg flex items-center justify-center">
@@ -234,7 +237,7 @@ export default function HillyheallyHomepage() {
                   <h3 className="text-white font-semibold mb-1">
                     {item.title}
                   </h3>
-                  <p className="text-gray-500 text-sm leading-relaxed">
+                  <p className="text-gray-300 text-sm leading-relaxed">
                     {item.desc}
                   </p>
                   {"kinds" in item && item.kinds && (
@@ -247,7 +250,7 @@ export default function HillyheallyHomepage() {
                           <span className="font-semibold text-gray-200">
                             {k.label}
                           </span>
-                          <span className="text-gray-500">{k.hint}</span>
+                          <span className="text-gray-400">{k.hint}</span>
                         </span>
                       ))}
                     </div>
@@ -331,7 +334,7 @@ export default function HillyheallyHomepage() {
                   {item.icon}
                 </div>
                 <h3 className="text-white font-semibold mb-2">{item.title}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">
+                <p className="text-gray-300 text-sm leading-relaxed">
                   {item.desc}
                 </p>
               </div>
@@ -374,7 +377,7 @@ export default function HillyheallyHomepage() {
                   지도 만들러 가기
                   <ArrowUpRight className="h-4 w-4" />
                 </a>
-                <p className="mt-3 text-[11px] text-gray-600">
+                <p className="mt-3 text-[11px] text-gray-400">
                   map.hillyheally.com
                 </p>
               </div>
@@ -399,7 +402,7 @@ export default function HillyheallyHomepage() {
             </h2>
           </div>
           <div className="animate-fade-in-up delay-300">
-            <p className="text-gray-500 mb-8 max-w-xl mx-auto text-sm leading-relaxed">
+            <p className="text-gray-300 mb-8 max-w-xl mx-auto text-sm leading-relaxed">
               지도를 선택하고 인증하며 나만의 퍼즐을 완성해보세요.
             </p>
           </div>
@@ -418,7 +421,7 @@ export default function HillyheallyHomepage() {
                 <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-27.1-46.9-42.4-83.7-45.9-35.4-3.4-73.8 20.9-88 20.9-15 0-49-19.7-74.5-19.7C60.2 141.1 0 185.3 0 273.5c0 27.1 5 55.3 14.8 84.6 13.2 38.7 60.8 133.4 110.3 131.9 25.6-.6 43.6-18.3 73.3-18.3 28.6 0 45.3 18.3 74.5 18.3 50.1-.8 92.4-85.8 106.1-124.6-67.5-32-66.3-93.6-66.3-96.7zM266.7 79.6c28.5-34.5 25.8-66 25-77.6-24.2 1.5-52.3 16.7-68.6 35.8C203 61.4 186.7 96 190.5 127.4c26.6 2 51.2-13.4 76.2-47.8z" />
               </svg>
               <div className="text-left">
-                <div className="text-[10px] text-gray-500 leading-none">
+                <div className="text-[10px] text-gray-400 leading-none">
                   Download on the
                 </div>
                 <div className="text-sm font-semibold text-white leading-tight">
@@ -440,7 +443,7 @@ export default function HillyheallyHomepage() {
                 <path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6l-58.9-34.1-65.7 64.5 65.7 64.5 60.1-34.1c18-14.3 18-46.5-1.2-60.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z" />
               </svg>
               <div className="text-left">
-                <div className="text-[10px] text-gray-500 leading-none">
+                <div className="text-[10px] text-gray-400 leading-none">
                   GET IT ON
                 </div>
                 <div className="text-sm font-semibold text-white leading-tight">
@@ -468,21 +471,21 @@ export default function HillyheallyHomepage() {
                   Hilly Heally
                 </span>
               </div>
-              <p className="text-gray-600 text-sm">상호명: 주식회사 힐리힐리</p>
-              <p className="text-gray-600 text-sm">대표자: 박준섭</p>
-              <p className="text-gray-600 text-sm">
+              <p className="text-gray-400 text-sm">상호명: 주식회사 힐리힐리</p>
+              <p className="text-gray-400 text-sm">대표자: 박준섭</p>
+              <p className="text-gray-400 text-sm">
                 주소: 서울시 서초구 서초중앙로 123, 지하 1층 1003호
               </p>
-              <p className="text-gray-600 text-sm">사업자번호: 720-86-03798</p>
-              <p className="text-gray-600 text-sm">
+              <p className="text-gray-400 text-sm">사업자번호: 720-86-03798</p>
+              <p className="text-gray-400 text-sm">
                 Tel: 1800-5191 FAX: 02-6455-6023
               </p>
-              <p className="text-gray-600 text-sm">
+              <p className="text-gray-400 text-sm">
                 Mail: service@hillyheally.com
               </p>
             </div>
           </div>
-          <div className="border-t border-white/[0.05] mt-8 pt-8 text-center text-gray-600">
+          <div className="border-t border-white/[0.05] mt-8 pt-8 text-center text-gray-400">
             <p className="text-sm">
               &copy; 2025 Hilly Heally. All rights reserved.
             </p>
