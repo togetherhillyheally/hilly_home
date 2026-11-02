@@ -41,6 +41,8 @@ type Props = {
   initialCount: number;
   initialPool: TreasureReward[];
   coordinates: Coordinates | null;
+  /** GPX 없이 만든 보물지도 — 개수는 찍은 자리 수, 경로 미리보기 없음 */
+  routeless?: boolean;
 };
 
 function cloneDefaults(): TreasureReward[] {
@@ -52,6 +54,7 @@ export default function TreasureSettingsPanel({
   initialCount,
   initialPool,
   coordinates,
+  routeless,
 }: Props) {
   const router = useRouter();
   const [count, setCount] = useState<number>(initialCount);
@@ -144,9 +147,11 @@ export default function TreasureSettingsPanel({
         pool={pool}
         setPool={setPool}
         onResetDefaults={resetDefaults}
+        hideCount={routeless}
       />
 
       {/* 배치 미리보기 — 실제 세션은 매번 새로 뽑히므로 "샘플" 임을 명시 */}
+      {!routeless && (
       <div className="rounded-lg border border-white/10 bg-white/[0.02]">
         <div className="flex items-center justify-between px-3 py-2 border-b border-white/5">
           <button
@@ -199,6 +204,7 @@ export default function TreasureSettingsPanel({
           </div>
         ) : null}
       </div>
+      )}
 
       {error ? (
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-200 flex items-start gap-2">

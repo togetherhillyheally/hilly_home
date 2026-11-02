@@ -127,6 +127,8 @@ export async function POST(req: Request) {
     );
   }
 
+  if (String(form.get("no_gpx") ?? "") === "1") return createDirectTreasureMap(form);
+
   const fileEntries = form.getAll("files");
   const files: File[] = fileEntries.filter(
     (f): f is File => f instanceof File && f.size > 0
@@ -329,5 +331,121 @@ export async function POST(req: Request) {
       distance_km: merged.distanceKm,
       total_ascent_m: merged.totalAscentM,
     },
+  });
+}
+
+type LatLng = { lat: number; lng: number };
+
+function parseLatLng(v: unknown): LatLng | null {
+  const o = v as { lat?: unknown; lng?: unknown } | null;
+  if (!o || typeof o.lat !== "number" || typeof o.lng !== "number") return null;
+  if (!Number.isFinite(o.lat) || !Number.isFinite(o.lng)) return null;
+  if (Math.abs(o.lat) > 90 || Math.abs(o.lng) > 180) return null;
+  return { lat: o.lat, lng: o.lng };
+}
+
+/**
+ * GPX 없이 만드는 보물지도 (2026-11-02) — 출발점 + 직접 찍은 보물 자리만.
+ *  · coordinates 는 비워 둔다(NULL). 앱은 경로 선 대신 보물 자리·출발점으로 지도를 잡는다
+ *  · bounds/center 는 출발점과 보물 자리를 감싸는 범위(+여백)
+ *  · 보물 자리는 trail_treasure_spots 에 넣는다 — 자리가 있으면 모험 시작 시 그 자리에 보물이 놓인다
+ */
+async function createDirectTreasureMap(form: FormData) {
+  const name = String(form.get("name") ?? "").trim();
+  if (!name) return NextResponse.json({ error: "지도 이름을 입력해 주세요." }, { status: 400 });
+
+  let start: LatLng | null = null;
+  let spots: LatLng[] = [];
+  try {
+    start = parseLatLng(JSON.parse(String(form.get("start") ?? "null")));
+    const raw = JSON.parse(String(form.get("spots") ?? "[]")) as unknown;
+    spots = (Array.isArray(raw) ? raw : []).map(parseLatLng).filter((x): x is LatLng => !!x);
+  } catch {
+    return NextResponse.json({ error: "출발점·보물 자리 형식이 올바르지 않아요." }, { status: 400 });
+  }
+  if (!start) return NextResponse.json({ error: "출발점을 찍어 주세요." }, { status: 400 });
+  if (spots.length === 0) return NextResponse.json({ error: "보물 자리를 1개 이상 찍어 주세요." }, { status: 400 });
+  if (spots.length > 30) return NextResponse.json({ error: "보물 자리는 30개까지예요." }, { status: 400 });
+
+  const activityTypes = String(form.get("activity_types") ?? "walking,running")
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s): s is ActivityType => s === "walking" || s === "running" || s === "cycling");
+
+  let poolValue = DEFAULT_TREASURE_REWARD_POOL.map((r) => ({ ...r }));
+  const rawPool = form.get("treasure_reward_pool");
+  if (rawPool != null && String(rawPool).length > 0) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(String(rawPool));
+    } catch {
+      return NextResponse.json({ error: "treasure_reward_pool JSON 파싱 실패" }, { status: 400 });
+    }
+    const pr = validateTreasureRewardPool(parsed);
+    if (!pr.ok) return NextResponse.json({ error: pr.message }, { status: 400 });
+    poolValue = pr.value;
+  }
+
+  // 범위 — 점들을 감싸고 사방 약 150m 여백
+  const pts = [start, ...spots];
+  const PAD = 0.0015;
+  const bounds = {
+    minLat: Math.min(...pts.map((p) => p.lat)) - PAD,
+    maxLat: Math.max(...pts.map((p) => p.lat)) + PAD,
+    minLon: Math.min(...pts.map((p) => p.lng)) - PAD,
+    maxLon: Math.max(...pts.map((p) => p.lng)) + PAD,
+  };
+  const center: [number, number] = [
+    (bounds.minLon + bounds.maxLon) / 2,
+    (bounds.minLat + bounds.maxLat) / 2,
+  ];
+
+  const trailId = randomUUID();
+  let inserted: { id: string; name: string };
+  try {
+    inserted = await insertTrailRow({
+      id: trailId,
+      name,
+      day: null,
+      map_type: "treasure",
+      gpx_storage_bucket: null,
+      gpx_storage_path: null,
+      // 거리·상승은 경로가 없어 비워 둔다 (앱은 없으면 '-', 0 이면 '0km' 로 보여 줌)
+      distance_km: null,
+      total_ascent_m: null,
+      bounds,
+      center,
+      coordinates: null,
+      start_lat: start.lat,
+      start_lng: start.lng,
+      end_lat: start.lat,
+      end_lng: start.lng,
+      sort_order: await getNextSortOrder(),
+      created_by: ADMIN_UPLOADER_PROFILE_ID,
+      source: "manual",
+      activity_types: activityTypes.length > 0 ? activityTypes : ["walking", "running"],
+      series_name: String(form.get("series_name") ?? "").trim() || null,
+      treasure_count: spots.length,
+      treasure_reward_pool: poolValue,
+    });
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : "DB INSERT 실패" }, { status: 500 });
+  }
+
+  const res = await adminFetch("trail_treasure_spots", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(spots.map((s, i) => ({ trail_id: inserted.id, seq: i + 1, lat: s.lat, lng: s.lng }))),
+  });
+  if (!res.ok) {
+    // 자리 없는 보물지도는 앱에서 놓을 곳이 없다 — 지도도 지운다
+    await adminFetch(`trails?id=eq.${inserted.id}`, { method: "DELETE" }).catch(() => {});
+    const text = await res.text().catch(() => "");
+    return NextResponse.json({ error: `보물 자리 저장 실패: ${text}` }, { status: 500 });
+  }
+
+  return NextResponse.json({
+    success: true,
+    trail: { id: inserted.id, name: inserted.name, distance_km: null, total_ascent_m: null },
   });
 }

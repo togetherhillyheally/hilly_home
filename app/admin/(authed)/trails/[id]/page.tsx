@@ -12,6 +12,7 @@ import { adminList } from "@/lib/admin-rest";
 import EditForm from "./EditForm";
 import SegmentColorToggle from "./SegmentColorToggle";
 import TreasureSettingsPanel from "./TreasureSettingsPanel";
+import TreasureSpotsPanel from "./TreasureSpotsPanel";
 import {
   DEFAULT_TREASURE_COUNT,
   DEFAULT_TREASURE_REWARD_POOL,
@@ -100,6 +101,14 @@ export default async function TrailDetailPage({
   );
   const trail = rows[0];
   if (!trail) notFound();
+  // GPX 없이 만든 보물지도 — 경로 좌표 없이 출발점·보물 자리만 있다
+  const routeless = !Array.isArray(trail.coordinates) || trail.coordinates.length === 0;
+  const { rows: treasureSpots } =
+    trail.map_type === "treasure"
+      ? await adminList<{ lat: number; lng: number }>(
+          `trail_treasure_spots?select=lat,lng&trail_id=eq.${id}&order=seq.asc`
+        )
+      : { rows: [] as { lat: number; lng: number }[] };
 
   let creatorNickname: string | null = null;
   if (trail.created_by) {
@@ -203,6 +212,7 @@ export default async function TrailDetailPage({
                 checkpoints={checkpoints}
               />
             )}
+            {!routeless && (
             <ShareImageButton
               trailId={trail.id}
               trailName={trail.name}
@@ -215,6 +225,7 @@ export default async function TrailDetailPage({
               }
               coordinates={trail.coordinates}
             />
+            )}
           </div>
         </div>
         {trail.series_name && (
@@ -355,9 +366,23 @@ export default async function TrailDetailPage({
           {/* 코스 가이드 — 앱 미리보기 (진행방향 순서) */}
           <CheckpointGuide checkpoints={guideCheckpoints} />
 
+          {trail.map_type === "treasure" && (
+            <TreasureSpotsPanel
+              trailId={trail.id}
+              routeless={routeless}
+              initialStart={
+                trail.start_lat != null && trail.start_lng != null
+                  ? { lat: trail.start_lat, lng: trail.start_lng }
+                  : null
+              }
+              initialSpots={treasureSpots.map((s) => ({ lat: s.lat, lng: s.lng }))}
+            />
+          )}
+
           {trail.map_type === "treasure" ? (
             /* 보물지도 설정 — 코스 퀴즈 대신 넓은 좌측 영역에 배치 */
             <TreasureSettingsPanel
+              routeless={routeless}
               trailId={trail.id}
               initialCount={trail.treasure_count ?? DEFAULT_TREASURE_COUNT}
               initialPool={

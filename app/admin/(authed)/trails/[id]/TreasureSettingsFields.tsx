@@ -19,6 +19,8 @@ type Props = {
   setPool: React.Dispatch<React.SetStateAction<TreasureReward[]>>;
   onResetDefaults: () => void;
   disabled?: boolean;
+  /** 보물 자리를 직접 찍은 지도 — 개수는 찍은 자리 수로 정해져서 숨김 */
+  hideCount?: boolean;
 };
 
 export default function TreasureSettingsFields({
@@ -28,6 +30,7 @@ export default function TreasureSettingsFields({
   setPool,
   onResetDefaults,
   disabled,
+  hideCount,
 }: Props) {
   const sumWeight = totalWeight(pool);
 
@@ -48,6 +51,7 @@ export default function TreasureSettingsFields({
   return (
     <div className="space-y-4">
       {/* 보물 개수 */}
+      {!hideCount && (
       <div>
         <label className="block text-xs text-gray-300 mb-1.5">
           보물 개수 <span className="text-gray-500">(세션마다 숨길 보물의 수)</span>
@@ -86,6 +90,7 @@ export default function TreasureSettingsFields({
           더 적게 나올 수 있어요. (허용: {TREASURE_COUNT_MIN}~{TREASURE_COUNT_MAX})
         </p>
       </div>
+      )}
 
       {/* 보상 풀 */}
       <div>

@@ -18,6 +18,7 @@ import {
   type PreparedTrailGeometry,
 } from "@/lib/gpx-prep";
 import TrailMapPreview from "@/components/admin/TrailMapPreview";
+import TreasureSpotPicker, { type LatLng } from "@/components/admin/TreasureSpotPicker";
 import SeriesNameInput, {
   invalidateSeriesNamesCache,
 } from "@/components/admin/SeriesNameInput";
@@ -82,6 +83,13 @@ export default function UploadForm({ mapType = "adventure" }: { mapType?: MapKin
   const [treasurePool, setTreasurePool] = useState<TreasureReward[]>(() =>
     DEFAULT_TREASURE_REWARD_POOL.map((r) => ({ ...r }))
   );
+  // GPX 없이 지도에서 출발점·보물 자리를 직접 찍는 보물지도 (2026-11-02)
+  const [noGpx, setNoGpx] = useState(false);
+  const [pick, setPick] = useState<{ start: LatLng | null; spots: LatLng[] }>({
+    start: null,
+    spots: [],
+  });
+  const directMode = mapType === "treasure" && noGpx;
 
   const validEntries = useMemo(
     () => entries.filter((e) => e.prep && !e.parseError),
@@ -214,6 +222,7 @@ export default function UploadForm({ mapType = "adventure" }: { mapType?: MapKin
   };
 
   const submit = () => {
+    if (directMode) return submitDirect();
     if (validEntries.length === 0) {
       setError("GPX 또는 KML 파일을 1개 이상 첨부해주세요.");
       return;
@@ -284,6 +293,44 @@ export default function UploadForm({ mapType = "adventure" }: { mapType?: MapKin
     });
   };
 
+  // GPX 없이 — 출발점과 보물 자리만 보낸다
+  const submitDirect = () => {
+    if (!name.trim()) return setError("지도 이름을 입력해 주세요.");
+    if (!pick.start) return setError("지도에서 출발점을 찍어 주세요.");
+    if (pick.spots.length === 0) return setError("보물 자리를 1개 이상 찍어 주세요.");
+    if (activityTypes.length === 0) return setError("활동 유형을 1개 이상 선택해주세요.");
+    const pr = validateTreasureRewardPool(treasurePool);
+    if (!pr.ok) return setError(pr.message);
+    setError(null);
+
+    const form = new FormData();
+    form.append("no_gpx", "1");
+    form.append("name", name.trim());
+    form.append("series_name", seriesName.trim());
+    form.append("activity_types", activityTypes.join(","));
+    form.append("map_type", "treasure");
+    form.append("start", JSON.stringify(pick.start));
+    form.append("spots", JSON.stringify(pick.spots));
+    form.append("treasure_count", String(pick.spots.length));
+    form.append("treasure_reward_pool", JSON.stringify(treasurePool));
+
+    startSubmit(async () => {
+      try {
+        const res = await fetch("/api/admin/trails/upload", { method: "POST", body: form });
+        const data = await res.json();
+        if (!res.ok || !data?.success) {
+          setError(data?.error ?? "등록 실패");
+          return;
+        }
+        setSuccess({ id: data.trail.id, name: data.trail.name });
+        if (seriesName.trim()) invalidateSeriesNamesCache();
+        setTimeout(() => router.push(`/admin/trails/${data.trail.id}`), 1200);
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : "등록 실패");
+      }
+    });
+  };
+
   if (success) {
     return (
       <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-8 text-center">
@@ -303,6 +350,47 @@ export default function UploadForm({ mapType = "adventure" }: { mapType?: MapKin
     <div className="grid lg:grid-cols-[1fr_400px] gap-6">
       {/* Left: 파일 + 미리보기 */}
       <div className="space-y-5">
+        {mapType === "treasure" && (
+          <div className="inline-flex rounded-lg border border-white/10 bg-white/[0.03] p-0.5">
+            {(
+              [
+                [false, "GPX 파일로 만들기"],
+                [true, "지도에서 직접 찍기"],
+              ] as const
+            ).map(([v, label]) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => {
+                  setNoGpx(v);
+                  setError(null);
+                }}
+                disabled={busy}
+                className={`h-9 rounded-md px-4 text-sm font-semibold transition-colors ${
+                  noGpx === v ? "bg-amber-500 text-black" : "text-gray-400 hover:text-white"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {directMode ? (
+          <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+            <p className="mb-3 text-xs leading-relaxed text-gray-400">
+              경로 없이 출발점과 보물 자리만으로 만들어요. 앱에서는 경로 선 없이 보물 자리만 보이고,
+              모험을 시작하면 찍은 자리에 보물이 놓여요.
+            </p>
+            <TreasureSpotPicker
+              start={pick.start}
+              spots={pick.spots}
+              onChange={setPick}
+              disabled={submitting}
+            />
+          </div>
+        ) : (
+        <>
         {/* 분석 중 / 업로드 중 진행 표시 */}
         {analyzing && (
           <div className="rounded-xl border border-orange-500/30 bg-orange-500/[0.08] p-4 flex items-center gap-3">
@@ -506,6 +594,8 @@ export default function UploadForm({ mapType = "adventure" }: { mapType?: MapKin
             />
           </div>
         )}
+        </>
+        )}
 
         {/* 보물지도 설정 — 상세 화면처럼 넓은 좌측 영역에 배치 */}
         {mapType === "treasure" && (
@@ -533,6 +623,7 @@ export default function UploadForm({ mapType = "adventure" }: { mapType?: MapKin
                 );
               }}
               disabled={submitting}
+              hideCount={directMode}
             />
           </div>
         )}
@@ -549,7 +640,7 @@ export default function UploadForm({ mapType = "adventure" }: { mapType?: MapKin
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder={merged?.defaultName ?? "예: 지리산 둘레길"}
+              placeholder={directMode ? "예: 종댕이길 보물찾기" : merged?.defaultName ?? "예: 지리산 둘레길"}
               className="w-full h-10 px-3 rounded-lg bg-white/[0.04] border border-white/10 text-white placeholder:text-gray-600 text-sm focus:outline-none focus:border-orange-500/50"
             />
             {!name.trim() && merged?.defaultName && (
@@ -595,7 +686,20 @@ export default function UploadForm({ mapType = "adventure" }: { mapType?: MapKin
             </div>
           </div>
 
-          {merged && (
+          {directMode && (
+            <div className="pt-3 border-t border-white/10 text-xs text-gray-400 space-y-1">
+              <div className="flex justify-between">
+                <span>출발점</span>
+                <span className="font-mono text-gray-200">{pick.start ? "찍음" : "아직"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>보물 자리</span>
+                <span className="font-mono text-gray-200">{pick.spots.length}개</span>
+              </div>
+            </div>
+          )}
+
+          {!directMode && merged && (
             <div className="pt-3 border-t border-white/10 text-xs text-gray-400 space-y-1">
               <div className="flex justify-between">
                 <span>총 거리</span>
@@ -629,7 +733,10 @@ export default function UploadForm({ mapType = "adventure" }: { mapType?: MapKin
         <button
           type="button"
           onClick={submit}
-          disabled={submitting || validEntries.length === 0}
+          disabled={
+            submitting ||
+            (directMode ? !pick.start || pick.spots.length === 0 : validEntries.length === 0)
+          }
           className={`w-full h-11 rounded-lg disabled:bg-white/[0.06] disabled:text-gray-500 text-white text-sm font-semibold inline-flex items-center justify-center gap-2 transition-colors ${
             mapType === "treasure"
               ? "bg-amber-500 hover:bg-amber-600"
