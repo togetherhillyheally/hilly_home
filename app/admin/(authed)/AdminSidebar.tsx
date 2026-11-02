@@ -19,6 +19,7 @@ import {
 } from "@/lib/admin-nav";
 import type { MenuKey } from "@/lib/admin-permissions";
 import { cn } from "@/lib/utils";
+import { useNavActiveOverride } from "@/components/admin/NavActiveOverride";
 
 type Session = { nickname: string | null; phoneNumber: string | null };
 type BadgeSlots = Partial<Record<NavBadgeKey, React.ReactNode>>;
@@ -32,6 +33,7 @@ type Props = {
 function NavBody({
   nav,
   pathname,
+  activeOverride,
   badgeSlots,
   session,
   onItemClick,
@@ -39,6 +41,7 @@ function NavBody({
 }: {
   nav: AdminNavGroup[];
   pathname: string;
+  activeOverride: string | null;
   badgeSlots: BadgeSlots;
   session: Session;
   onItemClick?: () => void;
@@ -63,9 +66,10 @@ function NavBody({
             <ul className="space-y-0.5">
               {group.items.map((item) => {
                 const Icon = item.icon;
-                const active =
-                  pathname === item.href ||
-                  pathname.startsWith(item.href + "/");
+                const active = activeOverride
+                  ? activeOverride === item.href
+                  : pathname === item.href ||
+                    pathname.startsWith(item.href + "/");
                 const badgeSlot = item.badgeKey
                   ? badgeSlots[item.badgeKey]
                   : null;
@@ -116,6 +120,7 @@ function NavBody({
 
 export default function AdminSidebar({ allowedMenuKeys, session, badgeSlots }: Props) {
   const pathname = usePathname();
+  const activeOverride = useNavActiveOverride(pathname);
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const nav = filterNavByMenuKeys(ADMIN_NAV, new Set(allowedMenuKeys));
@@ -149,6 +154,7 @@ export default function AdminSidebar({ allowedMenuKeys, session, badgeSlots }: P
             <NavBody
               nav={nav}
               pathname={pathname}
+              activeOverride={activeOverride}
               badgeSlots={badgeSlots}
               session={session}
               onItemClick={() => setOpen(false)}
@@ -166,6 +172,7 @@ export default function AdminSidebar({ allowedMenuKeys, session, badgeSlots }: P
         <NavBody
           nav={nav}
           pathname={pathname}
+              activeOverride={activeOverride}
           badgeSlots={badgeSlots}
           session={session}
           onLogout={handleLogout}

@@ -30,6 +30,7 @@ import CheckpointCarouselButton, {
 } from "./CheckpointCarouselPanel";
 import CheckpointGuide, { type GuideCheckpoint } from "./CheckpointGuide";
 import QuizPanel from "./QuizPanel";
+import NavActiveOverride from "@/components/admin/NavActiveOverride";
 import { orderByRouteProgress } from "@/lib/checkpoint-order";
 
 export const dynamic = "force-dynamic";
@@ -176,12 +177,13 @@ export default async function TrailDetailPage({
     <main className="p-6 lg:p-10">
       {/* ───── 헤더 ───── */}
       <header className="mb-6">
+        {trail.map_type === "treasure" && <NavActiveOverride href="/admin/treasures" />}
         <Link
-          href="/admin/trails"
+          href={trail.map_type === "treasure" ? "/admin/treasures" : "/admin/trails"}
           className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-white mb-3"
         >
           <ChevronLeft className="h-4 w-4" />
-          코스 지도 목록
+          {trail.map_type === "treasure" ? "보물 지도 목록" : "코스 지도 목록"}
         </Link>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3">

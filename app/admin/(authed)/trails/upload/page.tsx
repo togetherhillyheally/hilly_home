@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronLeft, Gem } from "lucide-react";
 import UploadForm from "./UploadForm";
+import NavActiveOverride from "@/components/admin/NavActiveOverride";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,7 @@ export default async function TrailUploadPage({
 
   return (
     <main className="p-6 lg:p-10">
+      {isTreasure && <NavActiveOverride href="/admin/treasures" />}
       <header className="mb-6">
         <Link
           href={backHref}
