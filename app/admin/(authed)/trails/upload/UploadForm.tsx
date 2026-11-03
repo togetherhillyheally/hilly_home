@@ -227,7 +227,7 @@ export default function UploadForm({ mapType = "adventure" }: { mapType?: MapKin
       setError("GPX 또는 KML 파일을 1개 이상 첨부해주세요.");
       return;
     }
-    if (activityTypes.length === 0) {
+    if (mapType !== "treasure" && activityTypes.length === 0) {
       setError("활동 유형을 1개 이상 선택해주세요.");
       return;
     }
@@ -298,7 +298,6 @@ export default function UploadForm({ mapType = "adventure" }: { mapType?: MapKin
     if (!name.trim()) return setError("지도 이름을 입력해 주세요.");
     if (!pick.start) return setError("지도에서 출발점을 찍어 주세요.");
     if (pick.spots.length === 0) return setError("보물 자리를 1개 이상 찍어 주세요.");
-    if (activityTypes.length === 0) return setError("활동 유형을 1개 이상 선택해주세요.");
     const pr = validateTreasureRewardPool(treasurePool);
     if (!pr.ok) return setError(pr.message);
     setError(null);
@@ -661,6 +660,8 @@ export default function UploadForm({ mapType = "adventure" }: { mapType?: MapKin
             />
           </div>
 
+          {/* 활동 유형 — 코스 지도만. 보물지도는 걷기/달리기/자전거 구분 없음(기본 걷기로 저장, 2026-11-03) */}
+          {mapType !== "treasure" && (
           <div>
             <label className="block text-xs text-gray-400 mb-1.5">
               활동 유형
@@ -685,6 +686,7 @@ export default function UploadForm({ mapType = "adventure" }: { mapType?: MapKin
               })}
             </div>
           </div>
+          )}
 
           {directMode && (
             <div className="pt-3 border-t border-white/10 text-xs text-gray-400 space-y-1">
