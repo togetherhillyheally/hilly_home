@@ -113,7 +113,7 @@ export default function FulfillCell({ treasureId, isPrize, fulfilledAt, note }: 
             maxLength={200}
             onChange={(e) => setMemo(e.target.value)}
             placeholder="메모 (송장번호, 현장 전달 등)"
-            className="h-7 flex-1 min-w-0 px-2 rounded-md bg-white/[0.04] border border-white/10 text-white text-[11px] placeholder:text-gray-600 focus:outline-none focus:border-amber-500/50"
+            className="h-7 flex-1 min-w-0 px-2 rounded-md bg-white/[0.04] border border-white/10 text-white text-[11px] placeholder:text-gray-600 focus:outline-none focus:border-teal-500/50"
           />
           <button
             type="submit"

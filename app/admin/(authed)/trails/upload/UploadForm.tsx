@@ -30,7 +30,7 @@ import {
   type TreasureReward,
 } from "@/lib/trail-treasure";
 import TreasureSettingsFields from "../[id]/TreasureSettingsFields";
-import { Gem } from "lucide-react";
+import { TreasureChest } from "@/components/admin/TreasureChestIcon";
 
 type ActivityType = "walking" | "running" | "cycling";
 
@@ -366,7 +366,7 @@ export default function UploadForm({ mapType = "adventure" }: { mapType?: MapKin
                 }}
                 disabled={busy}
                 className={`h-9 rounded-md px-4 text-sm font-semibold transition-colors ${
-                  noGpx === v ? "bg-amber-500 text-black" : "text-gray-400 hover:text-white"
+                  noGpx === v ? "bg-teal-400 text-[#0b1f1c]" : "text-gray-400 hover:text-white"
                 }`}
               >
                 {label}
@@ -598,10 +598,10 @@ export default function UploadForm({ mapType = "adventure" }: { mapType?: MapKin
 
         {/* 보물지도 설정 — 상세 화면처럼 넓은 좌측 영역에 배치 */}
         {mapType === "treasure" && (
-          <div className="rounded-xl border border-amber-500/30 bg-amber-500/[0.03] p-5 space-y-4">
+          <div className="rounded-xl border border-teal-400/30 bg-teal-400/[0.03] p-5 space-y-4">
             <div className="flex items-center gap-2">
-              <Gem className="h-4 w-4 text-amber-300" />
-              <h2 className="text-sm font-semibold text-amber-100">
+              <TreasureChest className="h-4 w-4 text-teal-300" />
+              <h2 className="text-sm font-semibold text-teal-100">
                 보물지도 설정
               </h2>
             </div>
@@ -739,10 +739,10 @@ export default function UploadForm({ mapType = "adventure" }: { mapType?: MapKin
             submitting ||
             (directMode ? !pick.start || pick.spots.length === 0 : validEntries.length === 0)
           }
-          className={`w-full h-11 rounded-lg disabled:bg-white/[0.06] disabled:text-gray-500 text-white text-sm font-semibold inline-flex items-center justify-center gap-2 transition-colors ${
+          className={`w-full h-11 rounded-lg disabled:bg-white/[0.06] disabled:text-gray-500 text-sm font-semibold inline-flex items-center justify-center gap-2 transition-colors ${
             mapType === "treasure"
-              ? "bg-amber-500 hover:bg-amber-600"
-              : "bg-orange-500 hover:bg-orange-600"
+              ? "bg-teal-400 hover:bg-teal-300 text-[#0b1f1c]"
+              : "bg-orange-500 hover:bg-orange-600 text-white"
           }`}
         >
           {submitting && <Loader2 className="h-4 w-4 animate-spin" />}

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Gem, Plus, Search, Users } from "lucide-react";
+import { Plus, Search, Users } from "lucide-react";
+import { TreasureChest } from "@/components/admin/TreasureChestIcon";
 import { adminList, escapeIlike } from "@/lib/admin-rest";
 import Pagination from "../Pagination";
 import type { TreasureReward } from "@/lib/trail-treasure";
@@ -95,7 +96,7 @@ export default async function TreasuresPage({
       <header className="mb-6 flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight inline-flex items-center gap-2">
-            <Gem className="h-6 w-6" style={{ color: "#F2B705" }} />
+            <TreasureChest className="h-6 w-6" style={{ color: "#2DD4BF" }} />
             보물 지도
           </h1>
           <p className="text-sm text-gray-400 mt-1">
@@ -112,8 +113,8 @@ export default async function TreasuresPage({
           </Link>
           <Link
             href="/admin/trails/upload?map_type=treasure"
-            className="inline-flex items-center gap-2 px-4 h-10 rounded-lg text-white text-sm font-medium transition-colors"
-            style={{ backgroundColor: "#F2B705" }}
+            className="inline-flex items-center gap-2 px-4 h-10 rounded-lg text-[#0b1f1c] text-sm font-semibold transition-colors"
+            style={{ backgroundColor: "#2DD4BF" }}
           >
             <Plus className="h-4 w-4" />
             새 보물 지도
@@ -135,7 +136,7 @@ export default async function TreasuresPage({
               type="text"
               placeholder="이름 / 시리즈명"
               defaultValue={q}
-              className="w-full h-10 pl-9 pr-3 rounded-lg bg-white/[0.04] border border-white/10 text-white placeholder:text-gray-600 text-sm focus:outline-none focus:border-amber-500/50"
+              className="w-full h-10 pl-9 pr-3 rounded-lg bg-white/[0.04] border border-white/10 text-white placeholder:text-gray-600 text-sm focus:outline-none focus:border-teal-500/50"
             />
           </div>
           <button
@@ -158,7 +159,7 @@ export default async function TreasuresPage({
                 href={buildHref({ q: q || undefined, active: t })}
                 className={`px-3 h-7 inline-flex items-center rounded-md font-medium transition-colors ${
                   isActive
-                    ? "bg-amber-500/20 text-amber-200 border border-amber-500/40"
+                    ? "bg-teal-500/20 text-teal-200 border border-teal-500/40"
                     : "bg-white/[0.04] text-gray-400 border border-white/10 hover:text-white"
                 }`}
               >
@@ -204,17 +205,17 @@ export default async function TreasuresPage({
                           style={{
                             backgroundColor: "rgba(242,183,5,0.12)",
                             borderColor: "rgba(242,183,5,0.45)",
-                            color: "#F2B705",
+                            color: "#2DD4BF",
                           }}
                         >
-                          <Gem className="h-3 w-3" />
+                          <TreasureChest className="h-3 w-3" />
                           보물
                         </span>
                       </td>
                       <td className="px-4 py-3">
                         <Link
                           href={`/admin/trails/${t.id}`}
-                          className="text-white truncate max-w-[280px] block hover:text-amber-300 transition-colors"
+                          className="text-white truncate max-w-[280px] block hover:text-teal-300 transition-colors"
                         >
                           {t.name}
                         </Link>
@@ -229,7 +230,7 @@ export default async function TreasuresPage({
                         )}
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs font-medium">
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-teal-500/10 border border-teal-500/30 text-teal-200 text-xs font-medium">
                           {t.treasure_count ?? 10}개
                         </span>
                       </td>

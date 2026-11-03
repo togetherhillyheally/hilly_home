@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ChevronLeft, Gem } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
+import { TreasureChest } from "@/components/admin/TreasureChestIcon";
 import UploadForm from "./UploadForm";
 import NavActiveOverride from "@/components/admin/NavActiveOverride";
 
@@ -35,7 +36,7 @@ export default async function TrailUploadPage({
         </Link>
         <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight flex items-center gap-2">
           {isTreasure ? (
-            <Gem className="h-6 w-6 shrink-0" style={{ color: "#F2B705" }} />
+            <TreasureChest className="h-6 w-6 shrink-0" style={{ color: "#2DD4BF" }} />
           ) : null}
           <span>{title}</span>
         </h1>

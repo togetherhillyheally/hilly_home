@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowLeft, Download, Gem, Gift, Search, Sprout } from "lucide-react";
+import { ArrowLeft, Download, Gift, Search, Sprout } from "lucide-react";
+import { TreasureChest } from "@/components/admin/TreasureChestIcon";
 import { adminList } from "@/lib/admin-rest";
 import Pagination from "../../Pagination";
 import FulfillCell from "./FulfillCell";
@@ -89,7 +90,7 @@ export default async function TreasureClaimsPage({
             보물 지도
           </Link>
           <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight inline-flex items-center gap-2">
-            <Gem className="h-6 w-6" style={{ color: "#F2B705" }} />
+            <TreasureChest className="h-6 w-6" style={{ color: "#2DD4BF" }} />
             보물 획득자 명단
           </h1>
           <p className="text-sm text-gray-400 mt-1">
@@ -122,7 +123,7 @@ export default async function TreasureClaimsPage({
               type="text"
               placeholder="닉네임 / 전화번호"
               defaultValue={filters.q}
-              className="w-56 h-10 pl-9 pr-3 rounded-lg bg-white/[0.04] border border-white/10 text-white placeholder:text-gray-600 text-sm focus:outline-none focus:border-amber-500/50"
+              className="w-56 h-10 pl-9 pr-3 rounded-lg bg-white/[0.04] border border-white/10 text-white placeholder:text-gray-600 text-sm focus:outline-none focus:border-teal-500/50"
             />
           </div>
         </label>
@@ -131,7 +132,7 @@ export default async function TreasureClaimsPage({
           <select
             name="trail"
             defaultValue={filters.trail}
-            className="h-10 px-3 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:outline-none focus:border-amber-500/50 max-w-[260px]"
+            className="h-10 px-3 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:outline-none focus:border-teal-500/50 max-w-[260px]"
           >
             <option value="">전체</option>
             {trails.map((t) => (
@@ -147,7 +148,7 @@ export default async function TreasureClaimsPage({
             name="from"
             type="date"
             defaultValue={filters.from}
-            className="h-10 px-3 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:outline-none focus:border-amber-500/50"
+            className="h-10 px-3 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:outline-none focus:border-teal-500/50"
           />
         </label>
         <label className="flex flex-col gap-1 text-xs text-gray-500">
@@ -156,7 +157,7 @@ export default async function TreasureClaimsPage({
             name="to"
             type="date"
             defaultValue={filters.to}
-            className="h-10 px-3 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:outline-none focus:border-amber-500/50"
+            className="h-10 px-3 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:outline-none focus:border-teal-500/50"
           />
         </label>
         <button
@@ -185,7 +186,7 @@ export default async function TreasureClaimsPage({
               href={hrefWith({ kind: k, status: k === "prize" ? filters.status : "all" })}
               className={`px-3 h-7 inline-flex items-center rounded-md font-medium transition-colors ${
                 isActive
-                  ? "bg-amber-500/20 text-amber-200 border border-amber-500/40"
+                  ? "bg-teal-500/20 text-teal-200 border border-teal-500/40"
                   : "bg-white/[0.04] text-gray-400 border border-white/10 hover:text-white"
               }`}
             >
@@ -248,7 +249,7 @@ export default async function TreasureClaimsPage({
                         {u ? (
                           <Link
                             href={`/admin/users/${u.id}`}
-                            className="block hover:text-amber-300 transition-colors"
+                            className="block hover:text-teal-300 transition-colors"
                           >
                             <span className="text-white">{u.nickname ?? "(닉네임 없음)"}</span>
                             {u.phone_number && (
@@ -274,7 +275,7 @@ export default async function TreasureClaimsPage({
                         {s?.trail_id ? (
                           <Link
                             href={`/admin/trails/${s.trail_id}`}
-                            className="hover:text-amber-300 transition-colors truncate inline-block max-w-[220px] align-middle"
+                            className="hover:text-teal-300 transition-colors truncate inline-block max-w-[220px] align-middle"
                           >
                             {s.trails?.name ?? "(이름 없음)"}
                           </Link>
@@ -285,7 +286,7 @@ export default async function TreasureClaimsPage({
                       <td className="px-4 py-3 text-xs text-gray-300">
                         <Link
                           href={`/admin/sessions/${r.session_id}`}
-                          className="hover:text-amber-300 transition-colors"
+                          className="hover:text-teal-300 transition-colors"
                         >
                           <span className="truncate inline-block max-w-[240px] align-middle">
                             {s?.title ?? "(제목 없음)"}

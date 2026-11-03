@@ -7,11 +7,11 @@ import {
   AlertCircle,
   CheckCircle2,
   Dices,
-  Gem,
   Loader2,
   Map as MapIcon,
   Save,
 } from "lucide-react";
+import { TreasureChest } from "@/components/admin/TreasureChestIcon";
 import {
   DEFAULT_TREASURE_REWARD_POOL,
   validateTreasureCount,
@@ -135,10 +135,10 @@ export default function TreasureSettingsPanel({
   };
 
   return (
-    <section className="rounded-xl border border-amber-500/30 bg-amber-500/[0.03] p-5 space-y-4">
+    <section className="rounded-xl border border-teal-500/30 bg-teal-500/[0.03] p-5 space-y-4">
       <div className="flex items-center gap-2">
-        <Gem className="h-4 w-4 text-amber-300" />
-        <h2 className="text-sm font-semibold text-amber-100">보물지도 설정</h2>
+        <TreasureChest className="h-4 w-4 text-teal-300" />
+        <h2 className="text-sm font-semibold text-teal-100">보물지도 설정</h2>
       </div>
 
       <TreasureSettingsFields
@@ -160,7 +160,7 @@ export default function TreasureSettingsPanel({
             disabled={!hasRoute}
             className="inline-flex items-center gap-2 text-xs text-gray-200 hover:text-white disabled:opacity-40"
           >
-            <MapIcon className="h-3.5 w-3.5 text-amber-300" />
+            <MapIcon className="h-3.5 w-3.5 text-teal-300" />
             경로상 배치 미리보기
             <span className="text-[10px] text-gray-500">
               ({showPreview ? "접기" : "펼치기"})
@@ -170,7 +170,7 @@ export default function TreasureSettingsPanel({
             <button
               type="button"
               onClick={reroll}
-              className="inline-flex items-center gap-1 h-7 px-2 rounded-md text-[11px] text-amber-200 hover:text-amber-100 hover:bg-white/[0.05]"
+              className="inline-flex items-center gap-1 h-7 px-2 rounded-md text-[11px] text-teal-200 hover:text-teal-100 hover:bg-white/[0.05]"
             >
               <Dices className="h-3 w-3" /> 다시 뽑기
             </button>
@@ -186,7 +186,7 @@ export default function TreasureSettingsPanel({
                   height={380}
                 />
                 <p className="text-[11px] text-gray-500 leading-relaxed">
-                  요청 {count}개 중 <b className="text-amber-200">
+                  요청 {count}개 중 <b className="text-teal-200">
                     {placement.length}개
                   </b>{" "}
                   배치됨. 세션 시작 시 방장 디바이스가 다시 랜덤으로 뽑기 때문에
@@ -223,7 +223,7 @@ export default function TreasureSettingsPanel({
         type="button"
         onClick={save}
         disabled={saving || !dirty}
-        className="w-full h-10 rounded-lg bg-amber-500 hover:bg-amber-600 disabled:bg-amber-500/30 text-white text-sm font-semibold inline-flex items-center justify-center gap-2"
+        className="w-full h-10 rounded-lg bg-teal-400 hover:bg-teal-300 disabled:bg-teal-400/30 text-[#0b1f1c] text-sm font-semibold inline-flex items-center justify-center gap-2"
       >
         {saving ? (
           <Loader2 className="h-4 w-4 animate-spin" />

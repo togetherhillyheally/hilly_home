@@ -52,10 +52,10 @@ function chestEl(n: number) {
 function startEl() {
   const el = document.createElement("div");
   el.style.cssText = `
-    width: 34px; height: 34px; border-radius: 50%; background: #111;
-    border: 3px solid #fff; box-shadow: 0 1px 6px rgba(0,0,0,.5);
+    width: 34px; height: 34px; border-radius: 50%; background: #2DD4BF;
+    border: 3px solid #0b1f1c; box-shadow: 0 1px 6px rgba(0,0,0,.5);
     display: flex; align-items: center; justify-content: center;
-    font: 900 14px/1 Pretendard, sans-serif; color: #fff; cursor: grab; user-select: none;`;
+    font: 900 14px/1 Pretendard, sans-serif; color: #0b1f1c; cursor: grab; user-select: none;`;
   el.textContent = "S";
   el.title = "출발점 — 끌어서 옮겨요";
   return el;
@@ -215,7 +215,7 @@ export default function TreasureSpotPicker({
               onClick={() => setMode(m)}
               disabled={disabled}
               className={`h-8 rounded-md px-3 text-xs font-semibold transition-colors ${
-                mode === m ? (m === "start" ? "bg-white text-black" : "bg-amber-500 text-black") : "text-gray-400 hover:text-white"
+                mode === m ? (m === "start" ? "bg-white text-black" : "bg-teal-400 text-[#0b1f1c]") : "text-gray-400 hover:text-white"
               }`}
             >
               {label}

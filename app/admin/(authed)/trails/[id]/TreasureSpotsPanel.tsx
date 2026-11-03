@@ -58,11 +58,11 @@ export default function TreasureSpotsPanel({
   };
 
   return (
-    <section className="rounded-xl border border-amber-500/30 bg-amber-500/[0.03] p-5 space-y-4">
+    <section className="rounded-xl border border-teal-500/30 bg-teal-500/[0.03] p-5 space-y-4">
       <div>
         <div className="flex items-center gap-2">
-          <MapPin className="h-4 w-4 text-amber-300" />
-          <h2 className="text-sm font-semibold text-amber-100">
+          <MapPin className="h-4 w-4 text-teal-300" />
+          <h2 className="text-sm font-semibold text-teal-100">
             {routeless ? "출발점과 보물 자리" : "보물 자리 지정"}
           </h2>
         </div>
@@ -96,7 +96,7 @@ export default function TreasureSpotsPanel({
         type="button"
         onClick={save}
         disabled={saving || !dirty}
-        className="w-full h-10 rounded-lg bg-amber-500 hover:bg-amber-600 disabled:bg-amber-500/30 text-white text-sm font-semibold inline-flex items-center justify-center gap-2"
+        className="w-full h-10 rounded-lg bg-teal-400 hover:bg-teal-300 disabled:bg-teal-400/30 text-[#0b1f1c] text-sm font-semibold inline-flex items-center justify-center gap-2"
       >
         {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
         보물 자리 저장

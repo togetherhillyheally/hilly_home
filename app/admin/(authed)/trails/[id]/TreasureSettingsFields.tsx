@@ -67,7 +67,7 @@ export default function TreasureSettingsFields({
                 disabled={disabled}
                 className={`h-8 px-3 rounded-md text-xs font-semibold border transition disabled:opacity-50 ${
                   active
-                    ? "bg-amber-500/20 border-amber-400/60 text-amber-100"
+                    ? "bg-teal-500/20 border-teal-400/60 text-teal-100"
                     : "bg-white/[0.04] border-white/10 text-gray-300 hover:text-white"
                 }`}
               >
@@ -82,7 +82,7 @@ export default function TreasureSettingsFields({
             value={count}
             onChange={(e) => setCount(Number(e.target.value) || 0)}
             disabled={disabled}
-            className="w-20 h-8 px-2 ml-2 rounded-md bg-white/[0.04] border border-white/10 text-white text-xs text-right tabular-nums focus:outline-none focus:border-amber-400/50 disabled:opacity-50"
+            className="w-20 h-8 px-2 ml-2 rounded-md bg-white/[0.04] border border-white/10 text-white text-xs text-right tabular-nums focus:outline-none focus:border-teal-400/50 disabled:opacity-50"
           />
         </div>
         <p className="text-[11px] text-gray-500 leading-relaxed">
@@ -142,7 +142,7 @@ export default function TreasureSettingsFields({
                           });
                         }}
                         disabled={disabled}
-                        className="w-full h-8 px-1 rounded bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400/50 disabled:opacity-50"
+                        className="w-full h-8 px-1 rounded bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-teal-400/50 disabled:opacity-50"
                       >
                         {TREASURE_REWARD_KINDS.map((k) => (
                           <option
@@ -167,7 +167,7 @@ export default function TreasureSettingsFields({
                             value: Number(e.target.value) || 0,
                           })
                         }
-                        className="w-full h-8 px-2 rounded bg-white/[0.04] border border-white/10 text-white text-xs text-right tabular-nums focus:outline-none focus:border-amber-400/50 disabled:opacity-40"
+                        className="w-full h-8 px-2 rounded bg-white/[0.04] border border-white/10 text-white text-xs text-right tabular-nums focus:outline-none focus:border-teal-400/50 disabled:opacity-40"
                       />
                     </td>
                     <td className="px-2 py-1">
@@ -185,7 +185,7 @@ export default function TreasureSettingsFields({
                               ? "예: 스타벅스 쿠폰"
                               : "꽝"
                         }
-                        className="w-full h-8 px-2 rounded bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400/50 disabled:opacity-50"
+                        className="w-full h-8 px-2 rounded bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-teal-400/50 disabled:opacity-50"
                       />
                     </td>
                     <td className="px-2 py-1">
@@ -199,10 +199,10 @@ export default function TreasureSettingsFields({
                             weight: Number(e.target.value) || 0,
                           })
                         }
-                        className="w-full h-8 px-2 rounded bg-white/[0.04] border border-white/10 text-white text-xs text-right tabular-nums focus:outline-none focus:border-amber-400/50 disabled:opacity-50"
+                        className="w-full h-8 px-2 rounded bg-white/[0.04] border border-white/10 text-white text-xs text-right tabular-nums focus:outline-none focus:border-teal-400/50 disabled:opacity-50"
                       />
                     </td>
-                    <td className="px-2 py-1 text-right tabular-nums text-amber-200 text-xs">
+                    <td className="px-2 py-1 text-right tabular-nums text-teal-200 text-xs">
                       {pct}%
                     </td>
                     <td className="px-2 py-1 text-right">
@@ -227,7 +227,7 @@ export default function TreasureSettingsFields({
                     type="button"
                     onClick={addRow}
                     disabled={disabled}
-                    className="text-[11px] text-amber-300 hover:text-amber-200 inline-flex items-center gap-1 disabled:opacity-50"
+                    className="text-[11px] text-teal-300 hover:text-teal-200 inline-flex items-center gap-1 disabled:opacity-50"
                   >
                     <Plus className="h-3 w-3" /> 보상 추가
                   </button>

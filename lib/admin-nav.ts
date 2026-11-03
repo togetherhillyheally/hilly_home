@@ -6,7 +6,6 @@ import {
   Coins,
   FileText,
   Flag,
-  Gem,
   Ticket,
   GlassWater,
   HelpCircle,
@@ -28,6 +27,7 @@ import {
   Gift,
   Siren,
 } from "lucide-react";
+import { TreasureChest } from "@/components/admin/TreasureChestIcon";
 import type { MenuKey } from "@/lib/admin-permissions";
 
 export type NavBadgeKey = "pendingDeletions" | "pendingReports";
@@ -105,7 +105,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       {
         href: "/admin/treasures",
         label: "보물 지도",
-        icon: Gem,
+        icon: TreasureChest,
         menuKey: "treasures",
       },
       {
