@@ -5,9 +5,9 @@ import {
   TREASURE_COUNT_MAX,
   TREASURE_COUNT_MIN,
   TREASURE_COUNT_PRESETS,
+  TREASURE_EDIT_KINDS,
   TREASURE_REWARD_KIND_LABELS,
-  TREASURE_REWARD_KINDS,
-  totalWeight,
+  totalCount,
   type TreasureReward,
   type TreasureRewardKind,
 } from "@/lib/trail-treasure";
@@ -32,7 +32,10 @@ export default function TreasureSettingsFields({
   disabled,
   hideCount,
 }: Props) {
-  const sumWeight = totalWeight(pool);
+  // 배정 합 vs 상자 수 (2026-11-03 개수 기반) — hideCount 면 count 는 자리 수
+  const assigned = totalCount(pool);
+  const remainder = count - assigned;
+  const over = remainder < 0;
 
   const patchRow = (idx: number, patch: Partial<TreasureReward>) => {
     setPool((prev) => prev.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
@@ -44,7 +47,7 @@ export default function TreasureSettingsFields({
   const addRow = () => {
     setPool((prev) => [
       ...prev,
-      { kind: "seed", value: 1, label: "씨앗 1개", weight: 1 },
+      { kind: "prize", value: 0, label: "", count: 1 },
     ]);
   };
 
@@ -92,13 +95,17 @@ export default function TreasureSettingsFields({
       </div>
       )}
 
-      {/* 보상 풀 */}
+      {/* 상자에 넣을 보상 — 보상마다 "상자 몇 개" */}
       <div>
         <div className="flex items-center justify-between mb-2">
           <label className="block text-xs text-gray-300">
-            보상 풀{" "}
-            <span className="text-gray-500">
-              (가중치 랜덤 · 합계 {sumWeight})
+            상자에 넣을 보상{" "}
+            <span className={over ? "text-red-300" : "text-gray-500"}>
+              {over
+                ? `(상자 ${count}개보다 ${-remainder}개 많아요)`
+                : remainder > 0
+                  ? `(상자 ${count}개 중 ${assigned}개 배정, 나머지 ${remainder}개는 꽝)`
+                  : `(상자 ${count}개 모두 배정)`}
             </span>
           </label>
           <button
@@ -115,114 +122,101 @@ export default function TreasureSettingsFields({
             <thead className="bg-white/[0.03] text-gray-500">
               <tr>
                 <th className="px-2 py-1.5 text-left w-[90px]">종류</th>
-                <th className="px-2 py-1.5 text-right w-[70px]">수량</th>
+                <th className="px-2 py-1.5 text-right w-[70px]">씨앗 수량</th>
                 <th className="px-2 py-1.5 text-left">라벨 (20자 이내)</th>
-                <th className="px-2 py-1.5 text-right w-[70px]">가중치</th>
-                <th className="px-2 py-1.5 text-right w-[60px]">확률</th>
+                <th className="px-2 py-1.5 text-right w-[80px]">상자 개수</th>
                 <th className="px-2 py-1.5 w-8"></th>
               </tr>
             </thead>
             <tbody>
-              {pool.map((r, idx) => {
-                const pct =
-                  sumWeight > 0
-                    ? ((r.weight / sumWeight) * 100).toFixed(1)
-                    : "—";
-                return (
-                  <tr key={idx} className="border-t border-white/5 align-middle">
-                    <td className="px-2 py-1">
-                      <select
-                        value={r.kind}
-                        onChange={(e) => {
-                          const kind = e.target.value as TreasureRewardKind;
-                          patchRow(idx, {
-                            kind,
-                            value:
-                              kind === "seed" ? Math.max(1, r.value || 1) : 0,
-                          });
-                        }}
-                        disabled={disabled}
-                        className="w-full h-8 px-1 rounded bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-teal-400/50 disabled:opacity-50"
-                      >
-                        {TREASURE_REWARD_KINDS.map((k) => (
-                          <option
-                            key={k}
-                            value={k}
-                            className="bg-[#0c0c14]"
-                          >
-                            {TREASURE_REWARD_KIND_LABELS[k]}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-2 py-1">
-                      <input
-                        type="number"
-                        min={r.kind === "seed" ? 1 : 0}
-                        max={r.kind === "seed" ? undefined : 0}
-                        value={r.value}
-                        disabled={disabled || r.kind !== "seed"}
-                        onChange={(e) =>
-                          patchRow(idx, {
-                            value: Number(e.target.value) || 0,
-                          })
-                        }
-                        className="w-full h-8 px-2 rounded bg-white/[0.04] border border-white/10 text-white text-xs text-right tabular-nums focus:outline-none focus:border-teal-400/50 disabled:opacity-40"
-                      />
-                    </td>
-                    <td className="px-2 py-1">
-                      <input
-                        value={r.label}
-                        maxLength={20}
-                        disabled={disabled}
-                        onChange={(e) =>
-                          patchRow(idx, { label: e.target.value })
-                        }
-                        placeholder={
-                          r.kind === "seed"
-                            ? "씨앗 N개"
-                            : r.kind === "prize"
-                              ? "예: 스타벅스 쿠폰"
-                              : "꽝"
-                        }
-                        className="w-full h-8 px-2 rounded bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-teal-400/50 disabled:opacity-50"
-                      />
-                    </td>
-                    <td className="px-2 py-1">
-                      <input
-                        type="number"
-                        min={1}
-                        value={r.weight}
-                        disabled={disabled}
-                        onChange={(e) =>
-                          patchRow(idx, {
-                            weight: Number(e.target.value) || 0,
-                          })
-                        }
-                        className="w-full h-8 px-2 rounded bg-white/[0.04] border border-white/10 text-white text-xs text-right tabular-nums focus:outline-none focus:border-teal-400/50 disabled:opacity-50"
-                      />
-                    </td>
-                    <td className="px-2 py-1 text-right tabular-nums text-teal-200 text-xs">
-                      {pct}%
-                    </td>
-                    <td className="px-2 py-1 text-right">
-                      <button
-                        type="button"
-                        onClick={() => removeRow(idx)}
-                        disabled={disabled || pool.length <= 1}
-                        className="text-gray-500 hover:text-red-400 disabled:opacity-20 p-1"
-                        aria-label="행 삭제"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
+              {pool.map((r, idx) => (
+                <tr key={idx} className="border-t border-white/5 align-middle">
+                  <td className="px-2 py-1">
+                    <select
+                      value={r.kind}
+                      onChange={(e) => {
+                        const kind = e.target.value as TreasureRewardKind;
+                        patchRow(idx, {
+                          kind,
+                          value:
+                            kind === "seed" ? Math.max(1, r.value || 1) : 0,
+                        });
+                      }}
+                      disabled={disabled}
+                      className="w-full h-8 px-1 rounded bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-teal-400/50 disabled:opacity-50"
+                    >
+                      {TREASURE_EDIT_KINDS.map((k) => (
+                        <option
+                          key={k}
+                          value={k}
+                          className="bg-[#0c0c14]"
+                        >
+                          {TREASURE_REWARD_KIND_LABELS[k]}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="px-2 py-1">
+                    <input
+                      type="number"
+                      min={r.kind === "seed" ? 1 : 0}
+                      max={r.kind === "seed" ? undefined : 0}
+                      value={r.value}
+                      disabled={disabled || r.kind !== "seed"}
+                      onChange={(e) =>
+                        patchRow(idx, {
+                          value: Number(e.target.value) || 0,
+                        })
+                      }
+                      className="w-full h-8 px-2 rounded bg-white/[0.04] border border-white/10 text-white text-xs text-right tabular-nums focus:outline-none focus:border-teal-400/50 disabled:opacity-40"
+                    />
+                  </td>
+                  <td className="px-2 py-1">
+                    <input
+                      value={r.label}
+                      maxLength={20}
+                      disabled={disabled}
+                      onChange={(e) =>
+                        patchRow(idx, { label: e.target.value })
+                      }
+                      placeholder={
+                        r.kind === "seed" ? "씨앗 N개" : "예: 아메리카노 1잔"
+                      }
+                      className="w-full h-8 px-2 rounded bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-teal-400/50 disabled:opacity-50"
+                    />
+                  </td>
+                  <td className="px-2 py-1">
+                    <input
+                      type="number"
+                      min={1}
+                      max={TREASURE_COUNT_MAX}
+                      value={r.count}
+                      disabled={disabled}
+                      onChange={(e) =>
+                        patchRow(idx, {
+                          count: Number(e.target.value) || 0,
+                        })
+                      }
+                      className="w-full h-8 px-2 rounded bg-white/[0.04] border border-teal-400/40 text-white text-xs text-right tabular-nums focus:outline-none focus:border-teal-400/70 disabled:opacity-50"
+                    />
+                  </td>
+                  <td className="px-2 py-1 text-right">
+                    <button
+                      type="button"
+                      onClick={() => removeRow(idx)}
+                      disabled={disabled || pool.length <= 1}
+                      className="text-gray-500 hover:text-red-400 disabled:opacity-20 p-1"
+                      aria-label="행 삭제"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
             <tfoot>
               <tr className="border-t border-white/10 bg-white/[0.02]">
-                <td colSpan={6} className="px-2 py-1.5">
+                <td colSpan={5} className="px-2 py-1.5">
                   <button
                     type="button"
                     onClick={addRow}
@@ -237,8 +231,9 @@ export default function TreasureSettingsFields({
           </table>
         </div>
         <p className="text-[11px] text-gray-500 mt-1.5 leading-relaxed">
-          세션 시작 시 각 보물에 가중치 랜덤으로 하나씩 배정돼요. 씨앗은 자동 지급,
-          상품은 라벨만 표시되고 운영자가 오프라인에서 전달, 꽝은 획득해도 보상 없음.
+          세션 시작 시 적은 개수만큼 상자에 섞어 넣어요. 배정하지 않은 상자는 꽝이에요.
+          자리별 보상을 정한 상자는 그 보상이 먼저예요. 씨앗은 자동 지급, 상품은 라벨만
+          표시되고 운영자가 오프라인에서 전달해요.
         </p>
       </div>
     </div>

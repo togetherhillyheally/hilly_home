@@ -13,7 +13,8 @@ import {
 } from "lucide-react";
 import { TreasureChest } from "@/components/admin/TreasureChestIcon";
 import {
-  DEFAULT_TREASURE_REWARD_POOL,
+  defaultTreasureRewardPool,
+  normalizeTreasureRewardPool,
   TREASURE_COUNT_MAX,
   TREASURE_LIMIT_PRESETS,
   validateTreasureCount,
@@ -50,9 +51,6 @@ type Props = {
   routeless?: boolean;
 };
 
-function cloneDefaults(): TreasureReward[] {
-  return DEFAULT_TREASURE_REWARD_POOL.map((r) => ({ ...r }));
-}
 
 export default function TreasureSettingsPanel({
   trailId,
@@ -65,11 +63,11 @@ export default function TreasureSettingsPanel({
   const router = useRouter();
   const [count, setCount] = useState<number>(initialCount);
   const [limit, setLimit] = useState<number | null>(initialLimit);
-  const [pool, setPool] = useState<TreasureReward[]>(() =>
-    (initialPool ?? []).length > 0
-      ? initialPool.map((r) => ({ ...r }))
-      : cloneDefaults()
-  );
+  // 옛 저장값(weight)은 개수로 읽고, 꽝 줄은 뺀다(배정 안 한 상자가 꽝) — 2026-11-03
+  const [pool, setPool] = useState<TreasureReward[]>(() => {
+    const p = normalizeTreasureRewardPool(initialPool);
+    return p.length > 0 ? p : defaultTreasureRewardPool(initialCount);
+  });
   const [saving, startSave] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -100,7 +98,7 @@ export default function TreasureSettingsPanel({
     if (!confirm("기본 보상 풀로 되돌릴까요? 지금 입력한 내용은 사라져요.")) {
       return;
     }
-    setPool(cloneDefaults());
+    setPool(defaultTreasureRewardPool(count));
   };
 
   const save = () => {
@@ -111,7 +109,7 @@ export default function TreasureSettingsPanel({
       setError(countR.message);
       return;
     }
-    const poolR = validateTreasureRewardPool(pool);
+    const poolR = validateTreasureRewardPool(pool, countR.value);
     if (!poolR.ok) {
       setError(poolR.message);
       return;

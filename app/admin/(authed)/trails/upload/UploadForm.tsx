@@ -238,7 +238,7 @@ export default function UploadForm({ mapType = "adventure" }: { mapType?: MapKin
         setError(cr.message);
         return;
       }
-      const pr = validateTreasureRewardPool(treasurePool);
+      const pr = validateTreasureRewardPool(treasurePool, cr.value);
       if (!pr.ok) {
         setError(pr.message);
         return;
@@ -298,7 +298,7 @@ export default function UploadForm({ mapType = "adventure" }: { mapType?: MapKin
     if (!name.trim()) return setError("지도 이름을 입력해 주세요.");
     if (!pick.start) return setError("지도에서 출발점을 찍어 주세요.");
     if (pick.spots.length === 0) return setError("보물 자리를 1개 이상 찍어 주세요.");
-    const pr = validateTreasureRewardPool(treasurePool);
+    const pr = validateTreasureRewardPool(treasurePool, pick.spots.length);
     if (!pr.ok) return setError(pr.message);
     setError(null);
 
@@ -606,7 +606,7 @@ export default function UploadForm({ mapType = "adventure" }: { mapType?: MapKin
               </h2>
             </div>
             <TreasureSettingsFields
-              count={treasureCount}
+              count={directMode ? pick.spots.length : treasureCount}
               setCount={setTreasureCount}
               pool={treasurePool}
               setPool={setTreasurePool}
