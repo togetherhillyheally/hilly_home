@@ -14,7 +14,10 @@ import {
 import { TreasureChest } from "@/components/admin/TreasureChestIcon";
 import {
   DEFAULT_TREASURE_REWARD_POOL,
+  TREASURE_COUNT_MAX,
+  TREASURE_LIMIT_PRESETS,
   validateTreasureCount,
+  validateTreasureLimit,
   validateTreasureRewardPool,
   type TreasureReward,
 } from "@/lib/trail-treasure";
@@ -40,6 +43,8 @@ type Props = {
   trailId: string;
   initialCount: number;
   initialPool: TreasureReward[];
+  /** 한 사람당 찾을 수 있는 보물 수 — null = 제한 없음 */
+  initialLimit: number | null;
   coordinates: Coordinates | null;
   /** GPX 없이 만든 보물지도 — 개수는 찍은 자리 수, 경로 미리보기 없음 */
   routeless?: boolean;
@@ -53,11 +58,13 @@ export default function TreasureSettingsPanel({
   trailId,
   initialCount,
   initialPool,
+  initialLimit,
   coordinates,
   routeless,
 }: Props) {
   const router = useRouter();
   const [count, setCount] = useState<number>(initialCount);
+  const [limit, setLimit] = useState<number | null>(initialLimit);
   const [pool, setPool] = useState<TreasureReward[]>(() =>
     (initialPool ?? []).length > 0
       ? initialPool.map((r) => ({ ...r }))
@@ -84,9 +91,10 @@ export default function TreasureSettingsPanel({
 
   const dirty = useMemo(() => {
     if (count !== initialCount) return true;
+    if (limit !== initialLimit) return true;
     if (pool.length !== (initialPool ?? []).length) return true;
     return JSON.stringify(pool) !== JSON.stringify(initialPool ?? []);
-  }, [count, pool, initialCount, initialPool]);
+  }, [count, limit, pool, initialCount, initialLimit, initialPool]);
 
   const resetDefaults = () => {
     if (!confirm("기본 보상 풀로 되돌릴까요? 지금 입력한 내용은 사라져요.")) {
@@ -108,6 +116,11 @@ export default function TreasureSettingsPanel({
       setError(poolR.message);
       return;
     }
+    const limitR = validateTreasureLimit(limit);
+    if (!limitR.ok) {
+      setError(limitR.message);
+      return;
+    }
     startSave(async () => {
       try {
         const res = await fetch(`/api/admin/trails/${trailId}`, {
@@ -116,6 +129,7 @@ export default function TreasureSettingsPanel({
           body: JSON.stringify({
             treasure_count: countR.value,
             treasure_reward_pool: poolR.value,
+            treasure_per_person_limit: limitR.value,
           }),
         });
         const data = (await res.json().catch(() => null)) as {
@@ -149,6 +163,52 @@ export default function TreasureSettingsPanel({
         onResetDefaults={resetDefaults}
         hideCount={routeless}
       />
+
+      {/* 한 사람당 찾을 수 있는 보물 수 (2026-11-03) */}
+      <div>
+        <label className="block text-xs text-gray-300 mb-1.5">
+          한 사람당 찾을 수 있는 보물{" "}
+          <span className="text-gray-500">(다 찾으면 남은 상자는 다른 사람 몫)</span>
+        </label>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {TREASURE_LIMIT_PRESETS.map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => setLimit(p)}
+              className={`h-8 px-3 rounded-md text-xs border transition-colors ${
+                limit === p
+                  ? "bg-teal-500/20 border-teal-400/60 text-teal-100"
+                  : "bg-white/[0.03] border-white/10 text-gray-300 hover:bg-white/[0.06]"
+              }`}
+            >
+              {p}개
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => setLimit(null)}
+            className={`h-8 px-3 rounded-md text-xs border transition-colors ${
+              limit === null
+                ? "bg-teal-500/20 border-teal-400/60 text-teal-100"
+                : "bg-white/[0.03] border-white/10 text-gray-300 hover:bg-white/[0.06]"
+            }`}
+          >
+            제한 없음
+          </button>
+          <span className="ml-2 text-xs text-gray-500">직접</span>
+          <input
+            type="number"
+            min={1}
+            max={TREASURE_COUNT_MAX}
+            value={limit ?? ""}
+            placeholder="∞"
+            onChange={(e) => setLimit(e.target.value === "" ? null : Number(e.target.value))}
+            className="w-16 h-8 px-2 rounded-md bg-white/[0.04] border border-white/10 text-white text-xs text-right tabular-nums focus:outline-none focus:border-teal-400/50"
+          />
+          <span className="text-xs text-gray-500">개</span>
+        </div>
+      </div>
 
       {/* 배치 미리보기 — 실제 세션은 매번 새로 뽑히므로 "샘플" 임을 명시 */}
       {!routeless && (

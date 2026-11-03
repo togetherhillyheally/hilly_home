@@ -146,3 +146,52 @@ export function validateTreasureCount(
 export function totalWeight(pool: TreasureReward[]): number {
   return pool.reduce((s, r) => s + (Number(r.weight) || 0), 0);
 }
+
+/**
+ * 한 사람당 찾을 수 있는 보물 수 (2026-11-03, trails.treasure_per_person_limit).
+ * null = 제한 없음. DB 기본값 1 (2026-10-30 "한 사람당 1개" 규칙 그대로).
+ */
+export const TREASURE_LIMIT_PRESETS = [1, 2, 3] as const;
+export const DEFAULT_TREASURE_PER_PERSON_LIMIT = 1;
+
+export function validateTreasureLimit(
+  input: unknown
+): { ok: true; value: number | null } | { ok: false; message: string } {
+  if (input === null || input === undefined || input === "") return { ok: true, value: null };
+  const n = Number(input);
+  if (!Number.isInteger(n) || n < TREASURE_COUNT_MIN || n > TREASURE_COUNT_MAX) {
+    return {
+      ok: false,
+      message: `한 사람당 개수는 ${TREASURE_COUNT_MIN}~${TREASURE_COUNT_MAX} 사이거나 제한 없음이어야 해요.`,
+    };
+  }
+  return { ok: true, value: n };
+}
+
+/**
+ * 자리별 보상 (2026-11-03, trail_treasure_spots.reward_*). null = 보상 풀에서 랜덤.
+ * DB 체크와 같은 규칙: seed 는 value>=1, prize/none 은 value=0, label 1~20자.
+ */
+export type TreasureSpotReward = { kind: TreasureRewardKind; value: number; label: string };
+
+export function validateSpotReward(
+  input: unknown,
+  n: number
+): { ok: true; value: TreasureSpotReward | null } | { ok: false; message: string } {
+  if (input === null || input === undefined) return { ok: true, value: null };
+  const r = input as Partial<TreasureSpotReward>;
+  if (!TREASURE_REWARD_KINDS.includes(r.kind as TreasureRewardKind)) {
+    return { ok: false, message: `${n}번 보물의 보상 종류가 올바르지 않아요.` };
+  }
+  const kind = r.kind as TreasureRewardKind;
+  const value = kind === "seed" ? Number(r.value) : 0;
+  if (kind === "seed" && (!Number.isInteger(value) || value < 1)) {
+    return { ok: false, message: `${n}번 보물의 씨앗 수량은 1 이상이어야 해요.` };
+  }
+  const label =
+    (typeof r.label === "string" ? r.label.trim() : "") ||
+    (kind === "seed" ? `씨앗 ${value}개` : kind === "none" ? "꽝" : "");
+  if (!label) return { ok: false, message: `${n}번 보물의 상품 이름을 적어 주세요.` };
+  if (label.length > 20) return { ok: false, message: `${n}번 보물의 상품 이름은 20자까지예요.` };
+  return { ok: true, value: { kind, value, label } };
+}

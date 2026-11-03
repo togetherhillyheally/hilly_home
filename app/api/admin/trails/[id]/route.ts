@@ -4,6 +4,7 @@ import { adminFetch } from "@/lib/admin-rest";
 import {
   validateTreasureCount,
   validateTreasureRewardPool,
+  validateTreasureLimit,
 } from "@/lib/trail-treasure";
 
 export const runtime = "nodejs";
@@ -106,6 +107,13 @@ export async function PATCH(
       return NextResponse.json({ error: r.message }, { status: 400 });
     }
     update.treasure_reward_pool = r.value;
+  }
+  if ("treasure_per_person_limit" in body) {
+    const r = validateTreasureLimit(body.treasure_per_person_limit);
+    if (!r.ok) {
+      return NextResponse.json({ error: r.message }, { status: 400 });
+    }
+    update.treasure_per_person_limit = r.value;
   }
 
   if ("activity_types" in body) {

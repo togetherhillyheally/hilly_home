@@ -148,7 +148,8 @@ export default function TreasureSpotPicker({
       m.on("dragend", () => {
         const ll = m.getLngLat();
         const { start, spots, onChange } = latest.current;
-        onChange({ start, spots: spots.map((x, j) => (j === i ? { lat: ll.lat, lng: ll.lng } : x)) });
+        // 자리에 붙은 다른 값(보상 등)은 그대로 두고 좌표만 바꾼다
+        onChange({ start, spots: spots.map((x, j) => (j === i ? { ...x, lat: ll.lat, lng: ll.lng } : x)) });
       });
       el.addEventListener("click", (ev) => {
         ev.stopPropagation();

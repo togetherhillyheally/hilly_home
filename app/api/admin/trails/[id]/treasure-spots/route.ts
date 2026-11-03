@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { hasMenuAccess, readAdminSession } from "@/lib/admin-session";
 import { adminFetch } from "@/lib/admin-rest";
+import { validateSpotReward, type TreasureSpotReward } from "@/lib/trail-treasure";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,7 +19,7 @@ function parseLatLng(v: unknown): LatLng | null {
 /**
  * 보물 자리 저장 — 자리 목록을 통째로 바꾼다 (앱 set_trail_treasure_spots 와 같은 규칙, 최대 30).
  * 경로 없는(GPX 없이 만든) 보물지도면 출발점·범위·보물 개수도 함께 맞춘다.
- * body: { start?: {lat,lng}, spots: {lat,lng}[] }
+ * body: { start?: {lat,lng}, spots: {lat,lng,reward?}[] } — reward: {kind,value,label} | null(보상 풀 랜덤) (2026-11-03)
  */
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await readAdminSession();
@@ -29,8 +30,15 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   if (!/^[0-9a-f-]{36}$/i.test(id)) return NextResponse.json({ error: "잘못된 지도 ID" }, { status: 400 });
 
   const body = (await req.json().catch(() => null)) as { start?: unknown; spots?: unknown } | null;
-  const spots = (Array.isArray(body?.spots) ? body.spots : []).map(parseLatLng);
+  const rawSpots: unknown[] = Array.isArray(body?.spots) ? body.spots : [];
+  const spots = rawSpots.map(parseLatLng);
   if (spots.some((s) => !s)) return NextResponse.json({ error: "보물 자리 형식이 올바르지 않아요." }, { status: 400 });
+  const rewards: (TreasureSpotReward | null)[] = [];
+  for (let i = 0; i < rawSpots.length; i++) {
+    const r = validateSpotReward((rawSpots[i] as { reward?: unknown }).reward ?? null, i + 1);
+    if (!r.ok) return NextResponse.json({ error: r.message }, { status: 400 });
+    rewards.push(r.value);
+  }
   if (spots.length > 30) return NextResponse.json({ error: "보물 자리는 30개까지예요." }, { status: 400 });
   const start = body?.start != null ? parseLatLng(body.start) : null;
 
@@ -50,7 +58,15 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const ins = await adminFetch("trail_treasure_spots", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify((spots as LatLng[]).map((s, i) => ({ trail_id: id, seq: i + 1, lat: s.lat, lng: s.lng }))),
+      body: JSON.stringify((spots as LatLng[]).map((s, i) => ({
+          trail_id: id,
+          seq: i + 1,
+          lat: s.lat,
+          lng: s.lng,
+          reward_kind: rewards[i]?.kind ?? null,
+          reward_value: rewards[i]?.value ?? 0,
+          reward_label: rewards[i]?.label ?? null,
+        }))),
     });
     if (!ins.ok) return NextResponse.json({ error: `보물 자리 저장 실패: ${await ins.text()}` }, { status: 500 });
   }

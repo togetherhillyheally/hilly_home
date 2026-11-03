@@ -17,7 +17,16 @@ import {
   DEFAULT_TREASURE_COUNT,
   DEFAULT_TREASURE_REWARD_POOL,
   type TreasureReward,
+  type TreasureRewardKind,
 } from "@/lib/trail-treasure";
+
+type TreasureSpotRow = {
+  lat: number;
+  lng: number;
+  reward_kind: TreasureRewardKind | null;
+  reward_value: number;
+  reward_label: string | null;
+};
 import VisibilitySelect, {
   VisibilityBadge,
   type Visibility,
@@ -50,6 +59,7 @@ type Trail = {
   segments_colored: boolean;
   treasure_count: number | null;
   treasure_reward_pool: TreasureReward[] | null;
+  treasure_per_person_limit: number | null;
   created_at: string;
   created_by: string | null;
   source: string | null;
@@ -98,7 +108,7 @@ export default async function TrailDetailPage({
   const { id } = await params;
 
   const { rows } = await adminList<Trail>(
-    `trails?select=id,name,series_name,course_summary,map_type,distance_km,total_ascent_m,activity_types,sort_order,is_active,visibility,segments_colored,treasure_count,treasure_reward_pool,created_at,created_by,source,gpx_storage_bucket,gpx_storage_path,start_lat,start_lng,end_lat,end_lng,bounds,coordinates&id=eq.${id}`
+    `trails?select=id,name,series_name,course_summary,map_type,distance_km,total_ascent_m,activity_types,sort_order,is_active,visibility,segments_colored,treasure_count,treasure_reward_pool,treasure_per_person_limit,created_at,created_by,source,gpx_storage_bucket,gpx_storage_path,start_lat,start_lng,end_lat,end_lng,bounds,coordinates&id=eq.${id}`
   );
   const trail = rows[0];
   if (!trail) notFound();
@@ -106,10 +116,10 @@ export default async function TrailDetailPage({
   const routeless = !Array.isArray(trail.coordinates) || trail.coordinates.length === 0;
   const { rows: treasureSpots } =
     trail.map_type === "treasure"
-      ? await adminList<{ lat: number; lng: number }>(
-          `trail_treasure_spots?select=lat,lng&trail_id=eq.${id}&order=seq.asc`
+      ? await adminList<TreasureSpotRow>(
+          `trail_treasure_spots?select=lat,lng,reward_kind,reward_value,reward_label&trail_id=eq.${id}&order=seq.asc`
         )
-      : { rows: [] as { lat: number; lng: number }[] };
+      : { rows: [] as TreasureSpotRow[] };
 
   let creatorNickname: string | null = null;
   if (trail.created_by) {
@@ -377,7 +387,14 @@ export default async function TrailDetailPage({
                   ? { lat: trail.start_lat, lng: trail.start_lng }
                   : null
               }
-              initialSpots={treasureSpots.map((s) => ({ lat: s.lat, lng: s.lng }))}
+              initialSpots={treasureSpots.map((s) => ({
+                lat: s.lat,
+                lng: s.lng,
+                reward:
+                  s.reward_kind && s.reward_label
+                    ? { kind: s.reward_kind, value: s.reward_value, label: s.reward_label }
+                    : null,
+              }))}
             />
           )}
 
@@ -387,6 +404,7 @@ export default async function TrailDetailPage({
               routeless={routeless}
               trailId={trail.id}
               initialCount={trail.treasure_count ?? DEFAULT_TREASURE_COUNT}
+              initialLimit={trail.treasure_per_person_limit}
               initialPool={
                 Array.isArray(trail.treasure_reward_pool) &&
                 trail.treasure_reward_pool.length > 0
