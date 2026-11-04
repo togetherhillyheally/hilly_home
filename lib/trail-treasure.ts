@@ -199,10 +199,10 @@ export function totalCount(pool: TreasureReward[]): number {
 
 /**
  * 한 사람당 찾을 수 있는 보물 수 (2026-11-03, trails.treasure_per_person_limit).
- * null = 제한 없음. DB 기본값 1 (2026-10-30 "한 사람당 1개" 규칙 그대로).
+ * null = 제한 없음. DB 기본값 null (2026-11-04 현장 피드백 — 기본은 제한 없음, 2026-10-30 "한 사람당 1개" 는 폐지).
  */
 export const TREASURE_LIMIT_PRESETS = [1, 2, 3] as const;
-export const DEFAULT_TREASURE_PER_PERSON_LIMIT = 1;
+export const DEFAULT_TREASURE_PER_PERSON_LIMIT: number | null = null;
 
 export function validateTreasureLimit(
   input: unknown
