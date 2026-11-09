@@ -80,17 +80,18 @@ function renderHtml(
 
   const cardsHtml = responses
     .map((r, idx) => {
-      const nameQ = allQuestions[0];
-      const nameVal =
-        (nameQ && r.answers?.[nameQ.id]) || "(이름 미기입)";
-      const rows = allQuestions
-        .slice(1)
+      // 첫 문항이 이름(주관식)일 때만 카드 제목으로 (admin 페이지와 같음)
+      const nameQ = allQuestions[0]?.type === "text" ? allQuestions[0] : null;
+      const nameVal = !nameQ
+        ? "응답"
+        : r.answers?.[nameQ.id] || "(이름 미기입)";
+      const rows = (nameQ ? allQuestions.slice(1) : allQuestions)
         .map((q) => {
           const v = r.answers?.[q.id];
           const display =
             v === null || v === undefined || v === ""
               ? '<span style="color:#9ca3af">—</span>'
-              : escape(String(v));
+              : escape(Array.isArray(v) ? v.join(", ") : String(v));
           return `<tr>
             <th>${escape(q.text)}</th>
             <td>${display}</td>
@@ -119,7 +120,7 @@ function renderHtml(
           if (q.type === "choice") {
             const buckets = new Map<string, number>();
             for (const opt of q.options) buckets.set(opt, 0);
-            for (const v of vals as string[])
+            for (const v of vals.flatMap((x) => (Array.isArray(x) ? x : [x])))
               buckets.set(String(v), (buckets.get(String(v)) ?? 0) + 1);
             const max = Math.max(1, ...Array.from(buckets.values()));
             const bars = q.options

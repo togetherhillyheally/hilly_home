@@ -1,6 +1,6 @@
 export type Question =
   | { id: string; type: "scale"; text: string; min: number; max: number; minLabel?: string; maxLabel?: string }
-  | { id: string; type: "choice"; text: string; options: string[] }
+  | { id: string; type: "choice"; text: string; options: string[]; multi?: boolean }
   | { id: string; type: "text"; text: string; long?: boolean };
 
 export type Section = {
@@ -70,13 +70,18 @@ function parseQuestion(rawLine: string, id: string): Question {
   }
 
   // em-dash MC: "질문 — 옵션1 / 옵션2 / ..."
+  //   질문에 (복수) 를 붙이면 여러 개 선택 — "질문 (복수) — 옵션1 / 옵션2" (2026-11-09)
   const dashIdx = text.indexOf("—");
   if (dashIdx !== -1) {
-    const qPart = text.slice(0, dashIdx).trim();
+    let qPart = text.slice(0, dashIdx).trim();
     const optPart = text.slice(dashIdx + 1).trim();
     const options = optPart.split(/\s*\/\s*/).map((s) => s.trim()).filter(Boolean);
     if (options.length >= 2) {
-      return { id, type: "choice", text: qPart, options };
+      const multi = /\(\s*복수\s*\)/.test(qPart);
+      if (multi) qPart = qPart.replace(/\s*\(\s*복수\s*\)/, "").trim();
+      return multi
+        ? { id, type: "choice", text: qPart, options, multi: true }
+        : { id, type: "choice", text: qPart, options };
     }
   }
 

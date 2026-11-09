@@ -1,7 +1,8 @@
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-export type SurveyAnswers = Record<string, string | number | null>;
+/** string[] = 여러 개 선택 문항 (복수) */
+export type SurveyAnswers = Record<string, string | number | string[] | null>;
 
 export type SurveySubmission = {
   surveySlug: string;

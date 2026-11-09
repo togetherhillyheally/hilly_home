@@ -176,11 +176,15 @@ function ResponseCard({
   sections: Section[];
 }) {
   const allQuestions = sections.flatMap((s) => s.questions);
-  const nameQ = allQuestions[0];
+  // 첫 문항이 이름(주관식)일 때만 카드 제목으로 — 이름 없는 익명 설문은 번호만
+  const nameQ = allQuestions[0]?.type === "text" ? allQuestions[0] : null;
   const nameValue = nameQ ? response.answers?.[nameQ.id] : null;
-  const nameStr =
-    nameValue == null || nameValue === "" ? "(이름 미기입)" : String(nameValue);
-  const restQuestions = allQuestions.slice(1);
+  const nameStr = !nameQ
+    ? "응답"
+    : nameValue == null || nameValue === ""
+      ? "(이름 미기입)"
+      : String(nameValue);
+  const restQuestions = nameQ ? allQuestions.slice(1) : allQuestions;
 
   return (
     <section className="rounded-2xl border border-white/5 bg-white/[0.02] overflow-hidden">
@@ -201,7 +205,11 @@ function ResponseCard({
         {restQuestions.map((q) => {
           const v = response.answers?.[q.id];
           const display =
-            v === null || v === undefined || v === "" ? null : String(v);
+            v === null || v === undefined || v === ""
+              ? null
+              : Array.isArray(v)
+                ? v.join(", ")
+                : String(v);
           return (
             <div key={q.id} className="contents">
               <dt className="text-xs text-gray-400 pt-0.5 sm:pt-1">
@@ -269,7 +277,7 @@ function QuestionStats({
       {question.type === "choice" && (
         <ChoiceStats
           question={question}
-          values={values as string[]}
+          values={values as (string | string[])[]}
           total={answeredCount}
         />
       )}
@@ -348,13 +356,14 @@ function ChoiceStats({
   total,
 }: {
   question: Extract<Question, { type: "choice" }>;
-  values: string[];
+  values: (string | string[])[];
   total: number;
 }) {
   const counts = new Map<string, number>(
     question.options.map((opt) => [opt, 0])
   );
-  for (const v of values) {
+  // 여러 개 선택(배열)은 고른 보기마다 1 — 비율은 응답자 수 기준이라 합이 100% 를 넘을 수 있다
+  for (const v of values.flatMap((x) => (Array.isArray(x) ? x : [x]))) {
     counts.set(v, (counts.get(v) ?? 0) + 1);
   }
   const max = Math.max(1, ...Array.from(counts.values()));

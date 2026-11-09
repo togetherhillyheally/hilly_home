@@ -35,7 +35,7 @@ export default function SurveyClient({ survey, slug }: Props) {
       ? 0
       : Math.round((answeredCount / allQuestions.length) * 100);
 
-  function setAnswer(id: string, value: string | number | null) {
+  function setAnswer(id: string, value: string | number | string[] | null) {
     setAnswers((prev) => ({ ...prev, [id]: value }));
   }
 
@@ -290,13 +290,16 @@ function QuestionField({
   onChange,
 }: {
   question: Question;
-  value: string | number | null;
-  onChange: (v: string | number | null) => void;
+  value: string | number | string[] | null;
+  onChange: (v: string | number | string[] | null) => void;
 }) {
   return (
     <div>
       <label className="block text-sm text-gray-200 leading-relaxed mb-3">
         {question.text}
+        {question.type === "choice" && question.multi && (
+          <span className="ml-1.5 text-xs text-gray-500">(여러 개 선택 가능)</span>
+        )}
       </label>
       {question.type === "scale" && (
         <ScaleField question={question} value={value} onChange={onChange} />
@@ -329,7 +332,7 @@ function ScaleField({
   onChange,
 }: {
   question: Extract<Question, { type: "scale" }>;
-  value: string | number | null;
+  value: string | number | string[] | null;
   onChange: (v: number | null) => void;
 }) {
   const items = [];
@@ -375,19 +378,25 @@ function ChoiceField({
   onChange,
 }: {
   question: Extract<Question, { type: "choice" }>;
-  value: string | number | null;
-  onChange: (v: string | null) => void;
+  value: string | number | string[] | null;
+  onChange: (v: string | string[] | null) => void;
 }) {
-  const selected = typeof value === "string" ? value : null;
+  const picked = Array.isArray(value) ? value : typeof value === "string" ? [value] : [];
+  const toggle = (opt: string, active: boolean) => {
+    if (!question.multi) return onChange(active ? null : opt);
+    // 여러 개 선택 — 보기 순서대로 저장, 다 빼면 미응답
+    const next = question.options.filter((o) => (o === opt ? !active : picked.includes(o)));
+    onChange(next.length ? next : null);
+  };
   return (
     <div className="flex flex-wrap gap-2">
       {question.options.map((opt) => {
-        const active = selected === opt;
+        const active = picked.includes(opt);
         return (
           <button
             key={opt}
             type="button"
-            onClick={() => onChange(active ? null : opt)}
+            onClick={() => toggle(opt, active)}
             className={cn(
               "px-4 h-10 rounded-lg text-sm font-medium transition-all border",
               active
