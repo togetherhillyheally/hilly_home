@@ -53,11 +53,12 @@ function timeAgo(iso: string | null): string {
 }
 
 /** JT808 기기(단말 ID 12자리)와 MT710(IMEI 15자리)은 명령 체계가 다르다.
- *  1초는 매뉴얼 규정(10~3600초) 밖 — 기기가 거부하면 "실패"로 표시된다. */
+ *  ML100G 실측 하한은 약 5초 — INTERVAL,1 을 보내도 5초 간격으로 동작한다
+ *  (2026-11-10 #2 실측). 그래서 최소 프리셋을 5초로 둔다. */
 function presetsFor(imei: string) {
   const jt = imei.length !== 15;
   return [
-    { label: "1초", command: jt ? "INTERVAL,1" : "MODE,1,1", warn: true },
+    { label: "5초", command: jt ? "INTERVAL,5" : "MODE,1,5", warn: true },
     { label: "10초", command: jt ? "INTERVAL,10" : "MODE,1,10" },
     { label: "30초", command: jt ? "INTERVAL,30" : "MODE,1,30" },
     { label: "60초", command: jt ? "INTERVAL,60" : "MODE,1,60" },
@@ -339,7 +340,7 @@ export default function TrackerTable({
                             disabled={busy}
                             title={
                               p.warn
-                                ? "매뉴얼 규정(10초~) 밖이라 기기가 거부할 수 있어요"
+                                ? "매뉴얼 규정(10초~) 밖 — ML100G 는 5초로 동작하지만 다른 기기는 거부할 수 있어요"
                                 : undefined
                             }
                             className={`rounded-md px-2.5 py-1 text-xs text-white hover:bg-white/15 disabled:opacity-50 ${
