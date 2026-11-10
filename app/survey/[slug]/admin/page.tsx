@@ -415,7 +415,9 @@ function TextStats({ values }: { values: string[] }) {
 function formatDateTime(iso: string): string {
   try {
     const d = new Date(iso);
+    // 서버(UTC)에서 렌더되므로 한국 시간 명시
     return d.toLocaleString("ko-KR", {
+      timeZone: "Asia/Seoul",
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
