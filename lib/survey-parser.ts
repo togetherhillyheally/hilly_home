@@ -1,5 +1,15 @@
 export type Question =
-  | { id: string; type: "scale"; text: string; min: number; max: number; minLabel?: string; maxLabel?: string }
+  | {
+      id: string;
+      type: "scale";
+      text: string;
+      min: number;
+      max: number;
+      minLabel?: string;
+      maxLabel?: string;
+      /** 점수마다 라벨 (min 부터 순서대로) — 있으면 숫자 대신 라벨 버튼 */
+      labels?: string[];
+    }
   | { id: string; type: "choice"; text: string; options: string[]; multi?: boolean }
   | { id: string; type: "text"; text: string; long?: boolean };
 
@@ -39,6 +49,25 @@ function parseQuestion(rawLine: string, id: string): Question {
       min: 0,
       max: 10,
     };
+  }
+
+  // 점수마다 라벨 (1=전혀 그렇지 않다, 2=그렇지 않다, ..., 5=매우 그렇다) → 라벨 버튼 척도 (2026-11-10)
+  const allLabels = text.match(/\(\s*(1\s*=[^)]*)\)\s*$/);
+  if (allLabels) {
+    const pairs = allLabels[1].split(/[,，]/).map((p) => p.match(/^\s*(\d+)\s*=\s*(.+?)\s*$/));
+    if (pairs.length >= 3 && pairs.every((m, i) => m && parseInt(m[1], 10) === i + 1)) {
+      const labels = pairs.map((m) => m![2]);
+      return {
+        id,
+        type: "scale",
+        text: text.replace(/\s*\([^)]*\)\s*$/, "").trim(),
+        min: 1,
+        max: labels.length,
+        minLabel: labels[0],
+        maxLabel: labels[labels.length - 1],
+        labels,
+      };
+    }
   }
 
   // explicit (1=..., 5=...) labels → scale with labels

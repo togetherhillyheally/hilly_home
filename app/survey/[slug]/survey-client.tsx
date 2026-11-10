@@ -339,6 +339,33 @@ function ScaleField({
   for (let i = question.min; i <= question.max; i++) items.push(i);
   const selected = typeof value === "number" ? value : null;
 
+  // 점수마다 라벨이 있으면 라벨 버튼 (값은 그대로 숫자 — 결과 페이지 평균 유지)
+  if (question.labels) {
+    return (
+      <div className="flex flex-col sm:flex-row gap-2">
+        {question.labels.map((label, i) => {
+          const n = question.min + i;
+          const active = selected === n;
+          return (
+            <button
+              key={n}
+              type="button"
+              onClick={() => onChange(active ? null : n)}
+              className={cn(
+                "sm:flex-1 min-h-10 px-3 py-2 rounded-lg text-sm font-medium transition-all border",
+                active
+                  ? "bg-gradient-to-r from-orange-400 to-pink-500 text-white border-transparent shadow-md shadow-orange-500/20"
+                  : "bg-white/[0.03] border-white/10 text-gray-300 hover:border-orange-400/40 hover:text-white",
+              )}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="flex flex-wrap gap-2">

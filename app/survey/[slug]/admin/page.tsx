@@ -324,8 +324,8 @@ function ScaleStats({
           const pct = (count / max) * 100;
           return (
             <div key={n} className="contents">
-              <span className="text-xs text-gray-400 tabular-nums w-6 text-right">
-                {n}
+              <span className="text-xs text-gray-400 tabular-nums min-w-6 text-right">
+                {question.labels ? `${n} ${question.labels[idx]}` : n}
               </span>
               <div className="h-2 rounded-full bg-white/[0.04] overflow-hidden">
                 <div
