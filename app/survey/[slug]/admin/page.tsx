@@ -3,7 +3,13 @@ import path from "path";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
-import { parseSurvey, type Question, type Section } from "@/lib/survey-parser";
+import {
+  formatAnswer,
+  parseSurvey,
+  wasShown,
+  type Question,
+  type Section,
+} from "@/lib/survey-parser";
 import {
   fetchSurveyResponses,
   fetchSurveyStatus,
@@ -202,14 +208,8 @@ function ResponseCard({
         </span>
       </header>
       <dl className="px-5 py-4 grid grid-cols-1 sm:grid-cols-[minmax(100px,140px)_1fr] gap-x-4 gap-y-2.5">
-        {restQuestions.map((q) => {
-          const v = response.answers?.[q.id];
-          const display =
-            v === null || v === undefined || v === ""
-              ? null
-              : Array.isArray(v)
-                ? v.join(", ")
-                : String(v);
+        {restQuestions.filter((q) => wasShown(q, response.answers)).map((q) => {
+          const display = formatAnswer(q, response.answers?.[q.id]);
           return (
             <div key={q.id} className="contents">
               <dt className="text-xs text-gray-400 pt-0.5 sm:pt-1">

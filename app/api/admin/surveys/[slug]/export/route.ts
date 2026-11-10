@@ -1,7 +1,13 @@
 import fs from "fs";
 import path from "path";
 import { NextResponse } from "next/server";
-import { parseSurvey, type Question, type Survey } from "@/lib/survey-parser";
+import {
+  formatAnswer,
+  parseSurvey,
+  wasShown,
+  type Question,
+  type Survey,
+} from "@/lib/survey-parser";
 import {
   fetchSurveyResponses,
   type SurveyResponseRow,
@@ -86,12 +92,13 @@ function renderHtml(
         ? "응답"
         : r.answers?.[nameQ.id] || "(이름 미기입)";
       const rows = (nameQ ? allQuestions.slice(1) : allQuestions)
+        .filter((q) => wasShown(q, r.answers))
         .map((q) => {
-          const v = r.answers?.[q.id];
+          const shown = formatAnswer(q, r.answers?.[q.id]);
           const display =
-            v === null || v === undefined || v === ""
+            shown === null
               ? '<span style="color:#9ca3af">—</span>'
-              : escape(Array.isArray(v) ? v.join(", ") : String(v));
+              : escape(shown);
           return `<tr>
             <th>${escape(q.text)}</th>
             <td>${display}</td>

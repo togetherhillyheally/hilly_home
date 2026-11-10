@@ -240,3 +240,23 @@ export function parseSurvey(md: string): Survey {
 
   return { title, intro, sections };
 }
+
+type AnswerValue = string | number | string[] | null | undefined;
+
+/** 응답 한 칸 표시 — 라벨 척도는 "그렇다 (4점)", 여러 개 선택은 쉼표로. 미응답은 null */
+export function formatAnswer(q: Question, v: AnswerValue): string | null {
+  if (v === null || v === undefined || v === "") return null;
+  if (Array.isArray(v)) return v.length ? v.join(", ") : null;
+  if (q.type === "scale" && q.labels && typeof v === "number") {
+    const label = q.labels[v - q.min];
+    if (label) return `${label} (${v}점)`;
+  }
+  return String(v);
+}
+
+/** [앞 답: …] 문항이 이 응답에서 보였는지 — 안 보인 문항은 결과 카드에서 뺀다 */
+export function wasShown(q: Question, answers: Record<string, AnswerValue> | null | undefined): boolean {
+  if (!q.showIf) return true;
+  const v = answers?.[q.showIf.questionId];
+  return Array.isArray(v) ? v.includes(q.showIf.value) : v === q.showIf.value;
+}
