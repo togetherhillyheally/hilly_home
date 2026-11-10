@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { NextResponse } from "next/server";
 import {
+  findNameQuestion,
   formatAnswer,
   parseSurvey,
   wasShown,
@@ -86,12 +87,13 @@ function renderHtml(
 
   const cardsHtml = responses
     .map((r, idx) => {
-      // 첫 문항이 이름(주관식)일 때만 카드 제목으로 (admin 페이지와 같음)
-      const nameQ = allQuestions[0]?.type === "text" ? allQuestions[0] : null;
+      // 이름 문항(어디에 있든)을 카드 제목으로 (admin 페이지와 같음)
+      const nameQ = findNameQuestion(allQuestions);
       const nameVal = !nameQ
         ? "응답"
         : r.answers?.[nameQ.id] || "(이름 미기입)";
-      const rows = (nameQ ? allQuestions.slice(1) : allQuestions)
+      const rows = allQuestions
+        .filter((q) => q !== nameQ)
         .filter((q) => wasShown(q, r.answers))
         .map((q) => {
           const shown = formatAnswer(q, r.answers?.[q.id]);

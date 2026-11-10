@@ -260,3 +260,11 @@ export function wasShown(q: Question, answers: Record<string, AnswerValue> | nul
   const v = answers?.[q.showIf.questionId];
   return Array.isArray(v) ? v.includes(q.showIf.value) : v === q.showIf.value;
 }
+
+/** 결과 카드 제목으로 쓸 이름 문항 — "이름" 이 든 주관식, 없으면 첫 문항이 주관식일 때 그 문항 */
+export function findNameQuestion(questions: Question[]): Question | null {
+  return (
+    questions.find((q) => q.type === "text" && /이름/.test(q.text)) ??
+    (questions[0]?.type === "text" ? questions[0] : null)
+  );
+}

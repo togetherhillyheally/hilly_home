@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 
 import {
+  findNameQuestion,
   formatAnswer,
   parseSurvey,
   wasShown,
@@ -182,15 +183,15 @@ function ResponseCard({
   sections: Section[];
 }) {
   const allQuestions = sections.flatMap((s) => s.questions);
-  // 첫 문항이 이름(주관식)일 때만 카드 제목으로 — 이름 없는 익명 설문은 번호만
-  const nameQ = allQuestions[0]?.type === "text" ? allQuestions[0] : null;
+  // 이름 문항(어디에 있든)을 카드 제목으로 — 이름 문항 없는 익명 설문은 "응답"
+  const nameQ = findNameQuestion(allQuestions);
   const nameValue = nameQ ? response.answers?.[nameQ.id] : null;
   const nameStr = !nameQ
     ? "응답"
     : nameValue == null || nameValue === ""
       ? "(이름 미기입)"
       : String(nameValue);
-  const restQuestions = nameQ ? allQuestions.slice(1) : allQuestions;
+  const restQuestions = allQuestions.filter((q) => q !== nameQ);
 
   return (
     <section className="rounded-2xl border border-white/5 bg-white/[0.02] overflow-hidden">
