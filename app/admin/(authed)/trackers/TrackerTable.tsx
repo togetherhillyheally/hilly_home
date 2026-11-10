@@ -60,8 +60,12 @@ function presetsFor(imei: string) {
     { label: "1초", command: jt ? "INTERVAL,1" : "MODE,1,1", warn: true },
     { label: "10초", command: jt ? "INTERVAL,10" : "MODE,1,10" },
     { label: "30초", command: jt ? "INTERVAL,30" : "MODE,1,30" },
+    { label: "60초", command: jt ? "INTERVAL,60" : "MODE,1,60" },
+    { label: "120초", command: jt ? "INTERVAL,120" : "MODE,1,120" },
     { label: "절전 1시간", command: jt ? "INTERVAL,3600" : "MODE,3,1" },
     { label: "재시작", command: "REBOOT" },
+    // PARAM(설정 되읽기)은 JT808 전용 — 적용 검증은 ack 가 아니라 이걸로 한다
+    ...(jt ? [{ label: "설정 조회", command: "PARAM" }] : []),
   ];
 }
 
@@ -361,6 +365,14 @@ export default function TrackerTable({
                           {CMD_STATUS_LABEL[lastCommands[d.id].status] ??
                             lastCommands[d.id].status}
                         </span>
+                        {lastCommands[d.id].reply && (
+                          <span
+                            title={lastCommands[d.id].reply ?? undefined}
+                            className="mt-0.5 block max-w-[320px] truncate font-mono text-[10px] text-gray-600 ml-auto"
+                          >
+                            {lastCommands[d.id].reply}
+                          </span>
+                        )}
                       </p>
                     )}
                     {assignId === d.id && (
