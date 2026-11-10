@@ -28,7 +28,16 @@ export async function generateMetadata({
   if (!fs.existsSync(filePath)) return { title: "설문지" };
   const md = fs.readFileSync(filePath, "utf-8");
   const survey = parseSurvey(md);
-  return { title: `${survey.title} | Hilly Heally` };
+  // 카톡·SNS 공유 미리보기 — 가로 1200×630 이미지 (로고만 쓰면 카톡에서 잘림, 2026-11-10)
+  const title = survey.title.replace(/\n+/g, " · ");
+  const description = survey.intro?.split("\n").find((l) => l.trim())?.trim() ?? "설문에 참여해 주세요";
+  const image = { url: "/images/og-survey.png", width: 1200, height: 630 };
+  return {
+    title: `${title} | Hilly Heally`,
+    description,
+    openGraph: { title, description, images: [image], url: `/survey/${slug}`, siteName: "Hilly Heally" },
+    twitter: { card: "summary_large_image", title, description, images: [image.url] },
+  };
 }
 
 export const dynamic = "force-dynamic";
