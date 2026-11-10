@@ -187,7 +187,7 @@ export default function SurveyClient({ survey, slug }: Props) {
               <button
                 type="button"
                 onClick={onSubmit}
-                disabled={submitting || answeredCount === 0}
+                disabled={submitting || answeredCount === 0 || missingIds.length > 0}
                 className={cn(
                   "inline-flex items-center justify-center gap-2 px-8 py-3 rounded-full font-medium text-sm",
                   "bg-gradient-to-r from-orange-400 to-pink-500 text-white shadow-lg shadow-orange-500/20",
@@ -198,9 +198,16 @@ export default function SurveyClient({ survey, slug }: Props) {
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
                 {submitting ? "제출 중…" : "응답 제출하기"}
               </button>
-              <p className="text-xs text-gray-500">
-                답변한 항목만 저장돼요 ({answeredCount}/{visibleQuestions.length})
-              </p>
+              {missingIds.length > 0 ? (
+                <p className="text-xs text-gray-400">
+                  <span className="text-red-500 font-bold">*</span> 필수 질문{" "}
+                  {missingIds.length}개에 답하면 제출할 수 있어요
+                </p>
+              ) : (
+                <p className="text-xs text-gray-500">
+                  답변한 항목만 저장돼요 ({answeredCount}/{visibleQuestions.length})
+                </p>
+              )}
             </div>
           </>
         )}
