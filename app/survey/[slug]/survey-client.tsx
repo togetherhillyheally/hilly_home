@@ -27,13 +27,31 @@ export default function SurveyClient({ survey, slug }: Props) {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const answeredCount = Object.values(answers).filter(
-    (v) => v !== null && v !== undefined && v !== "",
-  ).length;
+  // [앞 답: …] 문항 — 앞 문항 답이 그 보기일 때만 보이고, 숨겨지면 답도 안 보낸다
+  const isVisible = (q: Question) => {
+    if (!q.showIf) return true;
+    const v = answers[q.showIf.questionId];
+    return Array.isArray(v) ? v.includes(q.showIf.value) : v === q.showIf.value;
+  };
+  const visibleQuestions = allQuestions.filter(isVisible);
+  const visibleAnswers: SurveyAnswers = Object.fromEntries(
+    visibleQuestions
+      .map((q) => [q.id, answers[q.id] ?? null] as const)
+      .filter(([, v]) => v !== null && v !== ""),
+  );
+
+  const answeredCount = Object.keys(visibleAnswers).length;
   const progress =
-    allQuestions.length === 0
+    visibleQuestions.length === 0
       ? 0
-      : Math.round((answeredCount / allQuestions.length) * 100);
+      : Math.round((answeredCount / visibleQuestions.length) * 100);
+
+  // (필수) 를 쓰는 설문만 필수 * / (선택) 표시 — 안 쓰는 예전 설문은 그대로
+  const marksRequired = allQuestions.some((q) => q.required);
+  const missingIds = visibleQuestions
+    .filter((q) => q.required && !(q.id in visibleAnswers))
+    .map((q) => q.id);
+  const [showMissing, setShowMissing] = useState(false);
 
   function setAnswer(id: string, value: string | number | string[] | null) {
     setAnswers((prev) => ({ ...prev, [id]: value }));
@@ -41,18 +59,26 @@ export default function SurveyClient({ survey, slug }: Props) {
 
   async function onSubmit() {
     if (submitting) return;
+    if (missingIds.length > 0) {
+      setShowMissing(true);
+      setError(`필수 질문 ${missingIds.length}개에 답해 주세요.`);
+      document
+        .getElementById(`q-${missingIds[0]}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
       await submitSurveyResponse({
         surveySlug: slug,
-        answers,
+        answers: visibleAnswers,
         meta: {
           user_agent:
             typeof navigator !== "undefined" ? navigator.userAgent : null,
           locale: typeof navigator !== "undefined" ? navigator.language : null,
           answered_count: answeredCount,
-          total_questions: allQuestions.length,
+          total_questions: visibleQuestions.length,
         },
       });
       setSubmitted(true);
@@ -89,7 +115,7 @@ export default function SurveyClient({ survey, slug }: Props) {
           {!submitted && (
             <div className="flex items-center gap-3">
               <span className="text-xs text-gray-400 tabular-nums">
-                {answeredCount}/{allQuestions.length}
+                {answeredCount}/{visibleQuestions.length}
               </span>
               <div className="w-24 sm:w-40 h-1.5 rounded-full bg-white/5 overflow-hidden">
                 <div
@@ -137,12 +163,14 @@ export default function SurveyClient({ survey, slug }: Props) {
                   </h2>
 
                   <div className="space-y-7">
-                    {section.questions.map((q) => (
+                    {section.questions.filter(isVisible).map((q) => (
                       <QuestionField
                         key={q.id}
                         question={q}
                         value={answers[q.id] ?? null}
                         onChange={(v) => setAnswer(q.id, v)}
+                        marksRequired={marksRequired}
+                        missing={showMissing && missingIds.includes(q.id)}
                       />
                     ))}
                   </div>
@@ -171,7 +199,7 @@ export default function SurveyClient({ survey, slug }: Props) {
                 {submitting ? "제출 중…" : "응답 제출하기"}
               </button>
               <p className="text-xs text-gray-500">
-                답변한 항목만 저장돼요 ({answeredCount}/{allQuestions.length})
+                답변한 항목만 저장돼요 ({answeredCount}/{visibleQuestions.length})
               </p>
             </div>
           </>
@@ -288,15 +316,30 @@ function QuestionField({
   question,
   value,
   onChange,
+  marksRequired,
+  missing,
 }: {
   question: Question;
   value: string | number | string[] | null;
   onChange: (v: string | number | string[] | null) => void;
+  marksRequired?: boolean;
+  missing?: boolean;
 }) {
   return (
-    <div>
+    <div
+      id={`q-${question.id}`}
+      className={cn(missing && "rounded-xl ring-1 ring-red-500/60 bg-red-500/[0.04] p-3 -m-3")}
+    >
       <label className="block text-sm text-gray-200 leading-relaxed mb-3">
         {question.text}
+        {marksRequired &&
+          (question.required ? (
+            <span className="ml-1 text-red-500 font-bold" aria-label="필수">
+              *
+            </span>
+          ) : (
+            <span className="ml-1.5 text-xs text-gray-500">(선택)</span>
+          ))}
         {question.type === "choice" && question.multi && (
           <span className="ml-1.5 text-xs text-gray-500">(여러 개 선택 가능)</span>
         )}
@@ -318,6 +361,7 @@ function QuestionField({
         ) : (
           <Input
             value={typeof value === "string" ? value : ""}
+            inputMode={/전화번호/.test(question.text) ? "tel" : undefined}
             onChange={(e) => onChange(e.target.value || null)}
             className="bg-white/[0.03] border-white/10 text-gray-100 placeholder:text-gray-600 focus-visible:ring-orange-400/40"
           />

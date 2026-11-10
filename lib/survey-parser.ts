@@ -1,4 +1,7 @@
-export type Question =
+/** 바로 앞 문항에서 이 보기를 골랐을 때만 보이는 문항 — 줄 앞에 [앞 답: 보기] (2026-11-10) */
+export type ShowIf = { questionId: string; value: string };
+
+export type Question = (
   | {
       id: string;
       type: "scale";
@@ -11,7 +14,12 @@ export type Question =
       labels?: string[];
     }
   | { id: string; type: "choice"; text: string; options: string[]; multi?: boolean }
-  | { id: string; type: "text"; text: string; long?: boolean };
+  | { id: string; type: "text"; text: string; long?: boolean }
+) & {
+  showIf?: ShowIf;
+  /** 줄에 (필수) — 답해야 제출된다. 없으면 선택 문항 */
+  required?: boolean;
+};
 
 export type Section = {
   number: string;
@@ -172,7 +180,16 @@ export function parseSurvey(md: string): Survey {
     }
     if (current && /^[-•]\s+/.test(line)) {
       const id = `q_${current.number}_${current.questions.length + 1}`;
-      current.questions.push(parseQuestion(line, id));
+      // "- [앞 답: 동의해요] 질문" → 바로 앞 문항 답이 그 보기일 때만 보임
+      const cond = line.match(/^([-•]\s+)\[\s*앞\s*답\s*:\s*([^\]]+)\]\s*/);
+      const prev = current.questions[current.questions.length - 1];
+      let body = cond ? cond[1] + line.slice(cond[0].length) : line;
+      const required = /\(\s*필수\s*\)/.test(body);
+      if (required) body = body.replace(/\s*\(\s*필수\s*\)/, "");
+      const q = parseQuestion(body, id);
+      if (cond && prev) q.showIf = { questionId: prev.id, value: cond[2].trim() };
+      if (required) q.required = true;
+      current.questions.push(q);
     }
   }
   if (current) sections.push(current);
