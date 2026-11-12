@@ -46,7 +46,7 @@ export default async function StampMapDetailPage({
   if (!trail) notFound();
 
   const { rows: points } = await adminList<StampPointRow>(
-    `stamp_points?select=id,trail_id,title,hint,lng,lat,sort_order,radius_m,quiz_question,quiz_choices,quiz_answer_index&trail_id=eq.${id}&order=sort_order.asc`
+    `stamp_points?select=id,trail_id,title,hint,lng,lat,sort_order,radius_m,quiz_question,quiz_choices,quiz_answer_index,is_mystery&trail_id=eq.${id}&order=sort_order.asc`
   );
 
   // 파밍박스 — 테이블이 없거나 실패해도 페이지는 뜨게

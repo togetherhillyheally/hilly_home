@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import mapboxgl, { type LngLatBoundsLike } from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { parseStampTitle, TIER_COLOR } from "@/lib/stamp-pool";
+import { MYSTERY_COLOR, parseStampTitle, TIER_COLOR } from "@/lib/stamp-pool";
 import { applyKoreanLabels } from "@/lib/mapbox-locale";
 import { syncRadiusCircles, type RadiusCircle } from "./radius-layer";
 
@@ -22,6 +22,8 @@ export type StampPoint = {
   lng: number;
   lat: number;
   sort_order: number;
+  /** 미스터리 — 찍을 때 −30~+30 랜덤, 지도엔 "?" (2026-11-12) */
+  is_mystery?: boolean;
 };
 
 export type LatLng = { lat: number; lng: number };
@@ -80,6 +82,36 @@ function MarkerContent({
   selected: boolean;
 }) {
   const { entry, name, score } = parseStampTitle(point.title);
+
+  // 미스터리 — 회색 원 + "?" (배점 마커와 같은 모양)
+  if (point.is_mystery) {
+    return (
+      <div
+        title={`${name || `#${point.sort_order}`} · 미스터리(−30~+30)`}
+        style={{
+          width: selected ? 36 : 30,
+          height: selected ? 36 : 30,
+          borderRadius: "50%",
+          background: MYSTERY_COLOR,
+          border: selected ? "3px solid #fff" : "2px solid #fff",
+          outline: `2px dashed ${MYSTERY_COLOR}`,
+          outlineOffset: "1.5px",
+          boxShadow: selected
+            ? "0 0 0 3px rgba(255,255,255,0.6), 0 2px 6px rgba(0,0,0,0.45)"
+            : "0 1px 5px rgba(0,0,0,0.35)",
+          color: "#fff",
+          fontSize: selected ? 15 : 13,
+          fontWeight: 900,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+        }}
+      >
+        ?
+      </div>
+    );
+  }
 
   // 점수가 있으면 PO 이벤트 코스 지도(gwanggyo-cps) 와 동일한 스타일 —
   // 색상 배경 + 숫자 + 점선 outline. hilly_po/components/events/CourseMap.tsx 참고.

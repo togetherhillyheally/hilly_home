@@ -26,6 +26,7 @@ import StampMap, {
 } from "@/components/admin/StampMap";
 import type { RadiusCircle } from "@/components/admin/radius-layer";
 import {
+  MYSTERY_COLOR,
   SCORE_TIERS,
   TIER_COLOR,
   composeStampTitle,
@@ -54,6 +55,8 @@ export type StampPointRow = {
   quiz_question: string | null;
   quiz_choices: string[] | null;
   quiz_answer_index: number | null;
+  /** 미스터리 — 찍는 순간 −30~+30 랜덤 (2026-11-12) */
+  is_mystery?: boolean;
 };
 
 type PointPatch = {
@@ -65,6 +68,7 @@ type PointPatch = {
   quiz_question?: string | null;
   quiz_choices?: string[] | null;
   quiz_answer_index?: number | null;
+  is_mystery?: boolean;
 };
 
 type Props = {
@@ -139,7 +143,7 @@ export default function StampEditor({
     () =>
       points.filter((p) => {
         const { entry, score } = parseStampTitle(p.title);
-        return entry != null || score != null;
+        return entry != null || score != null || !!p.is_mystery;
       }),
     [points]
   );
@@ -693,7 +697,7 @@ export default function StampEditor({
                 const { entry, name, score } = parseStampTitle(p.title);
                 const Icon = entry?.Icon;
                 const color = entry?.color ?? "#fb923c";
-                const isStartLegacy = entry == null && score == null;
+                const isStartLegacy = entry == null && score == null && !p.is_mystery;
                 return (
                   <button
                     key={p.id}
@@ -705,7 +709,14 @@ export default function StampEditor({
                         : "hover:bg-white/[0.03]"
                     } ${isStartLegacy ? "opacity-70" : ""}`}
                   >
-                    {score != null ? (
+                    {p.is_mystery ? (
+                      <span
+                        className="w-7 h-7 rounded-full border-2 flex items-center justify-center"
+                        style={{ background: MYSTERY_COLOR, borderColor: "#fff", color: "#fff", fontWeight: 900, fontSize: 12 }}
+                      >
+                        ?
+                      </span>
+                    ) : score != null ? (
                       <span
                         className="w-7 h-7 rounded-full border-2 flex items-center justify-center tabular-nums"
                         style={{
@@ -884,7 +895,16 @@ function PointDetail({ point, saving, onSave, onDelete, onError }: DetailProps) 
   const changeScore = (next: ScoreTier | null) => {
     setScore(next);
     const nextTitle = composeStampTitle(entry, currentName, next);
-    if (nextTitle !== point.title) onSave({ title: nextTitle });
+    const patch: PointPatch = {};
+    if (nextTitle !== point.title) patch.title = nextTitle;
+    if (point.is_mystery) patch.is_mystery = false;
+    if (Object.keys(patch).length > 0) onSave(patch);
+  };
+  // 미스터리 — 제목의 배점 "(N)" 을 떼고 is_mystery 만 켠다 (값은 찍는 순간 서버가 정함)
+  const setMystery = () => {
+    if (point.is_mystery) return;
+    setScore(null);
+    onSave({ title: composeStampTitle(entry, currentName, null), is_mystery: true });
   };
 
   const save = () => {
@@ -912,7 +932,14 @@ function PointDetail({ point, saving, onSave, onDelete, onError }: DetailProps) 
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 space-y-3">
       <div className="flex items-center gap-2">
-        {currentScore != null ? (
+        {point.is_mystery ? (
+          <span
+            className="w-7 h-7 rounded-full border-2 flex items-center justify-center"
+            style={{ background: MYSTERY_COLOR, borderColor: "#fff", color: "#fff", fontWeight: 900, fontSize: 12 }}
+          >
+            ?
+          </span>
+        ) : currentScore != null ? (
           <span
             className="w-7 h-7 rounded-full border-2 flex items-center justify-center tabular-nums"
             style={{
@@ -969,13 +996,13 @@ function PointDetail({ point, saving, onSave, onDelete, onError }: DetailProps) 
         <label className="block text-[10px] text-gray-500 mb-1">
           배점 (낯선곳으로 이벤트 코스 지도 전용 · 선택)
         </label>
-        <div className="grid grid-cols-6 gap-1.5">
+        <div className="grid grid-cols-7 gap-1.5">
           <button
             type="button"
             onClick={() => changeScore(null)}
             disabled={saving}
             className={`h-9 rounded-md text-[11px] font-semibold border transition-colors disabled:opacity-50 ${
-              score == null
+              score == null && !point.is_mystery
                 ? "bg-white/[0.08] border-white/30 text-white"
                 : "bg-white/[0.02] border-white/10 text-gray-500 hover:text-white"
             }`}
@@ -983,7 +1010,7 @@ function PointDetail({ point, saving, onSave, onDelete, onError }: DetailProps) 
             없음
           </button>
           {SCORE_TIERS.map((n) => {
-            const selected = score === n;
+            const selected = score === n && !point.is_mystery;
             const c = TIER_COLOR[n];
             return (
               <button
@@ -1002,11 +1029,26 @@ function PointDetail({ point, saving, onSave, onDelete, onError }: DetailProps) 
               </button>
             );
           })}
+          <button
+            type="button"
+            onClick={setMystery}
+            disabled={saving}
+            title="미스터리 — 찍는 순간 −30~+30점 중 랜덤"
+            style={{
+              background: point.is_mystery ? MYSTERY_COLOR : "transparent",
+              borderColor: point.is_mystery ? "#fff" : MYSTERY_COLOR,
+              color: point.is_mystery ? "#fff" : "#a1a1aa",
+            }}
+            className="h-9 rounded-md text-[13px] font-black border-2 transition-colors disabled:opacity-50"
+          >
+            ?
+          </button>
         </div>
         <p className="text-[10px] text-gray-500 mt-1 leading-relaxed">
           누르면 바로 저장돼요 — 지도 마커가 점선 테두리 + 숫자 + 색상(10
           세이지~50 크림슨) 으로 즉시 바뀜. "낯선곳으로 — 광교산" 처럼 배점
-          체크포인트 지도에 사용.
+          체크포인트 지도에 사용. "?" 는 미스터리 — 앱에서 찍는 순간 −30~+30점
+          중 하나로 정해져요(같은 팀은 같은 값).
         </p>
       </div>
 

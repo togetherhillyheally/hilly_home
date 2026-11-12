@@ -13,6 +13,7 @@ const ALLOWED_FIELDS = new Set([
   "lat",
   "sort_order",
   "radius_m",
+  "is_mystery",
   // 퀴즈 3필드는 별도 all-or-none 검증으로 처리
 ]);
 
@@ -60,6 +61,10 @@ export async function PATCH(
     } else if (k === "sort_order") {
       if (typeof v !== "number" || !Number.isInteger(v)) continue;
       update.sort_order = v;
+    } else if (k === "is_mystery") {
+      // 미스터리 — 서버 트리거가 배점을 0 으로 맞춘다 (2026-11-12)
+      if (typeof v !== "boolean") continue;
+      update.is_mystery = v;
     } else if (k === "radius_m") {
       const r = normalizeRadius(v);
       if (!r.ok) return NextResponse.json({ error: r.error }, { status: 400 });

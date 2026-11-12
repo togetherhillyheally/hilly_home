@@ -107,6 +107,9 @@ export const TIER_COLOR: Record<ScoreTier, string> = {
 const SCORE_RE = /[(（]\s*(\d{1,3})\s*[)）]\s*$/;
 
 /** title 끝의 "(점수)" 를 떼어 반환. 값이 10/20/30/40/50 중 하나일 때만 유효. */
+/** 미스터리 포인트 색 — 앱(StampMapScreen)과 같은 회색 (2026-11-12) */
+export const MYSTERY_COLOR = "#6E6E7A";
+
 export function parseStampScore(title: string | null | undefined): {
   score: ScoreTier | null;
   withoutScore: string;
