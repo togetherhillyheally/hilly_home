@@ -125,12 +125,20 @@ export function parseStampScore(title: string | null | undefined): {
 }
 
 /** title ("icon-name|korean-name" 혹은 그 뒤 "(점수)" 포함) → entry + name + score */
-export function parseStampTitle(title: string | null | undefined): {
+export function parseStampTitle(
+  title: string | null | undefined,
+  /** stamp_points.points — 제목에 "(N)" 이 없으면 이 값을 배점으로 (앱·DB 의 진짜 배점, 2026-11-14) */
+  points?: number | null
+): {
   entry: StampPoolEntry | null;
   name: string;
   score: ScoreTier | null;
 } {
-  const { score, withoutScore: raw } = parseStampScore(title);
+  const parsed = parseStampScore(title);
+  const raw = parsed.withoutScore;
+  const score =
+    parsed.score ??
+    (points != null && SCORE_TIERS.includes(points as ScoreTier) ? (points as ScoreTier) : null);
   if (!raw) return { entry: null, name: "", score };
   const sepIdx = raw.indexOf("|");
   if (sepIdx > 0) {

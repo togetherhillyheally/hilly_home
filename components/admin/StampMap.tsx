@@ -24,6 +24,8 @@ export type StampPoint = {
   sort_order: number;
   /** 미스터리 — 찍을 때 −30~+30 랜덤, 지도엔 "?" (2026-11-12) */
   is_mystery?: boolean;
+  /** 배점(DB) — 제목에 "(N)" 이 없을 때 표시용 */
+  points?: number | null;
 };
 
 export type LatLng = { lat: number; lng: number };
@@ -81,7 +83,7 @@ function MarkerContent({
   point: StampPoint;
   selected: boolean;
 }) {
-  const { entry, name, score } = parseStampTitle(point.title);
+  const { entry, name, score } = parseStampTitle(point.title, point.points);
 
   // 미스터리 — 회색 원 + "?" (배점 마커와 같은 모양)
   if (point.is_mystery) {

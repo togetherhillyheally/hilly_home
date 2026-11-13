@@ -57,6 +57,8 @@ export type StampPointRow = {
   quiz_answer_index: number | null;
   /** 미스터리 — 찍는 순간 −30~+30 랜덤 (2026-11-12) */
   is_mystery?: boolean;
+  /** 배점(DB) — 제목에 "(N)" 이 없으면 이 값으로 표시 (2026-11-14) */
+  points?: number | null;
 };
 
 type PointPatch = {
@@ -142,7 +144,7 @@ export default function StampEditor({
   const mapPoints = useMemo(
     () =>
       points.filter((p) => {
-        const { entry, score } = parseStampTitle(p.title);
+        const { entry, score } = parseStampTitle(p.title, p.points);
         return entry != null || score != null || !!p.is_mystery;
       }),
     [points]
@@ -694,7 +696,7 @@ export default function StampEditor({
             <div className="max-h-72 overflow-y-auto divide-y divide-white/5">
               {points.map((p) => {
                 const isSel = selectedId === p.id;
-                const { entry, name, score } = parseStampTitle(p.title);
+                const { entry, name, score } = parseStampTitle(p.title, p.points);
                 const Icon = entry?.Icon;
                 const color = entry?.color ?? "#fb923c";
                 const isStartLegacy = entry == null && score == null && !p.is_mystery;
@@ -864,7 +866,7 @@ function quizPatchIfChanged(
 
 function PointDetail({ point, saving, onSave, onDelete, onError }: DetailProps) {
   // 매 렌더마다 point 기준으로 유도 — 저장 후 point prop 이 바뀌면 자연 동기화
-  const parsed = parseStampTitle(point.title);
+  const parsed = parseStampTitle(point.title, point.points);
   const { entry } = parsed;
   const currentName = parsed.name;
   const currentScore = parsed.score;
