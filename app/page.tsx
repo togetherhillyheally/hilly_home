@@ -6,7 +6,7 @@ import {
   Star,
   Navigation,
   Puzzle,
-  Stamp,
+  Target,
   Package,
   Footprints,
   Sparkles,
@@ -96,7 +96,7 @@ export default function HillyheallyHomepage() {
             </div>
             <div className="animate-fade-in-up delay-500">
               <p className="text-lg text-gray-300 mb-10 max-w-xl mx-auto leading-relaxed">
-                코스, 스탬프, 보물지도를 고르고 걸으며 도착을 인증하고
+                코스, ROUTE, 보물지도를 고르고 걸으며 인증하고
                 <br />
                 퍼즐을 완성하는 지도 앱
               </p>
@@ -183,11 +183,11 @@ export default function HillyheallyHomepage() {
                 step: "01",
                 icon: <Map className="h-5 w-5 text-orange-400" />,
                 title: "지도 선택",
-                desc: "걷고 싶은 지도를 골라보세요. 지도는 세 종류예요. 어떤 지도를 고르느냐에 따라 3단계 인증 방식이 달라져요. 거리, 상승고도, 예상 시간은 미리 확인할 수 있어요.",
+                desc: "걷고 싶은 지도를 골라보세요. 지도는 세 종류이고, 종류마다 인증 방식이 달라요. 거리, 상승고도, 예상 시간은 미리 확인할 수 있어요.",
                 kinds: [
-                  { label: "코스 지도", hint: "정해진 경로 + 체크포인트" },
-                  { label: "ROUTE", hint: "배점 스탬프를 모아 점수를 겨루는 전략 게임" },
-                  { label: "보물지도", hint: "경로 주변에 숨은 보물 찾기" },
+                  { label: "코스 지도", hint: "정해진 경로 + 인증 지점 3곳" },
+                  { label: "ROUTE", hint: "배점 포인트를 모아 목표 점수에 도전하는 전략 게임" },
+                  { label: "보물지도", hint: "숨겨진 보물 상자 찾기" },
                 ],
                 accent: "border-l-orange-500/60",
               },
@@ -202,21 +202,21 @@ export default function HillyheallyHomepage() {
                 step: "03",
                 icon: <Package className="h-5 w-5 text-orange-300" />,
                 title: "도착 인증",
-                desc: "GPS로 도착하면 자동 인증돼요. 인증 방식은 지도 종류마다 달라요. 코스 지도는 체크포인트 보물박스(또는 퀴즈), ROUTE는 배점이 매겨진 스탬프, 보물지도는 숨겨진 보물을 찾아내는 식이에요.",
+                desc: "GPS로 도착하면 자동 인증돼요. 코스 지도는 출발·중간·도착 인증 지점을 지나며 인증 조각을 모으고, ROUTE는 배점이 매겨진 포인트를 찍고, 보물지도는 숨겨진 보물 상자를 찾아 열어요.",
                 accent: "border-l-orange-400/60",
               },
               {
                 step: "04",
                 icon: <Puzzle className="h-5 w-5 text-pink-300" />,
                 title: "퍼즐 조각 맞추기",
-                desc: "각 지도에는 고유한 퍼즐 이미지가 연결돼 있어요. 인증하고 걸으며 모은 씨앗으로 조각을 뽑고 알맞은 자리에 맞춰 퍼즐을 완성해보세요.",
+                desc: "코스 지도마다 고유한 퍼즐이 연결돼 있어요. 걸으며 모은 씨앗으로 조각을 뽑고, 인증 지점에서 얻은 인증 조각까지 맞춰 퍼즐을 완성해보세요.",
                 accent: "border-l-pink-400/60",
               },
               {
                 step: "05",
                 icon: <Sparkles className="h-5 w-5 text-orange-400" />,
                 title: "완성과 공유",
-                desc: "완성한 퍼즐은 퍼즐함에 자동 보관되고 SNS에 공유해 내 발자국을 남길 수 있어요.",
+                desc: "완성한 코스 퍼즐은 프로필 우표책에 우표로 모여요. 함께 걸은 모험은 다시 보기로 되돌아보고, 카드로 만들어 SNS에 공유할 수 있어요.",
                 accent: "border-l-orange-500/60",
               },
             ].map((item, idx) => (
@@ -283,36 +283,36 @@ export default function HillyheallyHomepage() {
               {
                 icon: <Map className="h-6 w-6 text-orange-400" />,
                 iconBg: "bg-orange-400/10",
-                title: "코스 지도 & 체크포인트 인증",
-                desc: "GPX 파일을 업로드해 코스 지도를 만들어요. 경로 위 체크포인트 보물박스에 GPS로 도착하거나 짧은 퀴즈를 풀어 인증하고 사진, 메모, 후기를 남겨 트레일을 완성하세요.",
+                title: "코스 지도 & 인증 조각",
+                desc: "GPX 파일을 업로드해 코스 지도를 만들어요. 출발·중간·도착 인증 지점을 지나면 인증 조각이 모이고, 걷다가 남긴 사진과 기록, 후기가 지도에 쌓여요.",
                 hover: "hover:border-orange-500/30",
               },
               {
-                icon: <Stamp className="h-6 w-6 text-pink-400" />,
+                icon: <Target className="h-6 w-6 text-pink-400" />,
                 iconBg: "bg-pink-400/10",
                 title: "ROUTE",
-                desc: "로게이닝에서 영감을 받은 야외 전략 게임. 배점이 다른 스탬프를 골라 모으고 혼자서도 팀으로도 점수를 겨뤄요. 누구나 나만의 ROUTE를 만들 수 있어요.",
+                desc: "로게이닝에서 영감을 받은 야외 전략 게임. 10~50점 포인트와 결과를 알 수 없는 미스터리 포인트를 골라 모으고, 혼자서도 팀으로도 목표 점수에 도전해요. 누구나 나만의 ROUTE를 만들 수 있어요.",
                 hover: "hover:border-pink-500/30",
               },
               {
-                icon: <Gem className="h-6 w-6 text-amber-300" />,
-                iconBg: "bg-amber-300/10",
+                icon: <Gem className="h-6 w-6 text-teal-300" />,
+                iconBg: "bg-teal-300/10",
                 title: "보물지도",
-                desc: "경로 주변에 보물이 랜덤으로 숨겨져요. 걷다가 가까워지면 힌트가 뜨고 찾아내면 씨앗이나 상품 같은 보상을 받아요. 세션마다 위치가 달라져 같은 길도 매번 새로워요.",
-                hover: "hover:border-amber-400/30",
+                desc: "경로 주변이나 지도에서 직접 고른 자리에 보물 상자가 숨겨져요. 가까워지면 힌트가 뜨고, 찾아서 열면 씨앗이나 상품을 받아요. 가끔은 꽝도 있어요.",
+                hover: "hover:border-teal-400/30",
               },
               {
                 icon: <Puzzle className="h-6 w-6 text-pink-300" />,
                 iconBg: "bg-pink-300/10",
-                title: "퍼즐 조각 & 완성",
-                desc: "지도별 고유 퍼즐 이미지가 있어요. 인증할 때마다 조각을 뽑아 알맞은 자리에 맞추면, 내 발자국이 그림으로 남아요.",
+                title: "퍼즐 & 우표책",
+                desc: "코스 지도마다 4×4 퍼즐이 있어요. 씨앗으로 조각을 뽑고 인증 조각을 맞춰 완성하면, 그 코스가 우표가 되어 프로필 우표책에 남아요.",
                 hover: "hover:border-pink-500/30",
               },
               {
                 icon: <Navigation className="h-6 w-6 text-orange-400" />,
                 iconBg: "bg-orange-400/10",
                 title: "함께 걷기 & 실시간 위치 공유",
-                desc: "초대 링크나 주변 검색, 닉네임으로 친구를 초대하고 모험이 시작되면 실시간 위치를 공유하며 함께 걸어요. 백그라운드에서도 동작해요.",
+                desc: "초대 링크나 주변 사람, 닉네임 검색으로 친구를 초대하고 실시간 위치와 채팅을 나누며 함께 걸어요. 끝나면 다시 보기로 모두의 움직임을 되돌아볼 수 있어요.",
                 hover: "hover:border-orange-500/30",
               },
               {
@@ -365,7 +365,7 @@ export default function HillyheallyHomepage() {
                   이제 <span className="bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">웹에서 직접 지도</span>를 만들 수 있어요
                 </h2>
                 <p className="text-gray-400 text-sm lg:text-base leading-relaxed mb-5">
-                  GPX 업로드, 체크포인트와 보물박스 배치, 퍼즐 이미지 연결까지
+                  GPX 업로드, ROUTE 포인트와 보물 자리 배치, 퍼즐 이미지 연결까지
                   브라우저 하나로 힐리힐리 지도를 등록하세요.
                 </p>
                 <a

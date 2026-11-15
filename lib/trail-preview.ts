@@ -12,7 +12,7 @@ export type TrailSharePreview = {
   course_summary: string | null;
   distance_km: number | null;
   total_ascent_m: number | null;
-  map_type: "adventure" | "stamp";
+  map_type: "adventure" | "stamp" | "treasure";
   cover_bucket: string | null;
   cover_path: string | null;
   // [lng,lat,ele?][] (단일) 또는 [[...]][] (멀티 경로)
