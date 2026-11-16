@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { hasMenuAccess, readAdminSession } from "@/lib/admin-session";
 import { adminFetch } from "@/lib/admin-rest";
-import { ADMIN_UPLOADER_PROFILE_ID } from "@/lib/trail-upload-constants";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,6 +22,7 @@ export async function POST(req: Request) {
     name?: string;
     series_name?: string | null;
     stamp_order_mode?: string;
+    points_reveal?: string;
   };
   try {
     body = await req.json();
@@ -67,7 +67,10 @@ export async function POST(req: Request) {
     map_type: "stamp",
     stamp_order_mode: orderMode,
     sort_order: nextSort,
-    created_by: ADMIN_UPLOADER_PROFILE_ID,
+    // 만든 관리자 본인 (2026-11-16) — 고정 관리자 ID 로 넣어 누가 만들어도 한 계정 지도가 됐다
+    created_by: session.userId,
+    // 기본은 모험 시작 시 공개 — 항상 공개면 시작 전부터 누구에게나 위치·점수가 보인다
+    points_reveal: body.points_reveal === "always" ? "always" : "on_start",
     source: "upload",
     is_active: true,
     activity_types: ["walking"],

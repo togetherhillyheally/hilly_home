@@ -5,6 +5,7 @@ import { ChevronLeft } from "lucide-react";
 import { adminList } from "@/lib/admin-rest";
 import StampEditor, { type StampPointRow } from "./StampEditor";
 import TrailNameEdit from "./TrailNameEdit";
+import PointsRevealToggle from "./PointsRevealToggle";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,7 @@ type StampTrail = {
   is_active: boolean;
   map_type: string | null;
   stamp_order_mode: string | null;
+  points_reveal: string | null;
   bounds: {
     minLat: number;
     maxLat: number;
@@ -41,7 +43,7 @@ export default async function StampMapDetailPage({
   const { id } = await params;
 
   const { rows: trails } = await adminList<StampTrail>(
-    `trails?select=id,name,series_name,is_active,map_type,stamp_order_mode,bounds,start_lat,start_lng,end_lat,end_lng&id=eq.${id}`
+    `trails?select=id,name,series_name,is_active,map_type,stamp_order_mode,points_reveal,bounds,start_lat,start_lng,end_lat,end_lng&id=eq.${id}`
   );
   const trail = trails[0];
   if (!trail) notFound();
@@ -74,6 +76,10 @@ export default async function StampMapDetailPage({
               순서 모드: {ORDER_LABELS[trail.stamp_order_mode] ?? trail.stamp_order_mode}
             </span>
           )}
+          <PointsRevealToggle
+            trailId={trail.id}
+            initial={trail.points_reveal === "on_start" ? "on_start" : "always"}
+          />
         </div>
         {trail.series_name && (
           <p className="text-sm text-gray-400 mt-1.5">

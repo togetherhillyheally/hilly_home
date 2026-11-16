@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { hasMenuAccess, readAdminSession } from "@/lib/admin-session";
 import { adminFetch } from "@/lib/admin-rest";
+import { requestTrailThumbnail } from "@/lib/trail-thumbnail";
 import { parseStampTitle, pickUnusedEntry, stampTitleFromEntry } from "@/lib/stamp-pool";
 
 export const runtime = "nodejs";
@@ -164,4 +165,6 @@ async function recomputeTrailBounds(trailId: string): Promise<void> {
     headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
     body: JSON.stringify({ bounds, center }),
   });
+  // 포인트가 바뀌면 썸네일도 다시 (2026-11-16) — 관리자 화면에서 만든 ROUTE 는 썸네일이 안 생겼다
+  await requestTrailThumbnail(trailId);
 }

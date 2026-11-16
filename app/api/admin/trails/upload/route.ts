@@ -127,7 +127,7 @@ export async function POST(req: Request) {
     );
   }
 
-  if (String(form.get("no_gpx") ?? "") === "1") return createDirectTreasureMap(form);
+  if (String(form.get("no_gpx") ?? "") === "1") return createDirectTreasureMap(form, session.userId);
 
   const fileEntries = form.getAll("files");
   const files: File[] = fileEntries.filter(
@@ -219,7 +219,8 @@ export async function POST(req: Request) {
     center: merged.center,
     coordinates: merged.coordinates,
     sort_order: sortOrder,
-    created_by: ADMIN_UPLOADER_PROFILE_ID,
+    // 올린 관리자 본인 (2026-11-16) — 고정 관리자 ID 면 누가 올려도 한 계정 지도가 됐다
+    created_by: session.userId,
     source: "upload",
     activity_types:
       activityTypes.length > 0 ? activityTypes : ["walking", "running"],
@@ -350,7 +351,7 @@ function parseLatLng(v: unknown): LatLng | null {
  *  · bounds/center 는 출발점과 보물 자리를 감싸는 범위(+여백)
  *  · 보물 자리는 trail_treasure_spots 에 넣는다 — 자리가 있으면 모험 시작 시 그 자리에 보물이 놓인다
  */
-async function createDirectTreasureMap(form: FormData) {
+async function createDirectTreasureMap(form: FormData, createdBy: string) {
   const name = String(form.get("name") ?? "").trim();
   if (!name) return NextResponse.json({ error: "지도 이름을 입력해 주세요." }, { status: 400 });
 
@@ -421,7 +422,7 @@ async function createDirectTreasureMap(form: FormData) {
       end_lat: start.lat,
       end_lng: start.lng,
       sort_order: await getNextSortOrder(),
-      created_by: ADMIN_UPLOADER_PROFILE_ID,
+      created_by: createdBy,
       source: "manual",
       activity_types: activityTypes.length > 0 ? activityTypes : ["walking", "running"],
       series_name: String(form.get("series_name") ?? "").trim() || null,

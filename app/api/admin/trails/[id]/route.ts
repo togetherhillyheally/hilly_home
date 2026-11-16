@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { hasMenuAccess, readAdminSession } from "@/lib/admin-session";
 import { adminFetch } from "@/lib/admin-rest";
+import { requestTrailThumbnail } from "@/lib/trail-thumbnail";
 import {
   validateTreasureCount,
   validateTreasureRewardPool,
@@ -130,6 +131,17 @@ export async function PATCH(
     update.treasure_per_person_limit = r.value;
   }
 
+  // ROUTE 포인트 위치 공개 시점 (2026-11-16) — always 항상 / on_start 모험 시작 시. 썸네일도 이 값에 따라 핀/범위로 다시 그린다
+  if ("points_reveal" in body) {
+    if (body.points_reveal !== "always" && body.points_reveal !== "on_start") {
+      return NextResponse.json(
+        { error: "포인트 공개는 always / on_start 중 하나여야 해요." },
+        { status: 400 }
+      );
+    }
+    update.points_reveal = body.points_reveal;
+  }
+
   if ("activity_types" in body) {
     const arr = sanitizeActivityTypes(body.activity_types);
     update.activity_types = arr;
@@ -174,6 +186,7 @@ export async function PATCH(
       { status: 500 }
     );
   }
+  if ("points_reveal" in update) await requestTrailThumbnail(id);
   return NextResponse.json({ success: true });
 }
 

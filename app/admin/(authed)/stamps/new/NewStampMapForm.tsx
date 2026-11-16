@@ -32,6 +32,8 @@ export default function NewStampMapForm() {
   const [name, setName] = useState("");
   const [seriesName, setSeriesName] = useState("");
   const [orderMode, setOrderMode] = useState<OrderMode>("free");
+  // 포인트 위치 공개 — 기본은 모험 시작 시 공개 (2026-11-16)
+  const [reveal, setReveal] = useState<"on_start" | "always">("on_start");
   const [error, setError] = useState<string | null>(null);
   const [submitting, startSubmit] = useTransition();
 
@@ -50,6 +52,7 @@ export default function NewStampMapForm() {
             name: name.trim(),
             series_name: seriesName.trim() || null,
             stamp_order_mode: orderMode,
+            points_reveal: reveal,
           }),
         });
         const data = await res.json().catch(() => null);
@@ -121,6 +124,37 @@ export default function NewStampMapForm() {
                   <div className="text-[10px] text-gray-500 mt-1 leading-relaxed">
                     {m.desc}
                   </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <div>
+          <label className="block text-xs text-gray-400 mb-2">포인트 위치 공개</label>
+          <div className="grid sm:grid-cols-2 gap-2">
+            {(
+              [
+                { value: "on_start", label: "모험 시작 시 공개", desc: "시작 전엔 위치와 점수를 숨기고 참가자에게만 열어요" },
+                { value: "always", label: "항상 공개", desc: "지도 상세와 썸네일에서도 누구나 위치를 볼 수 있어요" },
+              ] as const
+            ).map((m) => {
+              const active = reveal === m.value;
+              return (
+                <button
+                  key={m.value}
+                  type="button"
+                  onClick={() => setReveal(m.value)}
+                  disabled={submitting}
+                  className={`rounded-lg border p-3 text-left transition-colors ${
+                    active
+                      ? "bg-orange-500/15 border-orange-500/50"
+                      : "bg-white/[0.04] border-white/10 hover:border-white/25"
+                  }`}
+                >
+                  <div className={`text-sm font-semibold ${active ? "text-orange-200" : "text-white"}`}>
+                    {m.label}
+                  </div>
+                  <div className="text-[10px] text-gray-500 mt-1 leading-relaxed">{m.desc}</div>
                 </button>
               );
             })}
