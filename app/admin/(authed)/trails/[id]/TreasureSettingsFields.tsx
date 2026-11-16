@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, RotateCcw, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import {
   TREASURE_COUNT_MAX,
   TREASURE_COUNT_MIN,
@@ -28,7 +28,6 @@ export default function TreasureSettingsFields({
   setCount,
   pool,
   setPool,
-  onResetDefaults,
   disabled,
   hideCount,
 }: Props) {
@@ -40,8 +39,8 @@ export default function TreasureSettingsFields({
   const patchRow = (idx: number, patch: Partial<TreasureReward>) => {
     setPool((prev) => prev.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
   };
+  // 마지막 줄도 지울 수 있다 — 보상이 없으면 모든 상자 꽝 (2026-11-16)
   const removeRow = (idx: number) => {
-    if (pool.length <= 1) return;
     setPool((prev) => prev.filter((_, i) => i !== idx));
   };
   const addRow = () => {
@@ -108,21 +107,13 @@ export default function TreasureSettingsFields({
                   : `(상자 ${count}개 모두 배정)`}
             </span>
           </label>
-          <button
-            type="button"
-            onClick={onResetDefaults}
-            disabled={disabled}
-            className="inline-flex items-center gap-1 h-7 px-2 rounded-md text-[11px] text-gray-400 hover:text-white hover:bg-white/[0.05] disabled:opacity-50"
-          >
-            <RotateCcw className="h-3 w-3" /> 기본값
-          </button>
+          {/* 기본값(옛 씨앗 풀) 버튼은 씨앗 폐지로 뺐다 (2026-11-16) */}
         </div>
         <div className="rounded-lg border border-white/10 bg-white/[0.02] overflow-x-auto">
           <table className="w-full text-xs">
             <thead className="bg-white/[0.03] text-gray-500">
               <tr>
                 <th className="px-2 py-1.5 text-left w-[90px]">종류</th>
-                <th className="px-2 py-1.5 text-right w-[70px]">씨앗 수량</th>
                 <th className="px-2 py-1.5 text-left">라벨 (20자 이내)</th>
                 <th className="px-2 py-1.5 text-right w-[80px]">상자 개수</th>
                 <th className="px-2 py-1.5 w-8"></th>
@@ -136,11 +127,7 @@ export default function TreasureSettingsFields({
                       value={r.kind}
                       onChange={(e) => {
                         const kind = e.target.value as TreasureRewardKind;
-                        patchRow(idx, {
-                          kind,
-                          value:
-                            kind === "seed" ? Math.max(1, r.value || 1) : 0,
-                        });
+                        patchRow(idx, { kind, value: 0 });
                       }}
                       disabled={disabled}
                       className="w-full h-8 px-1 rounded bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-teal-400/50 disabled:opacity-50"
@@ -158,30 +145,13 @@ export default function TreasureSettingsFields({
                   </td>
                   <td className="px-2 py-1">
                     <input
-                      type="number"
-                      min={r.kind === "seed" ? 1 : 0}
-                      max={r.kind === "seed" ? undefined : 0}
-                      value={r.value}
-                      disabled={disabled || r.kind !== "seed"}
-                      onChange={(e) =>
-                        patchRow(idx, {
-                          value: Number(e.target.value) || 0,
-                        })
-                      }
-                      className="w-full h-8 px-2 rounded bg-white/[0.04] border border-white/10 text-white text-xs text-right tabular-nums focus:outline-none focus:border-teal-400/50 disabled:opacity-40"
-                    />
-                  </td>
-                  <td className="px-2 py-1">
-                    <input
                       value={r.label}
                       maxLength={20}
                       disabled={disabled}
                       onChange={(e) =>
                         patchRow(idx, { label: e.target.value })
                       }
-                      placeholder={
-                        r.kind === "seed" ? "씨앗 N개" : "예: 아메리카노 1잔"
-                      }
+                      placeholder="예: 아메리카노 1잔"
                       className="w-full h-8 px-2 rounded bg-white/[0.04] border border-white/10 text-white text-xs focus:outline-none focus:border-teal-400/50 disabled:opacity-50"
                     />
                   </td>
@@ -204,7 +174,7 @@ export default function TreasureSettingsFields({
                     <button
                       type="button"
                       onClick={() => removeRow(idx)}
-                      disabled={disabled || pool.length <= 1}
+                      disabled={disabled}
                       className="text-gray-500 hover:text-red-400 disabled:opacity-20 p-1"
                       aria-label="행 삭제"
                     >
@@ -232,8 +202,8 @@ export default function TreasureSettingsFields({
         </div>
         <p className="text-[11px] text-gray-500 mt-1.5 leading-relaxed">
           세션 시작 시 적은 개수만큼 상자에 섞어 넣어요. 배정하지 않은 상자는 꽝이에요.
-          자리별 보상을 정한 상자는 그 보상이 먼저예요. 씨앗은 자동 지급, 상품은 라벨만
-          표시되고 운영자가 오프라인에서 전달해요.
+          자리별 보상을 정한 상자는 그 보상이 먼저예요. 상품은 라벨만 표시되고 운영자가
+          오프라인에서 전달해요. 씨앗 보상은 없어졌어요(2026-11-16).
         </p>
       </div>
     </div>

@@ -12,8 +12,12 @@ export const TREASURE_COUNT_PRESETS = [5, 10, 15, 20] as const;
 
 export const TREASURE_REWARD_KINDS = ["seed", "prize", "none"] as const;
 export type TreasureRewardKind = (typeof TREASURE_REWARD_KINDS)[number];
-/** 편집기에서 고르는 종류 — 꽝은 "배정 안 한 상자" 로 자동 */
-export const TREASURE_EDIT_KINDS = ["seed", "prize"] as const;
+/** 편집기에서 고르는 종류 — 꽝은 "배정 안 한 상자" 로 자동.
+ *  씨앗은 2026-11-16 폐지(누구나 만든 지도에서 씨앗을 마음대로 걸 수 있어 불공정). 서버 트리거도 씨앗을 꽝으로 바꾼다.
+ *  TREASURE_REWARD_KINDS 의 seed 는 옛 획득 기록을 보여 주려고만 남긴다 */
+export const TREASURE_EDIT_KINDS = ["prize"] as const;
+/** 자리별 보상에서 고르는 종류 */
+export const TREASURE_SPOT_KINDS = ["prize", "none"] as const;
 
 /** UI 라벨 매핑 — 셀렉트 옵션에 표시. */
 export const TREASURE_REWARD_KIND_LABELS: Record<TreasureRewardKind, string> = {
@@ -36,7 +40,13 @@ export const DEFAULT_TREASURE_COUNT = 10;
  * 상자 수에 맞춘 기본 풀 — 씨앗 10개 ×1(상자 3개 이상), 씨앗 5개 ×30%, 나머지 씨앗 3개. 꽝 없음.
  * DB 컬럼 기본값(상자 10개 기준 6/3/1)과 같은 비율.
  */
-export function defaultTreasureRewardPool(boxCount: number): TreasureReward[] {
+export function defaultTreasureRewardPool(_boxCount: number): TreasureReward[] {
+  // 씨앗 보상 폐지(2026-11-16) — 기본은 비움(모든 상자 꽝). DB 기본값도 '[]'
+  return [];
+}
+
+/** 옛 기본 풀(씨앗 3/5/10) — 참고용 */
+export function legacySeedRewardPool(boxCount: number): TreasureReward[] {
   const n = Math.max(1, Math.floor(boxCount));
   const big = n >= 3 ? 1 : 0;
   const mid = Math.min(n - big, Math.round(n * 0.3));
@@ -57,11 +67,12 @@ export function normalizeTreasureRewardPool(raw: unknown): TreasureReward[] {
   const out: TreasureReward[] = [];
   for (const r of raw as Partial<TreasureReward & { weight?: number }>[]) {
     if (!r || typeof r !== "object") continue;
-    if (r.kind !== "seed" && r.kind !== "prize") continue;
+    // 씨앗 줄은 버린다(2026-11-16 폐지)
+    if (r.kind !== "prize") continue;
     const count = Number(r.count ?? r.weight ?? 0);
     out.push({
       kind: r.kind,
-      value: r.kind === "seed" ? Number(r.value) || 0 : 0,
+      value: 0,
       label: typeof r.label === "string" ? r.label : "",
       count: Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 0,
     });
@@ -87,8 +98,9 @@ export function validateTreasureRewardPool(
   if (!Array.isArray(input)) {
     return { ok: false, code: "not_array", message: "보상 풀은 배열이어야 해요." };
   }
+  // 비어 있으면 모든 상자 꽝 — 씨앗 폐지 뒤로 경품 없는 보물찾기도 있다 (2026-11-16)
   if (input.length === 0) {
-    return { ok: false, code: "empty", message: "보상은 1개 이상 있어야 해요." };
+    return { ok: true, value: [] };
   }
   const normalized: TreasureReward[] = [];
   for (let i = 0; i < input.length; i++) {
@@ -135,13 +147,11 @@ export function validateTreasureRewardPool(
     }
     const valueNum = Number(r.value);
     if (kind === "seed") {
-      if (!Number.isInteger(valueNum) || valueNum < 1) {
-        return {
-          ok: false,
-          code: "bad_value",
-          message: `보상 #${i + 1} 씨앗 수량은 1 이상 정수여야 해요.`,
-        };
-      }
+      return {
+        ok: false,
+        code: "seed_removed",
+        message: `보상 #${i + 1} 씨앗 보상은 없어졌어요. 경품만 넣을 수 있어요.`,
+      };
     } else if (kind === "prize") {
       // prize 는 수량 개념이 없음 — 값은 항상 0 으로 저장
       if (valueNum !== 0) {
@@ -234,13 +244,12 @@ export function validateSpotReward(
     return { ok: false, message: `${n}번 보물의 보상 종류가 올바르지 않아요.` };
   }
   const kind = r.kind as TreasureRewardKind;
-  const value = kind === "seed" ? Number(r.value) : 0;
-  if (kind === "seed" && (!Number.isInteger(value) || value < 1)) {
-    return { ok: false, message: `${n}번 보물의 씨앗 수량은 1 이상이어야 해요.` };
+  if (kind === "seed") {
+    return { ok: false, message: `${n}번 보물 — 씨앗 보상은 없어졌어요. 경품이나 꽝을 골라 주세요.` };
   }
+  const value = 0;
   const label =
-    (typeof r.label === "string" ? r.label.trim() : "") ||
-    (kind === "seed" ? `씨앗 ${value}개` : kind === "none" ? "꽝" : "");
+    (typeof r.label === "string" ? r.label.trim() : "") || (kind === "none" ? "꽝" : "");
   if (!label) return { ok: false, message: `${n}번 보물의 상품 이름을 적어 주세요.` };
   if (label.length > 20) return { ok: false, message: `${n}번 보물의 상품 이름은 20자까지예요.` };
   return { ok: true, value: { kind, value, label } };

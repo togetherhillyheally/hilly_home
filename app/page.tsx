@@ -298,7 +298,7 @@ export default function HillyheallyHomepage() {
                 icon: <Gem className="h-6 w-6 text-teal-300" />,
                 iconBg: "bg-teal-300/10",
                 title: "보물지도",
-                desc: "경로 주변이나 지도에서 직접 고른 자리에 보물 상자가 숨겨져요. 가까워지면 힌트가 뜨고, 찾아서 열면 씨앗이나 상품을 받아요. 가끔은 꽝도 있어요.",
+                desc: "경로 주변이나 지도에서 직접 고른 자리에 보물 상자가 숨겨져요. 가까워지면 힌트가 뜨고, 찾아서 열면 상품을 받아요. 가끔은 꽝도 있어요.",
                 hover: "hover:border-teal-400/30",
               },
               {

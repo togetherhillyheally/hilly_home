@@ -7,7 +7,7 @@ import { AlertCircle, CheckCircle2, Loader2, MapPin, Save } from "lucide-react";
 import type { LatLng } from "@/components/admin/TreasureSpotPicker";
 import {
   TREASURE_REWARD_KIND_LABELS,
-  TREASURE_REWARD_KINDS,
+  TREASURE_SPOT_KINDS,
   validateSpotReward,
   type TreasureRewardKind,
   type TreasureSpotReward,
@@ -60,8 +60,7 @@ export default function TreasureSpotsPanel({
   const changeKind = (i: number, kind: TreasureRewardKind | "") => {
     if (!kind) return setReward(i, null);
     const prev = val.spots[i].reward;
-    if (kind === "seed") setReward(i, { kind, value: prev?.kind === "seed" ? prev.value : 5, label: "" });
-    else if (kind === "prize") setReward(i, { kind, value: 0, label: prev?.kind === "prize" ? prev.label : "" });
+    if (kind === "prize") setReward(i, { kind, value: 0, label: prev?.kind === "prize" ? prev.label : "" });
     else setReward(i, { kind, value: 0, label: "꽝" });
   };
 
@@ -141,25 +140,12 @@ export default function TreasureSpotsPanel({
                     className="h-8 rounded-md border border-white/10 bg-[#0c0c14] px-2 text-xs text-gray-100 focus:border-teal-400/50 focus:outline-none"
                   >
                     <option value="">보상 풀에서 랜덤</option>
-                    {TREASURE_REWARD_KINDS.map((k) => (
+                    {TREASURE_SPOT_KINDS.map((k) => (
                       <option key={k} value={k}>
                         {TREASURE_REWARD_KIND_LABELS[k]}
                       </option>
                     ))}
                   </select>
-                  {r?.kind === "seed" && (
-                    <>
-                      <input
-                        type="number"
-                        min={1}
-                        value={r.value}
-                        onChange={(e) => setReward(i, { ...r, value: Number(e.target.value) })}
-                        disabled={saving}
-                        className="h-8 w-20 rounded-md border border-white/10 bg-white/[0.04] px-2 text-right text-xs tabular-nums text-white focus:border-teal-400/50 focus:outline-none"
-                      />
-                      <span className="text-xs text-gray-400">개</span>
-                    </>
-                  )}
                   {r?.kind === "prize" && (
                     <input
                       value={r.label}
