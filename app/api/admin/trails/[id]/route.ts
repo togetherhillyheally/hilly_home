@@ -34,6 +34,20 @@ const COORD_FIELDS = new Set([
 
 type ActivityType = "walking" | "running" | "cycling";
 
+/** 코스 메뉴 권한이면 모든 지도, 아니면 지도 종류에 맞는 메뉴(ROUTE=stamps, 보물=treasures) 권한 (2026-11-16) */
+async function canManageTrail(
+  session: NonNullable<Awaited<ReturnType<typeof readAdminSession>>>,
+  id: string
+): Promise<boolean> {
+  if (hasMenuAccess(session, "trails")) return true;
+  const res = await adminFetch(`trails?select=map_type&id=eq.${id}`);
+  if (!res.ok) return false;
+  const mapType = ((await res.json()) as { map_type: string }[])[0]?.map_type;
+  if (mapType === "stamp") return hasMenuAccess(session, "stamps");
+  if (mapType === "treasure") return hasMenuAccess(session, "treasures");
+  return false;
+}
+
 function sanitizeActivityTypes(input: unknown): ActivityType[] | null {
   if (!Array.isArray(input)) return null;
   const valid = input.filter(
@@ -51,10 +65,10 @@ export async function PATCH(
   if (!session) {
     return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
   }
-  if (!hasMenuAccess(session, "trails")) {
+  const { id } = await ctx.params;
+  if (!(await canManageTrail(session, id))) {
     return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
   }
-  const { id } = await ctx.params;
 
   let body: Record<string, unknown>;
   try {
@@ -172,10 +186,10 @@ export async function DELETE(
   if (!session) {
     return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
   }
-  if (!hasMenuAccess(session, "trails")) {
+  const { id } = await ctx.params;
+  if (!(await canManageTrail(session, id))) {
     return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
   }
-  const { id } = await ctx.params;
 
   // 1) trail 조회
   const trailRes = await adminFetch(

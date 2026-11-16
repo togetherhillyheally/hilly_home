@@ -1,4 +1,5 @@
 import Link from "next/link";
+import MapHeaderActions from "@/components/admin/MapHeaderActions";
 import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { adminList } from "@/lib/admin-rest";
@@ -67,15 +68,7 @@ export default async function StampMapDetailPage({
         </Link>
         <div className="flex flex-wrap items-center gap-3">
           <TrailNameEdit trailId={trail.id} initialName={trail.name} />
-          {trail.is_active ? (
-            <span className="inline-flex items-center px-2 h-6 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-medium">
-              활성
-            </span>
-          ) : (
-            <span className="inline-flex items-center px-2 h-6 rounded-md bg-white/[0.06] border border-white/10 text-gray-400 text-[11px] font-medium">
-              비활성
-            </span>
-          )}
+          <MapHeaderActions trailId={trail.id} isActive={trail.is_active} listHref="/admin/stamps" />
           {trail.stamp_order_mode && (
             <span className="inline-flex items-center px-2 h-6 rounded-md bg-white/[0.04] border border-white/10 text-gray-300 text-[11px] font-medium">
               순서 모드: {ORDER_LABELS[trail.stamp_order_mode] ?? trail.stamp_order_mode}

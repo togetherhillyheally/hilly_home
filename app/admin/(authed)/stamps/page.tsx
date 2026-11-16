@@ -1,4 +1,5 @@
 import Link from "next/link";
+import TrailActiveToggle from "../trails/TrailActiveToggle";
 import { Search, MapPin, Plus } from "lucide-react";
 import { adminList, escapeIlike } from "@/lib/admin-rest";
 import Pagination from "../Pagination";
@@ -232,15 +233,7 @@ export default async function StampsPage({
                         {formatDate(t.created_at)}
                       </td>
                       <td className="px-3 py-3 text-center">
-                        {t.is_active ? (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[10px] font-medium">
-                            활성
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-white/[0.06] border border-white/10 text-gray-500 text-[10px] font-medium">
-                            비활성
-                          </span>
-                        )}
+                        <TrailActiveToggle trailId={t.id} initial={t.is_active} />
                       </td>
                     </tr>
                   );
