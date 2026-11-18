@@ -27,6 +27,7 @@ import {
   Gift,
   Siren,
 } from "lucide-react";
+import { Megaphone } from "lucide-react";
 import { TreasureChest } from "@/components/admin/TreasureChestIcon";
 import type { MenuKey } from "@/lib/admin-permissions";
 
@@ -166,6 +167,17 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         label: "물병 원장",
         icon: GlassWater,
         menuKey: "bottle-ledger",
+      },
+    ],
+  },
+  {
+    title: "중계",
+    items: [
+      {
+        href: "/admin/ads",
+        label: "광고",
+        icon: Megaphone,
+        menuKey: "ads",
       },
     ],
   },
