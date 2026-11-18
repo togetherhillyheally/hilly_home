@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>힐리힐리 지도 게임</title>
+<meta property="og:title" content="힐리힐리 지도 게임">
+<meta property="og:description" content="ROUTE와 보물찾기. 같은 길을 두 가지로 걷는 프로그램 소개입니다.">
+<meta property="og:image" content="https://hillyheally.com/map-games/img/course-map.png">
+<meta property="og:url" content="https://hillyheally.com/map-games/">
+<meta property="og:type" content="website">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #E6E7E9;
+    font-family: "Pretendard", "Pretendard Variable", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    color: #1A1A1A;
+    padding: 28px 14px 64px;
+    -webkit-font-smoothing: antialiased;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+  .deck { max-width: 1120px; margin: 0 auto; }
+
+  .page {
+    container-type: inline-size;
+    width: 100%;
+    aspect-ratio: 297 / 210;
+    background: #FFFFFF;
+    border-top: 4px solid #DC2F55;
+    box-shadow: 0 3px 16px rgba(0,0,0,0.12);
+    margin: 0 0 30px;
+    position: relative;
+    overflow: hidden;
+  }
+  .inner {
+    position: absolute; inset: 0;
+    padding: 5.2% 6% 7%;
+    font-size: 1.5cqw;
+    line-height: 1.6;
+    display: flex; flex-direction: column;
+  }
+  .inner > * { flex-shrink: 0; }
+  .hl { color: #DC2F55; font-weight: 700; }
+  .pfoot {
+    position: absolute; left: 6%; right: 6%; bottom: 3.4%;
+    display: flex; justify-content: space-between;
+    font-size: 0.95cqw; font-weight: 600; color: #9A9A9A; letter-spacing: 0.02em;
+  }
+
+  .eyebrow { color: #DC2F55; font-weight: 700; font-size: 0.78em; letter-spacing: 0.1em; margin: 0 0 0.5em; }
+  h2 { font-size: 2.1em; font-weight: 900; margin: 0 0 0.4em; line-height: 1.25; color: #1A1A1A; }
+  .sub { font-size: 0.92em; color: #6A6A6A; margin: -0.15em 0 1.1em; line-height: 1.6; }
+  .rule { border: none; border-top: 1.5px solid #E2E2E2; margin: 0 0 1.3em; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 0.86em; background: #FFFFFF; color: #2A2A2A; }
+  th, td { border: 1px solid #E4E4E4; padding: 0.58em 0.85em; text-align: left; vertical-align: middle; }
+  thead th { background: #F4F4F4; text-align: center; font-weight: 600; color: #8A8A8A; font-size: 0.86em; letter-spacing: 0.06em; }
+  td.key { background: #F7F7F7; font-weight: 700; width: 10em; white-space: nowrap; color: #1A1A1A; }
+  td.c { text-align: center; }
+  thead th.r { color: #DC2F55; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1em; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1em; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1em; }
+  .cardbox { background: #FAFAFA; border: 1px solid #E4E4E4; padding: 1.05em 1.15em; }
+  .cardbox .tag { color: #DC2F55; font-weight: 700; font-size: 0.75em; letter-spacing: 0.08em; margin: 0 0 0.45em; }
+  .cardbox h3 { font-size: 1.05em; font-weight: 800; margin: 0 0 0.35em; color: #1A1A1A; }
+  .cardbox p { font-size: 0.85em; line-height: 1.6; color: #5A5A5A; margin: 0; }
+
+  .note { font-size: 0.77em; color: #8A8A8A; margin-top: 0.9em; line-height: 1.6; }
+
+  .divider { background: #141414; border-top-color: #DC2F55; }
+  .divider .inner { justify-content: center; }
+  .divider .cnum {
+    font-size: 5.6em; font-weight: 900; color: #DC2F55; line-height: 1;
+    margin: 0 0 0.12em; letter-spacing: -0.02em;
+  }
+  .divider .cen { font-size: 2.2em; font-weight: 900; color: #FFFFFF; margin: 0 0 0.3em; letter-spacing: 0.02em; }
+  .divider .ckr { font-size: 1em; color: #9A9A9A; margin: 0; }
+
+  .cover .inner { align-items: center; justify-content: center; text-align: center; }
+  .cover .cov-eyebrow { color: #DC2F55; font-weight: 700; font-size: 0.95em; letter-spacing: 0.18em; margin: 0 0 1.1em; }
+  .cover h1 { font-size: 3.9em; font-weight: 900; margin: 0 0 0.22em; color: #1A1A1A; letter-spacing: -0.01em; }
+  .cover h1 .sp { letter-spacing: 0.1em; }
+  .cover h1 .amp { color: #DC2F55; }
+  .cover .cov-sub { font-size: 1.35em; font-weight: 700; color: #3A3A3A; margin: 0 0 0.5em; }
+  .cover .cov-tag { font-size: 0.98em; color: #6A6A6A; margin: 0 0 2em; line-height: 1.7; }
+  .cover .cov-meta { font-size: 1em; color: #8A8A8A; margin: 0.25em 0; }
+
+  .sign { display: flex; align-items: center; justify-content: center; gap: 0.52em; margin-top: 1.7em; }
+  .sign img { height: 1.5em; width: auto; display: block; }
+  .sign b { font-size: 1.22em; font-weight: 900; letter-spacing: 0.015em; color: #1A1A1A; }
+
+  .biorow { display: flex; gap: 1.4em; align-items: flex-start; }
+  .mapbox-img { display: block; width: 100%; height: auto; border: 1px solid #E4E4E4; }
+  .mapcap { font-size: 0.82em; color: #5A5A5A; font-weight: 600; margin: 0.6em 0 0; line-height: 1.5; }
+  .ruleitem { list-style: none; margin: 0; padding: 0; font-size: 0.8em; line-height: 1.55; color: #4A4A4A; }
+  .ruleitem li { margin-bottom: 0.6em; }
+  .ruleitem b { display: block; color: #1A1A1A; font-size: 1.02em; margin-bottom: 0.1em; }
+  .ruleitem strong { color: #1A1A1A; font-weight: 800; }
+
+  .tierrow { display: flex; align-items: center; gap: 0.7em; font-size: 0.84em; margin-bottom: 0.48em; }
+  .tierchip { flex: 0 0 auto; width: 3.1em; text-align: center; color: #fff; font-weight: 800; font-size: 0.82em; padding: 0.28em 0; border-radius: 4px; }
+  .bar { height: 0.9em; border-radius: 2px; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1em; }
+  .stat { background: #FAFAFA; border: 1px solid #E4E4E4; padding: 1.05em 1.15em; }
+  .stat .big { font-size: 2em; font-weight: 900; color: #DC2F55; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .stat .cap { font-size: 0.78em; color: #6A6A6A; margin-top: 0.3em; font-weight: 600; }
+
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.1em; }
+  .steps .st { border: 1px solid #E4E4E4; background: #FAFAFA; padding: 1.05em 1.15em; }
+  .steps .no { color: #DC2F55; font-size: 0.74em; font-weight: 800; letter-spacing: 0.1em; margin: 0 0 0.45em; }
+  .steps h3 { font-size: 1.02em; font-weight: 800; margin: 0 0 0.4em; color: #1A1A1A; line-height: 1.35; }
+  .steps p { font-size: 0.82em; line-height: 1.6; color: #5A5A5A; margin: 0; }
+
+  .punch {
+    background: #141414; color: #fff; padding: 0.95em 1.2em;
+    font-size: 1.02em; font-weight: 700; line-height: 1.55; margin: 1.1em 0 0;
+  }
+  .punch b { color: #FF6B8A; }
+
+  .videobox {
+    border: 2px dashed #D8D8D8; background: #FAFAFA;
+    display: flex; align-items: center; justify-content: center;
+    aspect-ratio: 16 / 9; width: 100%;
+  }
+  .shotrow { display: flex; gap: 1em; justify-content: center; }
+  .shotrow figure { margin: 0; flex: 0 0 19.5%; min-width: 0; }
+  .shotrow img { display: block; width: 100%; height: auto; border: 1px solid #E4E4E4; border-radius: 10px; }
+  .shotrow figcaption { font-size: 0.72em; color: #5A5A5A; font-weight: 600; margin-top: 0.55em; line-height: 1.45; text-align: center; }
+  .vidframe { display: block; width: 100%; height: auto; border: 1px solid #E4E4E4; background: #111; }
+  .videobox p { font-size: 0.86em; color: #9A9A9A; font-weight: 600; margin: 0; text-align: center; line-height: 1.7; }
+
+  @media screen and (max-width: 860px) {
+    .page { aspect-ratio: auto; }
+    .inner { position: static; padding: 24px 20px 48px; font-size: 15px; }
+    .pfoot { font-size: 10px; }
+    .cover .inner, .divider .inner { padding: 64px 20px; }
+    .grid2, .grid3, .grid4, .stats, .steps { grid-template-columns: 1fr; }
+    .biorow { flex-direction: column; }
+    .tblwrap { overflow-x: auto; }
+    .tblwrap table { min-width: 560px; }
+  }
+
+  @page { size: A4 landscape; margin: 12mm; }
+  @media print {
+    body { background: #fff; padding: 0; }
+    .deck { max-width: none; }
+    .page {
+      width: 273mm; height: 185mm; aspect-ratio: auto;
+      margin: 0 auto; box-shadow: none; page-break-after: always;
+      break-inside: avoid; border: 1px solid #E4E4E4; border-top: 4px solid #DC2F55;
+    }
+    .page:last-child { page-break-after: auto; }
+    .inner { font-size: 4.05mm; }
+    .pfoot { font-size: 2.6mm; }
+    .grid2 { grid-template-columns: 1fr 1fr; }
+    .grid3, .steps { grid-template-columns: 1fr 1fr 1fr; }
+    .grid4, .stats { grid-template-columns: repeat(4, 1fr); }
+    .biorow { flex-direction: row; }
+  }
+</style>
+</head>
+<body>
+<div class="deck">
+
+  <!-- 표지 -->
+  <section class="page cover">
+    <div class="inner">
+      <p class="cov-eyebrow">PROGRAM INTRODUCTION</p>
+      <h1>힐리힐리 <span class="amp">지도 게임</span></h1>
+      <p class="cov-sub" style="margin-bottom:0;">ROUTE와 보물찾기</p>
+    </div>
+  </section>
+
+  <!-- 두 가지 -->
+  <section class="page">
+    <div class="inner">
+      <p class="eyebrow">01 · TWO WAYS</p>
+      <h2>같은 길을 두 가지로 걷습니다</h2>
+      <p class="sub">둘은 준비의 무게가 다릅니다. ROUTE는 하루를 들여 차리는 행사이고 보물찾기는 지도만 있으면 그날 바로 열 수 있습니다.</p>
+      <hr class="rule">
+      <div class="tblwrap"><table>
+        <thead><tr><th style="width:15%;"></th><th class="r" style="width:42%;">ROUTE</th><th class="r">보물찾기</th></tr></thead>
+        <tbody>
+          <tr><td class="key">한 줄</td><td><b>목표를 정하고 나만의 경로를 찾는 게임</b></td><td><b>지도에 숨겨진 보물을 찾는 게임</b></td></tr>
+          <tr><td class="key">참가자가 하는 일</td><td>시작 전에 목표 점수를 정하고 그 점수에 맞게 체크포인트를 골라 돌아옵니다</td><td>길을 걷다가 근처에 숨은 상자를 찾아 엽니다</td></tr>
+          <tr><td class="key">지점</td><td>운영진이 사전 답사로 정한 고정 지점</td><td>출발할 때 경로 주변에 <b>자동으로 숨겨집니다.</b> 매번 자리가 다릅니다</td></tr>
+          <tr><td class="key">인원과 편성</td><td><b>2인 1팀</b>, 개인전으로 혼자 뛰어도 됩니다</td><td><b>개인</b></td></tr>
+          <tr><td class="key">만들기</td><td>앱에서 누구나 포인트를 찍어 자기 코스를 만듭니다. 행사용은 저희가 답사해서 짭니다</td><td>누구나 지도를 고르고 상자 개수와 경품을 정해 바로 엽니다</td></tr>
+          <tr><td class="key">준비</td><td>코스 답사, 체크포인트 지정, 운영본부</td><td>지도 하나와 상자 개수, 경품 설정</td></tr>
+          <tr><td class="key">남는 것</td><td>팀별 점수와 목표 적중 여부, 이동 기록</td><td>누가 어느 상자를 열었는지, 걸은 거리와 시간</td></tr>
+        </tbody>
+      </table></div>
+      <p class="note">둘을 겹쳐 쓰기도 합니다. 체크포인트로 점수를 쌓으면서 중간에 상자가 하나씩 나오는 식입니다.</p>
+    </div>
+    <div class="pfoot"><span>힐리힐리 지도 게임</span><span>힐리힐리 · 01</span></div>
+  </section>
+
+  <!-- CH 01 -->
+  <section class="page divider">
+    <div class="inner">
+      <p class="cnum">01</p>
+      <p class="cen">ROUTE</p>
+      <p class="ckr">목표를 정하고 나만의 경로를 찾는 게임</p>
+    </div>
+  </section>
+
+  <!-- ROUTE 규칙 -->
+  <section class="page">
+    <div class="inner">
+      <p class="eyebrow">02 · ROUTE</p>
+      <h2>ROUTE는 나만의 경로를 찾는 게임입니다</h2>
+      <p class="sub">출발 전에 우리 팀이 모을 목표 점수를 정합니다. 부족해도 넘쳐도 안 되고 딱 맞게 채워 도착 지점으로 돌아와야 성공입니다. 어느 포인트를 가고 어느 포인트를 버릴지 고르다 보면 같은 산에서도 팀마다 다른 경로가 나옵니다. 그래서 이름이 ROUTE입니다.</p>
+      <hr class="rule">
+      <div class="stats" style="margin-bottom:1.2em; grid-template-columns:repeat(3, 1fr);">
+        <div class="stat"><p class="big">10~50점</p><p class="cap">포인트마다 붙는 배점</p></div>
+        <div class="stat"><p class="big">10점 단위</p><p class="cap">시작 전에 선언하는 목표 점수</p></div>
+        <div class="stat"><p class="big">±50점</p><p class="cap">찍어야 알 수 있는 미스터리 포인트</p></div>
+      </div>
+      <div class="grid3">
+        <div class="cardbox"><p class="tag">RULE 1</p><h3>둘이서 한 팀</h3><p>2인 1팀이 기본입니다. 혼자 오시면 <b>개인전</b>으로 뛰시거나 점수 없이 지도만 보며 걸으셔도 됩니다.</p></div>
+        <div class="cardbox"><p class="tag">RULE 2</p><h3>목표 점수를 먼저 선언</h3><p>출발 전에 몇 점을 모을지 팀이 직접 정합니다. 10점 단위로 선언하고 <b>끝났을 때 그 점수와 딱 맞으면 성공</b>입니다.</p></div>
+        <div class="cardbox"><p class="tag">RULE 3</p><h3>출발 지점에서 체크</h3><p>출발 체크를 해야 포인트가 열립니다. 그전에는 어디에 몇 점이 있는지 보이지 않아 <b>미리 외워 올 수 없습니다.</b></p></div>
+        <div class="cardbox"><p class="tag">RULE 4</p><h3>가까이 가서 찍기</h3><p>포인트 가까이 가면 찍기 버튼이 열립니다. 같은 포인트는 <b>팀마다 한 번만</b> 찍힙니다.</p></div>
+        <div class="cardbox"><p class="tag">RULE 5</p><h3>특별한 포인트</h3><p>미스터리는 찍기 전까지 점수를 모릅니다. 50점을 얻을 수도 잃을 수도 있습니다. <b>합류 포인트는 팀원이 모두 모여야</b> 찍힙니다.</p></div>
+        <div class="cardbox"><p class="tag">RULE 6</p><h3>목표를 맞히고 도착</h3><p>남은 점수에 맞춰 마지막에 무엇을 찍을지 고릅니다. <b>도착 지점에 돌아오면</b> 그 자리에서 끝납니다.</p></div>
+      </div>
+      <p class="note">순위표는 만들지 않습니다. 100점마다 추첨권이 한 장 쌓이고 목표를 정확히 맞힌 팀에 두 장이 더 붙습니다. 빠른 사람만 가져가지 않게 두려고 만든 장치입니다.</p>
+    </div>
+    <div class="pfoot"><span>힐리힐리 지도 게임</span><span>힐리힐리 · 02</span></div>
+  </section>
+
+  <!-- 코스 -->
+  <section class="page">
+    <div class="inner">
+      <p class="eyebrow">03 · COURSE</p>
+      <h2>코스는 길에 맞춰 다시 짭니다</h2>
+      <p class="sub">아래는 2026년 11월 광교산에서 쓴 배치입니다. 길마다 거리와 난이도가 달라 배점과 개수는 매번 새로 잡습니다.</p>
+      <hr class="rule">
+      <div class="biorow">
+        <div style="flex:0 0 55%; min-width:0;">
+          <img class="mapbox-img" src="img/course-map.png" alt="광교산 체크포인트 배치 지도">
+          <p class="mapcap">광교산 체크포인트 35개소 배치. 초록색 S가 출발과 도착 지점입니다. 점수 표시는 참가자 앱 화면에 뜨는 모양 그대로입니다.</p>
+        </div>
+        <div style="flex:1; min-width:0;">
+          <h3 style="font-size:0.93em; font-weight:800; margin:0 0 0.7em; border-left:3px solid #DC2F55; padding-left:0.55em;">배점 구성 (광교산 사례)</h3>
+          <div class="tierrow"><span class="tierchip" style="background:#CE2B37;">50점</span><span class="bar" style="background:#CE2B37; width:6%;"></span><span>정상과 최원거리 2개소</span></div>
+          <div class="tierrow"><span class="tierchip" style="background:#7E4D9E;">40점</span><span class="bar" style="background:#7E4D9E; width:9%;"></span><span>주요 봉우리 3개소</span></div>
+          <div class="tierrow"><span class="tierchip" style="background:#D9A441;">30점</span><span class="bar" style="background:#D9A441; width:30%;"></span><span>능선 11개소</span></div>
+          <div class="tierrow"><span class="tierchip" style="background:#4C7FA4;">20점</span><span class="bar" style="background:#4C7FA4; width:40%;"></span><span>산중 15개소</span></div>
+          <div class="tierrow" style="margin-bottom:1.3em;"><span class="tierchip" style="background:#6B9E78;">10점</span><span class="bar" style="background:#6B9E78; width:11%;"></span><span>저지대와 초입 4개소</span></div>
+
+          <h3 style="font-size:0.93em; font-weight:800; margin:0 0 0.7em; border-left:3px solid #DC2F55; padding-left:0.55em;">길을 쓸 때 지키는 것</h3>
+          <ul class="ruleitem">
+            <li><b>지정 탐방로만</b><strong>비지정 등산로 진입 금지.</strong> 기존 갈림길과 시설을 체크포인트로 씁니다.</li>
+            <li><b>흔적을 남기지 않음</b>보관함과 안내물, 마킹은 <strong>당일 전량 회수</strong>합니다.</li>
+            <li><b>전부는 못 돌게</b>주어진 시간 안에 다 돌 수 없게 배치해 <strong>무리한 이동을 막습니다.</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="pfoot"><span>힐리힐리 지도 게임</span><span>힐리힐리 · 03</span></div>
+  </section>
+
+  <!-- 영상 -->
+  <section class="page">
+    <div class="inner">
+      <p class="eyebrow">04 · GUIDE FILM</p>
+      <h2>영상으로 보면 이런 게임입니다</h2>
+      <p class="sub">왼쪽은 규칙을 담은 40초 안내 영상이고 오른쪽은 광교저수지에서 실제로 돌린 판을 앱이 남긴 리플레이입니다.</p>
+      <hr class="rule">
+      <div class="biorow">
+        <div style="flex:0 0 22%; min-width:0;">
+          <video class="vidframe" src="video/route-guide.mp4" controls playsinline preload="metadata"></video>
+          <p class="mapcap">ROUTE 안내 영상, 40초</p>
+        </div>
+        <div style="flex:0 0 22%; min-width:0;">
+          <video class="vidframe" src="video/route-replay.mp4" controls playsinline preload="metadata"></video>
+          <p class="mapcap">광교저수지 ROUTE, 앱에서 저장한 리플레이</p>
+        </div>
+        <div style="flex:1; min-width:0;">
+          <ul class="ruleitem">
+            <li><b>안내 영상</b>팀 꾸리기와 목표 선언부터 출발 체크, 포인트 찍기, 미스터리와 합류, 도착까지 여섯 장면입니다.</li>
+            <li><b>실제 리플레이</b>세 사람이 각자 목표를 선언하고 1시간 30분을 걸은 판입니다. 포인트를 찍을 때마다 점수가 오르고 미스터리에 깎이는 순간까지 다 남습니다.</li>
+            <li><b>참가자가 직접 저장합니다</b>끝나면 앱이 이런 리플레이를 만들어 줍니다. 길이를 골라 각자 폰에 담습니다.</li>
+          </ul>
+          <p class="note">현장을 담은 촬영본은 따로 있습니다. 외주 없이 직접 찍습니다. 서울레이스 영상팀장을 맡은 감독이 팀에 있어서, 기관에서 쓰실 자료로도 정리해 드릴 수 있습니다.</p>
+        </div>
+      </div>
+    </div>
+    <div class="pfoot"><span>힐리힐리 지도 게임</span><span>힐리힐리 · 04</span></div>
+  </section>
+
+  <!-- CH 02 -->
+  <section class="page divider">
+    <div class="inner">
+      <p class="cnum">02</p>
+      <p class="cen">보물찾기</p>
+      <p class="ckr">지도에 숨겨진 보물을 찾는 게임</p>
+    </div>
+  </section>
+
+  <!-- 보물찾기 구조 -->
+  <section class="page">
+    <div class="inner">
+      <p class="eyebrow">05 · TREASURE HUNT</p>
+      <h2>길을 고르지 않아도 되는 쪽</h2>
+      <p class="sub">코스를 따라 그냥 걷습니다. 숨은 상자는 앱이 알아서 알려 주고 가까이 가면 열립니다.</p>
+      <hr class="rule">
+      <div class="steps" style="margin-bottom:1.1em;">
+        <div class="st"><p class="no">STEP 01 · 숨기기</p><h3>숨기는 건 자동,<br>직접 놓아도 됩니다</h3><p>기본은 출발할 때의 자동 배치입니다. 경로에서 <b>50m 안쪽</b>으로 비껴 놓고 상자끼리 <b>150m 이상</b> 띄워, 자리가 매번 달라집니다. 답사하면서 <b>원하는 자리를 직접 찍어</b> 고정할 수도 있습니다.</p></div>
+        <div class="st"><p class="no">STEP 02 · 찾기</p><h3>가까워지면<br>알려 줍니다</h3><p><b>100m</b>에서 근처에 있다고 알리고 <b>50m</b>면 아주 가깝다고 합니다. <b>20m</b> 안에서 지도의 상자를 눌러 엽니다.</p></div>
+        <div class="st"><p class="no">STEP 03 · 열기</p><h3>상자를 열면<br>그 자리에서 판정</h3><p>경품이 든 상자와 꽝이 섞여 있습니다. 경품은 만든 쪽이 직접 겁니다. <b>스타벅스 아메리카노</b> 한 잔처럼요. 당첨은 명단에 기록되고 수령은 운영에서 확인합니다.</p></div>
+      </div>
+      <div class="grid3">
+        <div class="cardbox"><p class="tag">조절할 수 있는 것</p><h3>개수와 시간</h3><p>상자는 5개, 10개, 15개 가운데 고르고 최대 30개까지 둡니다. 제한시간은 기본 60분이고 10분부터 5시간까지 잡습니다.</p></div>
+        <div class="cardbox"><p class="tag">막바지 장치</p><h3>남은 상자 힌트</h3><p>끝나기 10분 전이면 남은 상자의 <b>대략 위치를 반경 80m 원</b>으로 보여 주고 3분 전이면 위치를 공개합니다. 빈손으로 끝나지 않게 하는 장치입니다.</p></div>
+        <div class="cardbox"><p class="tag">공정</p><h3>한 사람당 제한</h3><p>앞사람이 다 열어 버리지 않도록 <b>한 사람이 가져갈 개수</b>를 정할 수 있습니다. 제한 없음도 가능합니다.</p></div>
+      </div>
+      <p class="note">꽝 상자도 일부러 섞습니다. 여는 순간의 두근거림이 상품보다 크다는 것이 지난 회차 설문에서 확인됐습니다.</p>
+    </div>
+    <div class="pfoot"><span>힐리힐리 지도 게임</span><span>힐리힐리 · 05</span></div>
+  </section>
+
+  <!-- 콤마하이킹 -->
+  <section class="page">
+    <div class="inner">
+      <p class="eyebrow">06 · FIELD RESULT</p>
+      <h2>지난 11월 8일, 콤마트레일에서</h2>
+      <p class="sub">종댕이길 구간에서 하이킹과 함께 앱 보물찾기를 돌렸습니다. 사후 설문 11명 기준입니다.</p>
+      <hr class="rule">
+      <div class="stats" style="margin-bottom:1.2em;">
+        <div class="stat"><p class="big">25 / 27</p><p class="cap">행사 중 열린 상자</p></div>
+        <div class="stat"><p class="big">13명</p><p class="cap">앱으로 함께 걸은 참가자</p></div>
+        <div class="stat"><p class="big">4.55점</p><p class="cap">보물찾기 재미 (5점 만점)</p></div>
+        <div class="stat"><p class="big">4.64점</p><p class="cap">주변에 추천할 의향</p></div>
+      </div>
+      <div class="grid2">
+        <div class="cardbox"><p class="tag">좋았던 점</p><h3>여는 순간과 함께 찾기</h3><p>1위가 <b>상자를 열 때의 두근거림</b>(9명), 2위가 <b>일행과 함께 찾기</b>(6명)였습니다. 상품과 보상은 3명으로 아래쪽이었습니다.</p></div>
+        <div class="cardbox"><p class="tag">보완한 점</p><h3>앞사람이 먼저 여는 문제</h3><p>한 줄로 걷는 길에서는 앞사람이 먼저 열게 돼 아쉽다는 의견이 3명 있었습니다. 한 사람당 개수 제한과 개봉 간격을 그래서 넣었습니다.</p></div>
+      </div>
+    </div>
+    <div class="pfoot"><span>힐리힐리 지도 게임</span><span>힐리힐리 · 06</span></div>
+  </section>
+
+  <!-- 리플레이 영상 -->
+  <section class="page">
+    <div class="inner">
+      <p class="eyebrow">07 · GUIDE FILM</p>
+      <h2>안내 영상과 그날의 리플레이입니다</h2>
+      <p class="sub">왼쪽은 규칙을 담은 안내 영상이고 오른쪽은 11월 8일 콤마트레일에서 참가자가 앱으로 저장한 리플레이입니다.</p>
+      <hr class="rule">
+      <div class="biorow">
+        <div style="flex:0 0 22%; min-width:0;">
+          <video class="vidframe" src="video/treasure-guide.mp4" controls playsinline preload="metadata"></video>
+          <p class="mapcap">보물찾기 안내 영상, 40초</p>
+        </div>
+        <div style="flex:0 0 22%; min-width:0;">
+          <video class="vidframe" src="video/treasure-replay.mp4" controls playsinline preload="metadata"></video>
+          <p class="mapcap">콤마트레일 보물찾기, 앱에서 저장한 리플레이</p>
+        </div>
+        <div style="flex:1; min-width:0;">
+          <ul class="ruleitem">
+            <li><b>안내 영상</b>상자가 숨는 것부터 가까이 가야 보이는 것, 사람마다 따로인 것, 막바지 힌트까지 여섯 장면입니다.</li>
+            <li><b>실제 리플레이</b>13명이 걸은 선이 색색으로 겹치고 상자가 열린 순간이 순서대로 올라옵니다. 끝에는 그날의 기록이 한 장으로 붙습니다.</li>
+            <li><b>참가자가 직접 저장합니다</b>20초와 40초, 60초 가운데 골라 폰에 담습니다. 오른쪽 영상도 참가자가 그렇게 저장한 파일입니다.</li>
+          </ul>
+          <p class="note">행사가 끝난 다음 날 참가자들이 각자 올릴 거리가 생깁니다. 운영하는 쪽에서는 따로 촬영을 붙이지 않아도 그날 기록이 남습니다.</p>
+        </div>
+      </div>
+    </div>
+    <div class="pfoot"><span>힐리힐리 지도 게임</span><span>힐리힐리 · 07</span></div>
+  </section>
+
+  <!-- CH 03 -->
+  <section class="page divider">
+    <div class="inner">
+      <p class="cnum">03</p>
+      <p class="cen">COMMON</p>
+      <p class="ckr">둘 다 무엇으로 돌리는가</p>
+    </div>
+  </section>
+
+  <!-- 지도 만들기 -->
+  <section class="page">
+    <div class="inner">
+      <p class="eyebrow">08 · MAP MAKER</p>
+      <h2>지도는 앱에서 누구나 만듭니다</h2>
+      <p class="sub">운영진 전용 도구가 아닙니다. 오늘 참가자였던 사람이 다음 주에 자기 지도를 열 수 있습니다. 아래는 실제 앱의 만들기 화면입니다.</p>
+      <hr class="rule">
+      <div class="shotrow">
+        <figure><img src="img/make-chooser.png" alt="지도 만들기 선택"><figcaption>만들기 입구. 코스와 ROUTE, 보물 지도 세 종류</figcaption></figure>
+        <figure><img src="img/make-point.png" alt="포인트 추가"><figcaption>포인트마다 종류와 배점을 그 자리에서 고릅니다</figcaption></figure>
+        <figure><img src="img/make-route.png" alt="ROUTE 포인트 배치"><figcaption>지도를 탭해 배점과 미스터리를 놓으면 ROUTE 완성</figcaption></figure>
+        <figure><img src="img/make-treasure.png" alt="보물 자리 찍기"><figcaption>출발점과 도착점, 이름 붙인 보물 상자를 직접 찍는 보물 지도</figcaption></figure>
+      </div>
+      <p class="note">ROUTE 포인트 종류에는 합류와 파밍박스, 출발과 도착, 미스터리까지 들어 있습니다. 보물 지도는 GPX 경로를 올려 자동으로 숨겨도 되고 이 화면처럼 직접 찍어도 됩니다.</p>
+    </div>
+    <div class="pfoot"><span>힐리힐리 지도 게임</span><span>힐리힐리 · 08</span></div>
+  </section>
+
+  <!-- 플랫폼 -->
+  <section class="page">
+    <div class="inner">
+      <p class="eyebrow">09 · PLATFORM</p>
+      <h2>관제 시스템을 직접 갖고 있습니다</h2>
+      <p class="sub">행사 때만 빌려 쓰는 외부 솔루션과 다릅니다. 평소 서비스 중인 자체 앱과 관제 화면이라 행사 중에는 운영진이 참가자 전원을 실시간으로 지켜보고 끝난 뒤에도 걸은 기록이 참가자 앱에 남습니다.</p>
+      <hr class="rule">
+      <div class="biorow">
+        <div style="flex:0 0 58%; min-width:0;">
+          <img class="mapbox-img" src="img/control-map.png" alt="운영본부 관제 화면">
+          <p class="mapcap">예시 데이터 32명을 띄운 실제 관제 화면. 2인 1팀 16개 조의 점수와 추첨권, 수신 상태가 한 화면에 모입니다.</p>
+        </div>
+        <div style="flex:1; min-width:0;">
+          <ul class="ruleitem">
+            <li><b>운영진 실시간 모니터링</b>참가자 전원의 위치와 점수가 <strong>관제 화면 한 장</strong>에 모입니다. 운영본부에서 행사 내내 지켜봅니다.</li>
+            <li><b>자동 판정</b>체크포인트 도착도 상자 개봉도 GPS가 판정해 <strong>수기 집계가 없습니다.</strong></li>
+            <li><b>이상 감지</b>마지막 수신 시각을 보고 <strong>신호가 끊기거나 오래 멈춘 사람</strong>을 먼저 찾아 연락합니다.</li>
+            <li><b>가족과 지인 응원 링크</b>참가하지 않는 사람도 웹에서 진행 상황을 지켜봅니다.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="note">참가자 휴대폰 하나면 돌아갑니다. 따로 장비를 나눠 드리거나 받아 오실 것은 없습니다.</p>
+    </div>
+    <div class="pfoot"><span>힐리힐리 지도 게임</span><span>힐리힐리 · 09</span></div>
+  </section>
+
+  <!-- 파밍박스 -->
+  <section class="page">
+    <div class="inner">
+      <p class="eyebrow">10 · FARMING BOX</p>
+      <h2>길 위에 둔 상자, 파밍박스</h2>
+      <p class="sub">앱 속 상자와 달리 실제로 여는 보관함입니다. 지도에는 표시하지 않습니다. 하이커박스처럼 길가에 놓여 있고 발견한 사람이 앱에서 비밀번호를 받아 엽니다.</p>
+      <hr class="rule">
+      <div class="steps" style="margin-bottom:1.2em;">
+        <div class="st"><p class="no">STEP 01</p><h3>발견한다</h3><p>위치를 미리 알려 주지 않습니다. 체크포인트와 달리 <b>지도에 뜨지 않아</b> 걷다가 눈에 들어와야 합니다.</p></div>
+        <div class="st"><p class="no">STEP 02</p><h3>비밀번호가 열린다</h3><p>발견하고 앱에서 상자를 확인하면 그 자리에서 <b>번호가 공개</b>됩니다. 앱 속 보물 상자와 같은 방식입니다.</p></div>
+        <div class="st"><p class="no">STEP 03</p><h3>쓰거나 가져간다</h3><p>꺼낸 것을 남은 구간에서 바로 쓰거나, 필요한 사람이 <b>보급으로 가져갑니다.</b></p></div>
+      </div>
+      <h3 style="font-size:0.93em; font-weight:800; margin:0 0 0.7em; border-left:3px solid #DC2F55; padding-left:0.55em;">쓰임은 두 가지입니다</h3>
+      <div class="grid2">
+        <div class="cardbox"><p class="tag">용도 1</p><h3>교육</h3><p>과제가 든 상자입니다. 헤드램프 같은 장비를 꺼내 그 자리에서 직접 써 보고 <b>인증 사진을 찍어 올리면</b> 완료되는 식입니다. 상자 안 쓰레기 봉투를 꺼내 다음 구간을 걸으며 <b>쓰레기를 주워 오는</b> 과제도 됩니다. 설명을 듣는 것이 아니라 길 위에서 해 보는 쪽입니다.</p></div>
+        <div class="cardbox"><p class="tag">용도 2</p><h3>보급</h3><p>물과 행동식, 반창고처럼 길에서 떨어지기 쉬운 것을 채워 둡니다. 하이커박스와 같이 <b>필요한 사람이 가져가고 남는 것은 두고 갑니다.</b> 무엇이 얼마나 남았는지는 운영에서 확인합니다.</p></div>
+      </div>
+      <p class="note">상자는 일반 이용객이 열 수 없게 잠그고 구조물에 고정한 뒤 위치추적기를 붙입니다. 교육과 보급 말고 다른 용도로는 쓰지 않으며 운영이 끝나면 전량 회수합니다.</p>
+    </div>
+    <div class="pfoot"><span>힐리힐리 지도 게임</span><span>힐리힐리 · 10</span></div>
+  </section>
+
+  <!-- 맺음 -->
+  <section class="page cover">
+    <div class="inner">
+      <p class="cov-eyebrow">HILLY HEALLY</p>
+      <p class="cov-tag" style="margin-bottom:0;">무엇을 제안드리려고 보내는 자료는 아닙니다.<br>저희가 어떤 프로그램을 돌리고 있는지 한 번 보셨으면 해서 정리했습니다.</p>
+      <div class="sign">
+        <img src="img/hh-mark.png" alt="힐리힐리">
+        <b>HILLY HEALLY</b>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
