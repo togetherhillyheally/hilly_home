@@ -3,7 +3,6 @@
 import { ArrowLeft, Printer } from "lucide-react";
 import {
   COMPANY_INFO,
-  formatDateKo,
   koreanAmount,
   statementLines,
   type QuoteRow,
@@ -11,13 +10,16 @@ import {
 
 /**
  * 거래명세서 — 견적서와 같은 품목·금액으로 출력 (2026-11-19).
- * 거래일자는 견적일자를 쓴다. 공급받는자는 수신인 상호만 채우고 나머지 칸은 비워 둔다.
+ * 흔히 쓰는 양식대로 공급자 정보만 표로 두고, 받는 곳은 상호만 '귀중' 으로 적는다.
+ * 거래일자는 견적일자를 쓴다.
  */
 export default function StatementPrint({ quote }: { quote: QuoteRow }) {
   const { lines, supplyTotal, taxTotal, total } = statementLines(quote);
-  const [, mm, dd] = quote.quote_date.split("-");
-  const monthDay = mm && dd ? `${Number(mm)}/${Number(dd)}` : "";
-  const blankRows = Math.max(0, 8 - lines.length);
+  const [yy, mm, dd] = quote.quote_date.split("-");
+  const monthDay = mm && dd ? `${mm}/${dd}` : "";
+  const serial = `${yy}/${mm}/${dd} · ${quote.quote_no ?? "-"}`;
+  const qtyTotal = lines.reduce((a, l) => a + (l.qty || 0), 0);
+  const blankRows = Math.max(0, 6 - lines.length);
   const won = (n: number) => (n ? n.toLocaleString("ko-KR") : "");
 
   return (
@@ -79,76 +81,103 @@ export default function StatementPrint({ quote }: { quote: QuoteRow }) {
         }
       `}</style>
 
-      <section className="mx-auto my-4 print:my-0 max-w-[210mm] bg-white shadow-sm print:shadow-none p-10 print:p-0 text-[11px]">
-        <h1 className="text-center text-[28px] font-black tracking-[0.5em] mb-1">
-          거래명세서
-        </h1>
-        <p className="text-center text-[11px] text-neutral-500 mb-6">
-          (공급받는자 보관용)
-        </p>
+      <section className="mx-auto my-4 print:my-0 max-w-[210mm] bg-white shadow-sm print:shadow-none p-10 print:p-0 text-[12px]">
+        {/* 상단: 좌 로고·제목·받는 곳 / 우 공급자 */}
+        <div className="grid grid-cols-[1fr_1.05fr] gap-6 items-stretch">
+          <div className="flex flex-col justify-between gap-5">
+            <div className="flex items-center gap-4 pt-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/home_logo.png"
+                alt="Hilly Heally"
+                className="h-12 w-auto"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = "none";
+                }}
+              />
+              <h1 className="text-[28px] font-black tracking-[0.12em]">거래명세서</h1>
+            </div>
+            <div className="border border-neutral-700 px-4 py-4 text-center text-[14px] font-semibold">
+              {quote.recipient} <span className="ml-1">貴中</span>
+            </div>
+          </div>
 
-        <div className="flex justify-between items-end mb-2 text-[12px]">
+          <div className="flex border border-neutral-700">
+            <div className="w-[26px] shrink-0 bg-neutral-100 border-r border-neutral-700 flex items-center justify-center font-semibold [writing-mode:vertical-rl] tracking-[0.3em]">
+              공급자용
+            </div>
+            <table className="flex-1 border-collapse">
+              <tbody>
+                <tr>
+                  <K>일련번호</K>
+                  <V>{serial}</V>
+                  <K narrow>TEL</K>
+                  <V>{COMPANY_INFO.contact}</V>
+                </tr>
+                <tr className="border-t border-neutral-500">
+                  <K>
+                    사업자
+                    <br />
+                    등록번호
+                  </K>
+                  <V>{COMPANY_INFO.bizNumber}</V>
+                  <K narrow>성명</K>
+                  <V>
+                    <span className="relative inline-block pr-9">
+                      {COMPANY_INFO.ownerName}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={COMPANY_INFO.sealPath}
+                        alt=""
+                        className="absolute right-[-14px] top-1/2 -translate-y-1/2 h-[58px] w-[58px] object-contain pointer-events-none"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                    </span>
+                  </V>
+                </tr>
+                <tr className="border-t border-neutral-500">
+                  <K>상호</K>
+                  <V colSpan={3}>{COMPANY_INFO.name}</V>
+                </tr>
+                <tr className="border-t border-neutral-500">
+                  <K>주소</K>
+                  <V colSpan={3}>{COMPANY_INFO.address}</V>
+                </tr>
+                <tr className="border-t border-neutral-500">
+                  <K>업태</K>
+                  <V>{COMPANY_INFO.bizType}</V>
+                  <K narrow>종목</K>
+                  <V>{COMPANY_INFO.bizItem}</V>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* 금액 */}
+        <div className="mt-5 flex items-center justify-between border-2 border-neutral-800 px-5 py-2.5 text-[16px] font-bold">
           <div>
-            거래일자 : <b>{formatDateKo(quote.quote_date)}</b>
-          </div>
-          <div className="text-neutral-600">No. {quote.quote_no ?? "-"}</div>
-        </div>
-
-        {/* 공급자 / 공급받는자 */}
-        <div className="grid grid-cols-2 border border-neutral-700">
-          <PartyBox
-            title="공급자"
-            rows={[
-              ["등록번호", COMPANY_INFO.bizNumber],
-              ["상호", COMPANY_INFO.name],
-              ["대표자", COMPANY_INFO.ownerName, true],
-              ["주소", COMPANY_INFO.address],
-              ["업태", COMPANY_INFO.bizType],
-              ["종목", COMPANY_INFO.bizItem],
-              ["연락처", COMPANY_INFO.contact],
-            ]}
-          />
-          <PartyBox
-            title="공급받는자"
-            rows={[
-              ["등록번호", ""],
-              ["상호", quote.recipient],
-              ["대표자", ""],
-              ["주소", ""],
-              ["업태", ""],
-              ["종목", ""],
-              ["연락처", ""],
-            ]}
-            borderLeft
-          />
-        </div>
-
-        {/* 합계금액 */}
-        <div className="mt-3 flex border border-neutral-700 text-[13px]">
-          <div className="w-[110px] shrink-0 bg-neutral-100 border-r border-neutral-700 px-3 py-2.5 font-bold text-center">
-            합계금액
-          </div>
-          <div className="flex-1 px-4 py-2.5 font-bold">
-            일금 {koreanAmount(total)}원정
-            <span className="ml-3 font-semibold">
-              (₩{total.toLocaleString("ko-KR")})
+            금&nbsp;&nbsp;액 : {koreanAmount(total)}원 정
+            <span className="ml-2 text-[11px] font-medium text-neutral-500">
+              ({taxTotal > 0 ? "부가세 포함" : "부가세 별도"})
             </span>
           </div>
-          <div className="px-3 py-2.5 text-neutral-600 text-[11px] self-center">
-            {taxTotal > 0 ? "부가세 포함" : "부가세 별도"}
-          </div>
+          <div>(₩{total.toLocaleString("ko-KR")})</div>
         </div>
 
         {/* 품목 */}
-        <table className="mt-3 w-full border-collapse">
+        <table className="mt-5 w-full border-collapse">
           <thead>
             <tr className="bg-neutral-100">
-              <Th className="w-[44px]">월/일</Th>
-              <Th>품목</Th>
+              <Th className="w-[52px]">일자</Th>
+              <Th>품목명[규격]</Th>
               <Th className="w-[44px]">수량</Th>
-              <Th className="w-[86px]">단가</Th>
-              <Th className="w-[96px]">공급가액</Th>
-              <Th className="w-[80px]">세액</Th>
+              <Th className="w-[82px]">단가</Th>
+              <Th className="w-[90px]">공급가액</Th>
+              <Th className="w-[70px]">부가세</Th>
+              <Th className="w-[90px]">적요</Th>
             </tr>
           </thead>
           <tbody>
@@ -159,95 +188,65 @@ export default function StatementPrint({ quote }: { quote: QuoteRow }) {
                 <Td center>{l.qty || ""}</Td>
                 <Td right>{won(l.unitPrice)}</Td>
                 <Td right>{won(l.supply)}</Td>
-                <Td right>{won(l.tax)}</Td>
+                <Td right>{l.tax ? won(l.tax) : "-"}</Td>
+                <Td>&nbsp;</Td>
               </tr>
             ))}
             {Array.from({ length: blankRows }).map((_, i) => (
               <tr key={`b${i}`}>
-                {Array.from({ length: 6 }).map((__, j) => (
+                {Array.from({ length: 7 }).map((__, j) => (
                   <Td key={j}>&nbsp;</Td>
                 ))}
               </tr>
             ))}
-            <tr className="bg-neutral-100 font-bold">
-              <Td center colSpan={4}>
-                계
-              </Td>
-              <Td right>{won(supplyTotal)}</Td>
-              <Td right>{taxTotal ? won(taxTotal) : "0"}</Td>
-            </tr>
-            <tr className="bg-sky-50 font-bold text-[12px]">
-              <Td center colSpan={4}>
-                합계 (공급가액 + 세액)
-              </Td>
-              <Td right colSpan={2}>
-                ₩{total.toLocaleString("ko-KR")}
-              </Td>
-            </tr>
           </tbody>
         </table>
 
-        <p className="mt-6 text-center text-[13px]">
-          위 금액을 정히 청구합니다.
-        </p>
-
-        <div className="mt-6 text-right">
-          <div className="inline-block relative pr-2 text-[13px] font-bold">
-            공급자 {COMPANY_INFO.name}
-            <span className="ml-2">대표이사 {COMPANY_INFO.ownerName}</span>
-            <span className="inline-block align-middle w-[64px]"></span>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={COMPANY_INFO.sealPath}
-              alt=""
-              className="absolute right-[-6px] top-1/2 -translate-y-1/2 h-[64px] w-[64px] object-contain pointer-events-none"
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).style.display = "none";
-              }}
-            />
-          </div>
-        </div>
+        {/* 합계 줄 */}
+        <table className="mt-2 w-full border-collapse border-2 border-neutral-800">
+          <tbody>
+            <tr>
+              <SumK>수량</SumK>
+              <SumV>{qtyTotal}</SumV>
+              <SumK>공급가액</SumK>
+              <SumV>{supplyTotal.toLocaleString("ko-KR")}</SumV>
+              <SumK>VAT</SumK>
+              <SumV>{taxTotal.toLocaleString("ko-KR")}</SumV>
+              <SumK>합계</SumK>
+              <SumV>{total.toLocaleString("ko-KR")}</SumV>
+              <SumK>인수</SumK>
+              <SumV>인</SumV>
+            </tr>
+          </tbody>
+        </table>
       </section>
     </div>
   );
 }
 
-function PartyBox({
-  title,
-  rows,
-  borderLeft,
-}: {
-  title: string;
-  rows: [string, string, boolean?][];
-  borderLeft?: boolean;
-}) {
+function K({ children, narrow }: { children: React.ReactNode; narrow?: boolean }) {
   return (
-    <div className={`flex ${borderLeft ? "border-l border-neutral-700" : ""}`}>
-      <div className="w-[26px] shrink-0 bg-neutral-100 border-r border-neutral-700 flex items-center justify-center font-bold text-[12px] [writing-mode:vertical-rl] tracking-[0.4em]">
-        {title}
-      </div>
-      <table className="flex-1 border-collapse">
-        <tbody>
-          {rows.map(([k, v, seal], i) => (
-            <tr key={k} className={i ? "border-t border-neutral-400" : ""}>
-              <td className="w-[62px] bg-neutral-50 border-r border-neutral-400 px-1.5 py-1.5 text-center text-neutral-700 whitespace-nowrap">
-                {k}
-              </td>
-              <td className="px-2 py-1.5 leading-snug">
-                {v}
-                {seal ? <span className="ml-2 text-neutral-500">(인)</span> : null}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <td
+      className={`${
+        narrow ? "w-[48px]" : "w-[70px]"
+      } bg-neutral-50 border-r border-neutral-500 px-1.5 py-2 text-center font-semibold leading-tight whitespace-nowrap`}
+    >
+      {children}
+    </td>
+  );
+}
+
+function V({ children, colSpan }: { children: React.ReactNode; colSpan?: number }) {
+  return (
+    <td colSpan={colSpan} className="border-r border-neutral-500 last:border-r-0 px-2 py-2 leading-snug">
+      {children}
+    </td>
   );
 }
 
 function Th({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <th className={`border border-neutral-500 px-2 py-2 text-center font-semibold ${className}`}>
+    <th className={`border border-neutral-400 px-2 py-2 text-center font-semibold ${className}`}>
       {children}
     </th>
   );
@@ -257,21 +256,32 @@ function Td({
   children,
   center,
   right,
-  colSpan,
 }: {
   children: React.ReactNode;
   center?: boolean;
   right?: boolean;
-  colSpan?: number;
 }) {
   return (
     <td
-      colSpan={colSpan}
-      className={`border border-neutral-500 px-2 py-1.5 ${
+      className={`border border-neutral-400 px-2 py-1.5 ${
         center ? "text-center" : right ? "text-right tabular-nums" : ""
       }`}
     >
       {children}
     </td>
+  );
+}
+
+function SumK({ children }: { children: React.ReactNode }) {
+  return (
+    <td className="bg-neutral-50 border border-neutral-500 px-2 py-2 text-center font-semibold whitespace-nowrap">
+      {children}
+    </td>
+  );
+}
+
+function SumV({ children }: { children: React.ReactNode }) {
+  return (
+    <td className="border border-neutral-500 px-2 py-2 text-right tabular-nums">{children}</td>
   );
 }
