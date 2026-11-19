@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, Printer } from "lucide-react";
+import { ChevronLeft, FileText, Printer } from "lucide-react";
 import { adminList } from "@/lib/admin-rest";
 import { type QuoteRow } from "@/lib/quotes";
 import QuoteEditor from "./QuoteEditor";
@@ -37,14 +37,24 @@ export default async function QuoteEditPage({
             {q.quote_no ?? "-"}
           </p>
         </div>
-        <Link
-          href={`/admin/quotes/${q.id}/preview`}
-          target="_blank"
-          className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] border border-white/10 text-white text-sm font-semibold"
-        >
-          <Printer className="h-4 w-4" />
-          미리보기 · 인쇄
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href={`/admin/quotes/${q.id}/preview`}
+            target="_blank"
+            className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] border border-white/10 text-white text-sm font-semibold"
+          >
+            <Printer className="h-4 w-4" />
+            견적서 미리보기 · 인쇄
+          </Link>
+          <Link
+            href={`/admin/quotes/${q.id}/statement`}
+            target="_blank"
+            className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] border border-white/10 text-white text-sm font-semibold"
+          >
+            <FileText className="h-4 w-4" />
+            거래명세서 · 인쇄
+          </Link>
+        </div>
       </header>
 
       <QuoteEditor initial={q} />

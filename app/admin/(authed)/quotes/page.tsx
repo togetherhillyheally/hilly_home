@@ -156,6 +156,13 @@ export default async function QuotesPage({
                       >
                         미리보기
                       </Link>
+                      <Link
+                        href={`/admin/quotes/${q.id}/statement`}
+                        target="_blank"
+                        className="ml-3 text-xs text-gray-400 hover:text-gray-200"
+                      >
+                        거래명세서
+                      </Link>
                     </td>
                   </tr>
                 );

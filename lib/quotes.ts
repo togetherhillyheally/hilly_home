@@ -9,6 +9,9 @@ export const COMPANY_INFO = {
   bizNumber: "720-86-03798",
   contact: "010-8313-8230",
   address: "서울특별시 서초구 서초중앙로 123, 지하 1층 1003호(서초동)",
+  // 사업자등록증명(2026-11-16 발급) 기준 — 거래명세서 공급자 칸
+  bizType: "정보통신업",
+  bizItem: "소프트웨어 개발 및 공급업",
   logoPath: "/images/company/hillyheally-logo.png", // 없어도 텍스트로 대체
   sealPath: "/images/company/hillyheally-seal.png", // 없어도 도장 생략
 } as const;
@@ -101,6 +104,82 @@ export function grandTotal(quote: Pick<QuoteRow, "sections" | "round_to_10k" | "
   const raw = sumQuote(quote.sections).amount;
   const rounded = quote.round_to_10k ? roundDownTo10K(raw) : raw;
   return quote.vat_included ? Math.round(rounded * 1.1) : rounded;
+}
+
+/**
+ * 거래명세서 줄 — 줄마다 공급가액·세액.
+ * 세액은 줄별 10% 반올림이고, 끝자리 차이는 마지막 줄에서 맞춰 합계가 grandTotal 과 같게 한다.
+ * 만단위 절사로 공급가액 합이 줄 합보다 작아지면 '절사' 줄(음수)을 붙인다.
+ */
+export type StatementLine = {
+  label: string;
+  qty: number;
+  unitPrice: number;
+  supply: number;
+  tax: number;
+};
+
+export function statementLines(
+  quote: Pick<QuoteRow, "sections" | "round_to_10k" | "vat_included">
+): { lines: StatementLine[]; supplyTotal: number; taxTotal: number; total: number } {
+  const lines: StatementLine[] = [];
+  for (const s of quote.sections ?? []) {
+    for (const it of s.items) {
+      const supply = itemLineTotal(it);
+      if (!supply) continue;
+      lines.push({
+        label: it.task || it.assignee || s.category,
+        qty: Number(it.man_month) || 0,
+        unitPrice: Number(it.unit_price) || 0,
+        supply,
+        tax: 0,
+      });
+    }
+  }
+  const raw = lines.reduce((a, l) => a + l.supply, 0);
+  const supplyTotal = quote.round_to_10k ? roundDownTo10K(raw) : raw;
+  if (supplyTotal !== raw) {
+    lines.push({ label: "만단위 절사", qty: 0, unitPrice: 0, supply: supplyTotal - raw, tax: 0 });
+  }
+  const total = grandTotal(quote);
+  const taxTotal = total - supplyTotal;
+  if (taxTotal > 0 && lines.length > 0) {
+    let acc = 0;
+    lines.forEach((l, i) => {
+      if (i === lines.length - 1) l.tax = taxTotal - acc;
+      else {
+        l.tax = Math.round(l.supply * 0.1);
+        acc += l.tax;
+      }
+    });
+  }
+  return { lines, supplyTotal, taxTotal, total };
+}
+
+/** 1000000 → "일백만" (금액 한글 표기, '원정' 은 호출부에서) */
+export function koreanAmount(n: number): string {
+  const digits = ["", "일", "이", "삼", "사", "오", "육", "칠", "팔", "구"];
+  const small = ["", "십", "백", "천"];
+  const big = ["", "만", "억", "조"];
+  let v = Math.floor(Math.abs(n));
+  if (v === 0) return "영";
+  let out = "";
+  let b = 0;
+  while (v > 0) {
+    const chunk = v % 10000;
+    if (chunk) {
+      let s = "";
+      let c = chunk;
+      for (let i = 0; i < 4 && c > 0; i++, c = Math.floor(c / 10)) {
+        const d = c % 10;
+        if (d) s = digits[d] + small[i] + s;
+      }
+      out = s + big[b] + out;
+    }
+    v = Math.floor(v / 10000);
+    b++;
+  }
+  return out;
 }
 
 export function formatKRW(n: number): string {
