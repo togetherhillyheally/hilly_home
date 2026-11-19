@@ -225,7 +225,21 @@ function PartyBox({
               </td>
               <td className="px-2 py-1.5 leading-snug">
                 {v}
-                {seal ? <span className="ml-2 text-neutral-500">(인)</span> : null}
+                {seal ? (
+                  <span className="relative inline-block ml-2 text-neutral-500">
+                    (인)
+                    {/* 직인 — (인) 위에 겹쳐 찍는다 */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={COMPANY_INFO.sealPath}
+                      alt=""
+                      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[52px] w-[52px] max-w-none object-contain pointer-events-none"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                  </span>
+                ) : null}
               </td>
             </tr>
           ))}
