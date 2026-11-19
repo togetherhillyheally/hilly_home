@@ -180,23 +180,6 @@ export default function StatementPrint({ quote }: { quote: QuoteRow }) {
         <p className="mt-6 text-center text-[13px]">
           위 금액을 정히 청구합니다.
         </p>
-
-        <div className="mt-6 text-right">
-          <div className="inline-block relative pr-2 text-[13px] font-bold">
-            공급자 {COMPANY_INFO.name}
-            <span className="ml-2">대표이사 {COMPANY_INFO.ownerName}</span>
-            <span className="inline-block align-middle w-[64px]"></span>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={COMPANY_INFO.sealPath}
-              alt=""
-              className="absolute right-[-6px] top-1/2 -translate-y-1/2 h-[64px] w-[64px] object-contain pointer-events-none"
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).style.display = "none";
-              }}
-            />
-          </div>
-        </div>
       </section>
     </div>
   );
