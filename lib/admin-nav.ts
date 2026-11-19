@@ -27,7 +27,7 @@ import {
   Gift,
   Siren,
 } from "lucide-react";
-import { Megaphone } from "lucide-react";
+import { HandCoins, Megaphone } from "lucide-react";
 import { TreasureChest } from "@/components/admin/TreasureChestIcon";
 import type { MenuKey } from "@/lib/admin-permissions";
 
@@ -189,6 +189,12 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         label: "참가비 정산",
         icon: Banknote,
         menuKey: "settlements",
+      },
+      {
+        href: "/admin/sponsorships",
+        label: "후원 정산",
+        icon: HandCoins,
+        menuKey: "sponsorships",
       },
     ],
   },
