@@ -94,7 +94,9 @@ export default function StatementPrint({ quote }: { quote: QuoteRow }) {
               거래일자 : <b>{formatDateKo(quote.quote_date)}</b>
             </div>
           </div>
-          <div className="text-neutral-600">No. {quote.quote_no ?? "-"}</div>
+          {quote.quote_no ? (
+            <div className="text-neutral-600">견적번호 {quote.quote_no}</div>
+          ) : null}
         </div>
 
         {/* 공급자 — 공급받는자 칸은 두지 않는다 (받는 곳은 위 '귀하' 줄) */}
