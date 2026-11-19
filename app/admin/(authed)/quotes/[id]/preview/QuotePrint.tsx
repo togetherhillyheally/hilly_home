@@ -116,7 +116,7 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
               filter: "blur(20px)",
             }}
           />
-          {/* 상단 좌: 로고 + 회사명 */}
+          {/* 상단 좌: 로고 (회사명은 하단 공급자 칸에 있어 뺐다) */}
           <div className="relative flex items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -127,9 +127,6 @@ export default function QuotePrint({ quote }: { quote: QuoteRow }) {
                 (e.currentTarget as HTMLImageElement).style.display = "none";
               }}
             />
-            <div className="text-sm tracking-[0.24em] font-semibold text-white/70 uppercase">
-              {COMPANY_INFO.name}
-            </div>
           </div>
 
           {/* 중앙: 타이틀 */}
